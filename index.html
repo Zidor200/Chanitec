@@ -309,7 +309,7 @@
                 <input type="text" id="custom-description" style="padding: 8px; width: 200px;">
             </div>
             <div>
-                <label>PRÉ:</label>
+                <label>PR £:</label>
                 <input type="number" id="custom-pre" step="0.01" style="padding: 8px; width: 100px;">
             </div>
             <button onclick="addCustomItem()" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; width: fit-content;">
@@ -426,7 +426,7 @@
             { description: 'BANDE ADHESIVE ALU', pre: '14.35' },
             { description: 'BANDE ARMAFLEX', pre: '' },
             { description: 'BANDE VINYLE', pre: '1.85' },
-            { description: 'BUTANE 400G', pre: '27.52' },
+            { description: 'BUTANE 400G', pre: '12.29' },
             { description: 'CABLE RIGIDE 3x2.5', pre: '1.81' },
             { description: 'CABLE SOUPLE 3x2.5', pre: '' },
             { description: 'COLLE ARMAFLEX', pre: '35.31' },
@@ -692,18 +692,18 @@
                 }
             });
 
-            const tva = totalHT * 0.20;
-            const totalTTC = totalHT + tva;
-            const totalGeneral = totalTTC + totalMO;
+            const totalOffreHT = totalHT + totalMO;
+            const tva = totalOffreHT * 0.16;
+            const totalTTC = totalOffreHT + tva;
 
             // Update all total displays with proper formatting
-            document.getElementById('total-fournitures').textContent = totalHT.toFixed(2);
+            document.getElementById('total-fournitures').textContent = totalOffreHT.toFixed(2);
             document.getElementById('table-total-fournitures').textContent = totalHT.toFixed(2);
             document.getElementById('tva').textContent = tva.toFixed(2);
             document.getElementById('total-ttc').textContent = totalTTC.toFixed(2);
             document.getElementById('total-mo').textContent = totalMO.toFixed(2);
             document.getElementById('table-total-mo').textContent = totalMO.toFixed(2);
-            document.getElementById('total-general').textContent = totalGeneral.toFixed(2);
+            document.getElementById('total-general').textContent = totalTTC.toFixed(2);
         }
 
         function prepareAndPrint() {
