@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calcul de Prix Offre Climatisation</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 0;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            box-sizing: border-box;
+            font-size: 11px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .info-section {
+            margin-bottom: 15px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .info-label {
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+            font-size: 11px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 4px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .total-section {
+            text-align: right;
+            margin-top: 10px;
+        }
+        .rates-section {
+            margin: 10px 0;
+            display: grid;
+            grid-template-columns: auto auto;
+            gap: 15px;
+            justify-content: end;
+        }
+        .rate-item {
+            display: grid;
+            grid-template-columns: auto auto;
+            gap: 10px;
+        }
+        .add-item-section, #custom-item-form {
+            margin-bottom: 10px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        input, select, button {
+            font-size: 11px;
+        }
+        h1 {
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        h2 {
+            font-size: 14px;
+            margin: 10px 0;
+        }
+        h3 {
+            font-size: 12px;
+            margin: 8px 0;
+        }
+        p {
+            margin: 5px 0;
+            font-size: 11px;
+        }
+        @media print {
+            body {
+                padding: 15px;
+                font-size: 11px;
+            }
+            button {
+                display: none;
+            }
+            .add-item-section, #custom-item-form {
+                display: none;
+            }
+            input {
+                border: none;
+                background: transparent;
+                font-size: 11px;
+            }
+            table {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CALCUL DE PRIX OFFRE CLIMATISATION</h1>
+    </div>
+
+    <div class="info-section">
+        <div class="info-grid">
+            <div class="info-label">CLIENT:</div>
+            <div class="info-value">
+                <input type="text" id="client-input" style="width: 100%; padding: 5px;" placeholder="Nom du client">
+            </div>
+            <div class="info-label">SITE:</div>
+            <div class="info-value">
+                <input type="text" id="site-input" style="width: 100%; padding: 5px;" placeholder="Adresse du site">
+            </div>
+            <div class="info-label">OBJET:</div>
+            <div class="info-value">
+                <input type="text" id="object-input" style="width: 100%; padding: 5px;" placeholder="Objet de l'intervention">
+            </div>
+            <div class="info-label">DATE:</div>
+            <div class="info-value">
+                <input type="date" id="date-input" style="width: 100%; padding: 5px;">
+            </div>
+        </div>
+    </div>
+
+
+    <table style="width: 40%; margin-left: auto; margin-bottom: 30px; border: 2px solid #ddd;">
+        <tr>
+            <td style="font-weight: bold; padding: 8px;">TOTAL OFFRE USD HT:</td>
+            <td style="text-align: right; padding: 8px;"><span id="total-fournitures">-</span></td>
+        </tr>
+        <tr>
+            <td style="font-weight: bold; padding: 8px;">TVA:</td>
+            <td style="text-align: right; padding: 8px;"><span id="tva">-</span></td>
+        </tr>
+        <tr style="background-color: #f2f2f2;">
+            <td style="font-weight: bold; padding: 8px;">TOTAL OFFRE USD TTC:</td>
+            <td style="text-align: right; padding: 8px;"><span id="total-ttc">-</span></td>
+        </tr>
+    </table>
+
+
+    <div class="add-item-section" style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
+        <h3>Ajouter un article</h3>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <select id="item-select" style="padding: 8px; min-width: 200px;">
+                <option value="">Sélectionner un article</option>
+                <option value="custom">+ Ajouter un nouvel article</option>
+            </select>
+            <input type="number" id="item-quantity" value="1" min="1" style="padding: 8px; width: 80px;" placeholder="Quantité">
+            <button onclick="addSelectedItem()" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Ajouter
+            </button>
+        </div>
+    </div>
+
+    <div id="custom-item-form" style="display: none; margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
+        <h3>Nouvel Article</h3>
+        <div style="display: grid; gap: 10px;">
+            <div>
+                <label>Description:</label>
+                <input type="text" id="custom-description" style="padding: 8px; width: 200px;">
+            </div>
+            <div>
+                <label>PRÉ:</label>
+                <input type="number" id="custom-pre" step="0.01" style="padding: 8px; width: 100px;">
+            </div>
+            <button onclick="addCustomItem()" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; width: fit-content;">
+                Ajouter l'article
+            </button>
+        </div>
+    </div>
+
+    <h2>FOURNITURES</h2>
+
+    <div class="rates-section">
+        <div class="rate-item">
+            <span>Tx de chg:</span>
+            <span>1.15</span>
+        </div>
+        <div class="rate-item">
+            <span>Tx de marge:</span>
+            <span>0.75</span>
+        </div>
+    </div>
+    <table id="fournitures-table">
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th>Qté</th>
+                <th>PRÉ</th>
+                <th>PRS</th>
+                <th>PV/uS</th>
+                <th>PVS Total HT</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+        <tfoot>
+            <tr style="font-weight: bold; background-color: #f9f9f9;">
+                <td colspan="5" style="text-align: right;">TOTAL FOURNITURE $ HT:</td>
+                <td id="table-total-fournitures" style="text-align: right;">-</td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <h2>MAIN D'OEUVRE</h2>
+    <p>Chef main d'oeuvre (en Arrêt de la machine, découpage de l'ancienne isolation, fourniture, et pose de la nouvelle isolation, séchage et remise en service)</p>
+
+    <div class="rates-section">
+        <div class="rate-item">
+            <span>Tx de chg:</span>
+            <span>1.2</span>
+        </div>
+        <div class="rate-item">
+            <span>Tx de marge:</span>
+            <span>0.8</span>
+        </div>
+    </div>
+
+    <div class="add-item-section" style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
+        <h3>Ajouter Main d'oeuvre</h3>
+        <div style="display: grid; gap: 10px;">
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="number" id="mo-nb-tech" value="1" min="1" style="padding: 8px; width: 80px;" placeholder="Nb technicien">
+                <input type="number" id="mo-nb-hours" value="1" min="1" style="padding: 8px; width: 80px;" placeholder="Nb heures">
+                <input type="number" id="mo-weekend" value="0" min="0" max="100" style="padding: 8px; width: 80px;" placeholder="Majo Weekend %">
+                <input type="number" id="mo-pre" value="10.00" step="0.01" style="padding: 8px; width: 80px;" placeholder="PRÉ">
+                <button onclick="addLabor()" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    Ajouter
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <table id="labor-table">
+        <thead>
+            <tr>
+                <th>Nb technicien</th>
+                <th>Nb heures</th>
+                <th>Majo Weekend</th>
+                <th>PRÉ</th>
+                <th>PRS</th>
+                <th>PVS Total HT</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+        <tfoot>
+            <tr style="font-weight: bold; background-color: #f9f9f9;">
+                <td colspan="5" style="text-align: right;">TOTAL MO $ HT:</td>
+                <td id="table-total-mo" style="text-align: right;">-</td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div class="total-section">
+        <div>TOTAL MO $ HT: <span id="total-mo">-</span></div>
+    </div>
+
+    <div class="total-section" style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #ddd;">
+        <div style="font-size: 1.2em; font-weight: bold;">TOTAL GENERAL: <span id="total-general">-</span></div>
+    </div>
+
+    <script>
+        const items = [
+            { description: 'ACETYLENE', pre: '' },
+            { description: 'ANTI ROUILLE', pre: '' },
+            { description: 'AZOTE', pre: '' },
+            { description: 'BAGUETTE EN ARGENT', pre: '0.73' },
+            { description: 'BANDE ADHESIVE ALU', pre: '14.35' },
+            { description: 'BANDE ARMAFLEX', pre: '' },
+            { description: 'BANDE VINYLE', pre: '1.85' },
+            { description: 'BUTANE 400G', pre: '27.52' },
+            { description: 'CABLE RIGIDE 3x2.5', pre: '1.81' },
+            { description: 'CABLE SOUPLE 3x2.5', pre: '' },
+            { description: 'COLLE ARMAFLEX', pre: '35.31' },
+            { description: 'COLLE EPATEX', pre: '7.45' },
+            { description: 'COUDE PVC 32MM', pre: '0.94' },
+            { description: 'DILUANT', pre: '' },
+            { description: 'DISJONCTEUR ELECTRONIK', pre: '64.83' },
+            { description: 'FEUILLE ARMAFLEX 19', pre: '25.27' },
+            { description: 'FEUILLE ARMAFLEX 25', pre: '81.37' },
+            { description: 'FEUILLE ARMAFLEX 32', pre: '84.24' },
+            { description: 'FILTRE DESHYDRATEUR 1/2', pre: '' },
+            { description: 'FILTRE DESHYDRATEUR 3/8', pre: '32.88' },
+            { description: 'FILTRE DESHYDRATEUR 5/8', pre: '' },
+            { description: 'FREON R134', pre: '10.09' },
+            { description: 'FREON R22', pre: '7.07' },
+            { description: 'FREON R404A', pre: '12.37' },
+            { description: 'FREON R407', pre: '12.96' },
+            { description: 'FREON R410A', pre: '11.35' },
+            { description: 'GOULOTTE', pre: '' },
+            { description: 'GOULOTTE MOSAIQUE', pre: '' },
+            { description: 'LAINE DE VERRE', pre: '33.76' },
+            { description: 'MANCHON PVC 32MM', pre: '' },
+            { description: 'OXYGENE', pre: '' },
+            { description: 'SPLIT 12000BTU', pre: '362.33' },
+            { description: 'SPLIT 18000BTU', pre: '523.69' },
+            { description: 'SPLIT 24000BTU', pre: '651.74' },
+            { description: 'SUPPORT CONDENSEUR', pre: '16.86' },
+            { description: 'SUPPORT MURAL 3/24', pre: '' },
+            { description: 'THINNER', pre: '' },
+            { description: 'TOLE GALVA 0.6', pre: '' },
+            { description: 'TOLE GALVA 0.8', pre: '32.33' },
+            { description: 'TUBE ARMAFLEX MT14', pre: '62.43' },
+            { description: 'TUBE ARMAFLEX MT22', pre: '11.71' },
+            { description: 'TUBE ARMAFLEX M28', pre: '11.35' },
+            { description: 'TUBE ARMAFLEX M32', pre: '103.58' },
+            { description: 'TUBE ARMAFLEX M35', pre: '17.11' },
+            { description: 'TUBE ARMAFLEX M42', pre: '19.93' },
+            { description: 'TUBE ARMAFLEX M48', pre: '25.5' },
+            { description: 'TUBE ARMAFLEX M76', pre: '41.45' },
+            { description: 'TUBE ARMAFLEX M89', pre: '23.19' },
+            { description: 'TUBE CUIVRE 1/2', pre: '8.93' },
+            { description: 'TUBING 3/8', pre: '5.44' }
+        ];
+
+        const txChg = 1.15;
+        const txMarge = 0.75;
+        let selectedItems = [];
+        let laborItems = [];
+        const moTxChg = 1.2;
+        const moTxMarge = 0.8;
+
+        function calculatePVS(pre) {
+            if (!pre || pre === '') return '';
+            const prs = parseFloat(pre) * txChg;
+            const pvus = prs / txMarge;
+            return pvus.toFixed(2);
+        }
+
+        function calculateMOPVS(pre, weekend = 0, nbTech = 1, nbHours = 1) {
+            if (!pre || pre === '') return '';
+            const weekendMultiplier = 1 + (weekend/100);
+            const prs = parseFloat(pre) * nbTech * nbHours * weekendMultiplier * moTxChg;
+            const pvs = prs / moTxMarge;
+            return pvs.toFixed(2);
+        }
+
+        function populateDropdown() {
+            const select = document.getElementById('item-select');
+            select.innerHTML = '<option value="">Sélectionner un article</option><option value="custom">+ Ajouter un nouvel article</option>';
+
+            items.sort((a, b) => a.description.localeCompare(b.description)).forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.description;
+                option.textContent = item.description;
+                select.appendChild(option);
+            });
+
+            // Hide custom form when changing selection
+            select.addEventListener('change', function() {
+                const customForm = document.getElementById('custom-item-form');
+                customForm.style.display = this.value === 'custom' ? 'block' : 'none';
+            });
+        }
+
+        function addSelectedItem() {
+            const select = document.getElementById('item-select');
+            const selectedDescription = select.value;
+
+            if (selectedDescription === 'custom') {
+                document.getElementById('custom-item-form').style.display = 'block';
+                select.value = '';
+                return;
+            }
+
+            if (!selectedDescription) {
+                alert('Veuillez sélectionner un article');
+                return;
+            }
+
+            const quantityInput = document.getElementById('item-quantity');
+            const quantity = parseInt(quantityInput.value) || 1;
+
+            const item = items.find(i => i.description === selectedDescription);
+            if (item) {
+                const existingItem = selectedItems.find(i => i.description === selectedDescription);
+                if (existingItem) {
+                    existingItem.quantity += quantity;
+                } else {
+                    selectedItems.push({ ...item, quantity });
+                }
+                updateTable();
+                select.value = '';
+                quantityInput.value = '1';
+                customForm.style.display = 'none';
+            }
+        }
+
+        function addCustomItem() {
+            const description = document.getElementById('custom-description').value;
+            const pre = document.getElementById('custom-pre').value;
+
+            if (!description || !pre) {
+                alert('Veuillez remplir tous les champs');
+                return;
+            }
+
+            const newItem = { description, pre };
+            items.push(newItem);
+            selectedItems.push({ ...newItem, quantity: 1 });
+
+            // Reset form
+            document.getElementById('custom-description').value = '';
+            document.getElementById('custom-pre').value = '';
+            document.getElementById('custom-item-form').style.display = 'none';
+
+            // Update everything
+            populateDropdown();
+            updateTable();
+        }
+
+        function addLabor() {
+            const nbTech = parseInt(document.getElementById('mo-nb-tech').value) || 1;
+            const nbHours = parseInt(document.getElementById('mo-nb-hours').value) || 1;
+            const weekend = parseInt(document.getElementById('mo-weekend').value) || 0;
+            const pre = parseFloat(document.getElementById('mo-pre').value) || 10;
+
+            laborItems.push({ nbTech, nbHours, weekend, pre });
+            updateLaborTable();
+        }
+
+        function updateTable() {
+            const tbody = document.querySelector('#fournitures-table tbody');
+            tbody.innerHTML = '';
+
+            selectedItems.forEach(item => {
+                const row = document.createElement('tr');
+                const prs = item.pre ? (parseFloat(item.pre) * txChg).toFixed(2) : '';
+                const pvus = calculatePVS(item.pre);
+                const pvsTotal = pvus ? (parseFloat(pvus) * item.quantity).toFixed(2) : '';
+
+                row.innerHTML = `
+                    <td>${item.description}</td>
+                    <td style="text-align: right;">${item.quantity}</td>
+                    <td>
+                        <input type="number" step="0.01" value="${item.pre}"
+                            onchange="updateItemPrice('${item.description}', this.value)"
+                            style="width: 80px; padding: 4px;">
+                    </td>
+                    <td style="text-align: right;">${prs}</td>
+                    <td style="text-align: right;">${pvus}</td>
+                    <td style="text-align: right;">${pvsTotal}</td>
+                    <td>
+                        <button onclick="removeItem('${item.description}')" style="padding: 2px 5px; background-color: #ff4444; color: white; border: none; border-radius: 3px; cursor: pointer;">
+                            X
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            calculateTotals();
+        }
+
+        function updateLaborTable() {
+            const tbody = document.querySelector('#labor-table tbody');
+            tbody.innerHTML = '';
+
+            laborItems.forEach((item, index) => {
+                const row = document.createElement('tr');
+                const weekendMultiplier = 1 + (item.weekend/100);
+                const prs = (parseFloat(item.pre) * item.nbTech * item.nbHours * weekendMultiplier * moTxChg).toFixed(2);
+                const pvsTotal = (parseFloat(calculateMOPVS(item.pre, item.weekend, item.nbTech, item.nbHours))).toFixed(2);
+
+                row.innerHTML = `
+                    <td style="text-align: right;">${item.nbTech}</td>
+                    <td style="text-align: right;">${item.nbHours}</td>
+                    <td style="text-align: right;">${item.weekend}%</td>
+                    <td style="text-align: right;">${item.pre}</td>
+                    <td style="text-align: right;">${prs}</td>
+                    <td style="text-align: right;">${pvsTotal}</td>
+                    <td>
+                        <button onclick="removeLaborItem(${index})" style="padding: 2px 5px; background-color: #ff4444; color: white; border: none; border-radius: 3px; cursor: pointer;">
+                            X
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            calculateTotals();
+        }
+
+        function updateItemPrice(description, newPrice) {
+            const item = selectedItems.find(i => i.description === description);
+            if (item) {
+                item.pre = newPrice;
+                updateTable();
+            }
+        }
+
+        function removeItem(description) {
+            selectedItems = selectedItems.filter(item => item.description !== description);
+            updateTable();
+        }
+
+        function removeLaborItem(index) {
+            laborItems.splice(index, 1);
+            updateLaborTable();
+        }
+
+        function calculateTotals() {
+            let totalHT = 0;
+            let totalMO = 0;
+
+            // Calculate total HT from items
+            selectedItems.forEach(item => {
+                if (item.pre && item.pre !== '') {
+                    const pvus = parseFloat(calculatePVS(item.pre));
+                    const quantity = parseInt(item.quantity) || 0;
+                    if (!isNaN(pvus) && !isNaN(quantity)) {
+                        totalHT += pvus * quantity;
+                    }
+                }
+            });
+
+            // Calculate total MO
+            laborItems.forEach(item => {
+                const pvs = parseFloat(calculateMOPVS(item.pre, item.weekend, item.nbTech, item.nbHours));
+                if (!isNaN(pvs)) {
+                    totalMO += pvs;
+                }
+            });
+
+            const tva = totalHT * 0.20;
+            const totalTTC = totalHT + tva;
+            const totalGeneral = totalTTC + totalMO;
+
+            // Update all total displays with proper formatting
+            document.getElementById('total-fournitures').textContent = totalHT.toFixed(2);
+            document.getElementById('table-total-fournitures').textContent = totalHT.toFixed(2);
+            document.getElementById('tva').textContent = tva.toFixed(2);
+            document.getElementById('total-ttc').textContent = totalTTC.toFixed(2);
+            document.getElementById('total-mo').textContent = totalMO.toFixed(2);
+            document.getElementById('table-total-mo').textContent = totalMO.toFixed(2);
+            document.getElementById('total-general').textContent = totalGeneral.toFixed(2);
+        }
+
+        // Initialize the page
+        window.onload = function() {
+            populateDropdown();
+            updateTable();
+            updateLaborTable();
+            // Set default date to today
+            document.getElementById('date-input').valueAsDate = new Date();
+        };
+    </script>
+</body>
+</html>
