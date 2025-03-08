@@ -1,0 +1,12 @@
+{
+    "name": "facteur-bilel",
+    "version": "1.0.0",
+    "description": "Calculateur de prix avec gestion d'articles",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js"
+    },
+    "dependencies": {
+        "express": "^4.18.2"
+    }
+}

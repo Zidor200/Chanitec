@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calcul de Prix Offre Climatisation</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        @page {
+            size: A4;
+            margin: 0;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            box-sizing: border-box;
+            font-size: 11px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .info-section {
+            margin-bottom: 15px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .info-label {
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+            font-size: 11px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 4px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .total-section {
+            text-align: right;
+            margin-top: 10px;
+        }
+        .rates-section {
+            margin: 10px 0;
+            display: grid;
+            grid-template-columns: auto auto;
+            gap: 15px;
+            justify-content: end;
+        }
+        .rate-item {
+            display: grid;
+            grid-template-columns: auto auto;
+            gap: 10px;
+        }
+        .add-item-section, #custom-item-form {
+            margin-bottom: 10px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        input, select, button {
+            font-size: 11px;
+        }
+        h1 {
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        h2 {
+            font-size: 14px;
+            margin: 10px 0;
+        }
+        h3 {
+            font-size: 12px;
+            margin: 8px 0;
+        }
+        p {
+            margin: 5px 0;
+            font-size: 11px;
+        }
+        @media print {
+            body {
+                padding: 15px;
+                font-size: 11px;
+            }
+            button {
+                display: none;
+            }
+            .add-item-section, #custom-item-form {
+                display: none;
+            }
+            input {
+                border: none;
+                background: transparent;
+                font-size: 11px;
+            }
+            table {
+                page-break-inside: avoid;
+            }
+        }
+        #item-quantity::-webkit-inner-spin-button,
+        #item-quantity::-webkit-outer-spin-button {
+            height: 50px;
+            opacity: 1;
+            cursor: pointer;
+            transform: scale(2);
+        }
+        #item-select {
+            padding: 12px;
+            min-width: 300px;
+            font-size: 14px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            background-color: white;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px top 50%;
+            background-size: 12px auto;
+            transition: all 0.2s ease;
+        }
+
+        #item-select:hover {
+            border-color: #4CAF50;
+        }
+
+        #item-select:focus {
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+            outline: none;
+        }
+
+        #item-select option {
+            padding: 12px;
+            font-size: 14px;
+        }
+
+        #item-select option[value="custom"] {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        select {
+            padding: 12px;
+            font-size: 14px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            background-color: white;
+            transition: all 0.2s ease;
+        }
+
+        input[type="text"]:hover,
+        input[type="number"]:hover,
+        input[type="date"]:hover,
+        select:hover {
+            border-color: #4CAF50;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        input[type="date"]:focus,
+        select:focus {
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+            outline: none;
+        }
+
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px top 50%;
+            background-size: 12px auto;
+            padding-right: 35px;
+        }
+
+        button {
+            padding: 12px 20px;
+            font-size: 14px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        /* Maintain the special styling for the item quantity spinner */
+        #item-quantity::-webkit-inner-spin-button,
+        #item-quantity::-webkit-outer-spin-button {
+            height: 50px;
+            opacity: 1;
+            cursor: pointer;
+            transform: scale(2);
+            margin-right: 10px;
+        }
+
+        #ready-button {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 30px;
+            font-size: 16px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: all 0.2s ease;
+            z-index: 1000;
+        }
+
+        #ready-button:hover {
+            background-color: #1976D2;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .hidden-for-print {
+            display: none !important;
+        }
+
+        /* Custom styles for number inputs */
+        input[type="number"] {
+            position: relative;
+            padding-right: 25px;
+        }
+
+        /* Webkit browsers (Chrome, Safari, newer Edge) */
+        input[type="number"]::-webkit-inner-spin-button {
+            opacity: 1;
+            background: transparent;
+            border-left: 1px solid #ddd;
+            height: 38px;
+            width: 25px;
+            position: absolute;
+            right: 0;
+            top: 0;
+            cursor: pointer;
+        }
+
+        input[type="number"]::-webkit-outer-spin-button {
+            display: none;
+        }
+
+        /* Style for when input is focused */
+        input[type="number"]:focus::-webkit-inner-spin-button {
+            border-left: 1px solid #4CAF50;
+        }
+
+        /* Hover effect */
+        input[type="number"]:hover::-webkit-inner-spin-button {
+            background-color: #f8f9fa;
+        }
+
+        /* Firefox */
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        /* Custom arrow buttons for Firefox */
+        .number-input-container {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .number-input-container::after {
+            content: "";
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-bottom: 5px solid #666;
+            pointer-events: none;
+        }
+
+        .number-input-container::before {
+            content: "";
+            position: absolute;
+            right: 5px;
+            top: calc(50% + 7px);
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 5px solid #666;
+            pointer-events: none;
+        }
+
+        /* Special styling for item quantity spinner */
+        #item-quantity::-webkit-inner-spin-button {
+            height: 50px;
+            width: 30px;
+            background: #4CAF50;
+            border-left: 1px solid #45a049;
+            opacity: 1;
+            cursor: pointer;
+        }
+
+        #item-quantity:hover::-webkit-inner-spin-button {
+            background: #45a049;
+        }
+
+        #item-quantity {
+            font-size: 16px;
+            padding-right: 35px;
+        }
+    </style>
+</head>
+<body>
+    <button id="ready-button" onclick="prepareAndPrint()">Ready</button>
+    <div class="header">
+        <h1>CALCUL DE PRIX OFFRE CLIMATISATION</h1>
+        <a href="manage_items.html" style="color: #2196F3; text-decoration: none; font-size: 14px;">Gérer les articles</a>
+    </div>
+
+    <div class="info-section">
+        <div class="info-grid">
+            <div class="info-label">CLIENT:</div>
+            <div class="info-value">
+                <input type="text" id="client-input" style="width: 100%; padding: 5px;" placeholder="Nom du client">
+            </div>
+            <div class="info-label">SITE:</div>
+            <div class="info-value">
+                <input type="text" id="site-input" style="width: 100%; padding: 5px;" placeholder="Adresse du site">
+            </div>
+            <div class="info-label">OBJET:</div>
+            <div class="info-value">
+                <input type="text" id="object-input" style="width: 100%; padding: 5px;" placeholder="Objet de l'intervention">
+            </div>
+            <div class="info-label">DATE:</div>
+            <div class="info-value">
+                <input type="date" id="date-input" style="width: 100%; padding: 5px;">
+            </div>
+        </div>
+    </div>
+
+
+    <table style="width: 40%; margin-left: auto; margin-bottom: 30px; border: 2px solid #ddd;">
+        <tr>
+            <td style="font-weight: bold; padding: 8px;">TOTAL OFFRE USD HT:</td>
+            <td style="text-align: right; padding: 8px;"><span id="total-fournitures">-</span></td>
+        </tr>
+        <tr>
+            <td style="font-weight: bold; padding: 8px;">TVA:</td>
+            <td style="text-align: right; padding: 8px;"><span id="tva">-</span></td>
+        </tr>
+        <tr style="background-color: #f2f2f2;">
+            <td style="font-weight: bold; padding: 8px;">TOTAL OFFRE USD TTC:</td>
+            <td style="text-align: right; padding: 8px;"><span id="total-ttc">-</span></td>
+        </tr>
+    </table>
+
+
+    <div class="add-item-section" style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
+        <h3>Ajouter un article</h3>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <select id="item-select" style="padding: 8px; min-width: 200px;">
+                <option value="">Sélectionner un article</option>
+                <option value="custom">+ Ajouter un nouvel article</option>
+            </select>
+            <input type="number" id="item-quantity" value="1" min="1" style="padding: 8px; width: 80px; font-size: 20px;" placeholder="Quantité">
+            <button onclick="addSelectedItem()" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Ajouter
+            </button>
+        </div>
+    </div>
+
+    <div id="custom-item-form" style="display: none; margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
+        <h3>Nouvel Article</h3>
+        <div style="display: grid; gap: 10px;">
+            <div>
+                <label>Description:</label>
+                <input type="text" id="custom-description" style="padding: 8px; width: 200px;">
+            </div>
+            <div>
+                <label>PR £:</label>
+                <input type="number" id="custom-pre" step="0.01" style="padding: 8px; width: 100px;">
+            </div>
+            <button onclick="addCustomItem()" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; width: fit-content;">
+                Ajouter l'article
+            </button>
+        </div>
+    </div>
+
+    <h2>FOURNITURES</h2>
+
+    <div class="rates-section">
+        <div class="rate-item">
+            <span>Tx de chg:</span>
+            <div class="number-input-container">
+                <input type="number" id="tx-chg" value="1.15" step="0.01" style="width: 60px; padding: 2px;" onchange="updateRatesAndRecalculate()">
+            </div>
+        </div>
+        <div class="rate-item">
+            <span>Tx de marge:</span>
+            <div class="number-input-container">
+                <input type="number" id="tx-marge" value="0.75" step="0.01" style="width: 60px; padding: 2px;" onchange="updateRatesAndRecalculate()">
+            </div>
+        </div>
+    </div>
+    <table id="fournitures-table">
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th>Qté</th>
+                <th>PR €</th>
+                <th>PR $</th>
+                <th>PV/u $</th>
+                <th>PV $ Total HT</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+        <tfoot>
+            <tr style="font-weight: bold; background-color: #f9f9f9;">
+                <td colspan="5" style="text-align: right;">TOTAL FOURNITURE $ HT:</td>
+                <td id="table-total-fournitures" style="text-align: right;">-</td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <h2>MAIN D'OEUVRE</h2>
+    <p>Chef main d'oeuvre (en Arrêt de la machine, découpage de l'ancienne isolation, fourniture, et pose de la nouvelle isolation, séchage et remise en service)</p>
+
+    <div class="rates-section">
+        <div class="rate-item">
+            <span>Tx de chg:</span>
+            <input type="number" id="mo-tx-chg" value="1.2" step="0.01" style="width: 60px; padding: 2px;" onchange="updateRatesAndRecalculate()">
+        </div>
+        <div class="rate-item">
+            <span>Tx de marge:</span>
+            <input type="number" id="mo-tx-marge" value="0.8" step="0.01" style="width: 60px; padding: 2px;" onchange="updateRatesAndRecalculate()">
+        </div>
+    </div>
+
+    <div class="add-item-section" style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
+        <h3>Ajouter Main d'oeuvre</h3>
+        <div style="display: grid; gap: 10px;">
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="number" id="mo-nb-tech" value="1" min="1" style="padding: 8px; width: 80px;" placeholder="Nb technicien">
+                <input type="number" id="mo-nb-hours" value="1" min="1" style="padding: 8px; width: 80px;" placeholder="Nb heures">
+                <select id="mo-weekend" style="padding: 8px; width: 120px;">
+                    <option value="1">1</option>
+                    <option value="1.6">1.6</option>
+                </select>
+                <input type="number" id="mo-pre" value="10.00" step="0.01" style="padding: 8px; width: 80px;" placeholder="PRÉ">
+                <button onclick="addLabor()" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    Ajouter
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <table id="labor-table">
+        <thead>
+            <tr>
+                <th>Nb technicien</th>
+                <th>Nb heures</th>
+                <th>Majo Weekend</th>
+                <th>PR €</th>
+                <th>PR $</th>
+                <th>PV/u $</th>
+                <th>PV $ Total HT</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+        <tfoot>
+            <tr style="font-weight: bold; background-color: #f9f9f9;">
+                <td colspan="5" style="text-align: right;">TOTAL MO $ HT:</td>
+                <td id="table-total-mo" style="text-align: right;">-</td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div class="total-section">
+        <div>TOTAL MO $ HT: <span id="total-mo">-</span></div>
+    </div>
+
+    <div class="total-section" style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #ddd;">
+        <div style="font-size: 1.2em; font-weight: bold;">TOTAL GENERAL: <span id="total-general">-</span></div>
+    </div>
+
+    <script>
+        let items = [];
+
+        // Load items from JSON file through API
+        async function loadItems() {
+            try {
+                const response = await fetch('/api/items');
+                const data = await response.json();
+                items = data.items;
+            } catch (error) {
+                console.error('Error loading items:', error);
+                items = [];
+            }
+        }
+
+        let txChg = 1.15;
+        let txMarge = 0.75;
+        let selectedItems = [];
+        let laborItems = [];
+        let moTxChg = 1.2;
+        let moTxMarge = 0.8;
+
+        function updateRatesAndRecalculate() {
+            txChg = parseFloat(document.getElementById('tx-chg').value) || 1.15;
+            txMarge = parseFloat(document.getElementById('tx-marge').value) || 0.75;
+            moTxChg = parseFloat(document.getElementById('mo-tx-chg').value) || 1.2;
+            moTxMarge = parseFloat(document.getElementById('mo-tx-marge').value) || 0.8;
+
+            updateTable();
+            updateLaborTable();
+        }
+
+        function calculatePVS(pre) {
+            if (!pre || pre === '') return '';
+            const prs = parseFloat(pre) * txChg;
+            const pvus = prs / txMarge;
+            return pvus.toFixed(2);
+        }
+
+        function calculateMOPVS(pre, weekend = 1, nbTech = 1, nbHours = 1) {
+            if (!pre || pre === '') return '';
+            const weekendMultiplier = parseFloat(weekend);
+            const prs = parseFloat(pre) * nbTech * nbHours * weekendMultiplier * moTxChg;
+            const pvs = prs / moTxMarge;
+            return pvs.toFixed(2);
+        }
+
+        function populateDropdown() {
+            const select = document.getElementById('item-select');
+            select.innerHTML = '<option value="">Sélectionner un article</option><option value="custom">+ Ajouter un nouvel article</option>';
+
+            items.sort((a, b) => a.description.localeCompare(b.description)).forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.description;
+                option.textContent = item.description;
+                select.appendChild(option);
+            });
+
+
+            select.addEventListener('change', function() {
+                const customForm = document.getElementById('custom-item-form');
+                customForm.style.display = this.value === 'custom' ? 'block' : 'none';
+            });
+        }
+
+        function addSelectedItem() {
+            const select = document.getElementById('item-select');
+            const selectedDescription = select.value;
+
+            if (selectedDescription === 'custom') {
+                document.getElementById('custom-item-form').style.display = 'block';
+                select.value = '';
+                return;
+            }
+
+            if (!selectedDescription) {
+                alert('Veuillez sélectionner un article');
+                return;
+            }
+
+            const quantityInput = document.getElementById('item-quantity');
+            const quantity = parseInt(quantityInput.value) || 1;
+
+            const item = items.find(i => i.description === selectedDescription);
+            if (item) {
+                const existingItem = selectedItems.find(i => i.description === selectedDescription);
+                if (existingItem) {
+                    existingItem.quantity += quantity;
+                } else {
+                    selectedItems.push({ ...item, quantity });
+                }
+                updateTable();
+                select.value = '';
+                quantityInput.value = '1';
+                customForm.style.display = 'none';
+            }
+        }
+
+        function addCustomItem() {
+            const description = document.getElementById('custom-description').value;
+            const pre = document.getElementById('custom-pre').value;
+
+            if (!description || !pre) {
+                alert('Veuillez remplir tous les champs');
+                return;
+            }
+
+            const newItem = { description, pre };
+            items.push(newItem);
+            selectedItems.push({ ...newItem, quantity: 1 });
+
+
+            document.getElementById('custom-description').value = '';
+            document.getElementById('custom-pre').value = '';
+            document.getElementById('custom-item-form').style.display = 'none';
+
+
+            populateDropdown();
+            updateTable();
+        }
+
+        function addLabor() {
+            const nbTech = parseInt(document.getElementById('mo-nb-tech').value) || 1;
+            const nbHours = parseInt(document.getElementById('mo-nb-hours').value) || 1;
+            const weekend = parseFloat(document.getElementById('mo-weekend').value);
+            const pre = parseFloat(document.getElementById('mo-pre').value) || 10;
+
+            laborItems.push({ nbTech, nbHours, weekend, pre });
+            updateLaborTable();
+        }
+
+        function updateTable() {
+            const tbody = document.querySelector('#fournitures-table tbody');
+            tbody.innerHTML = '';
+
+            selectedItems.forEach(item => {
+                const row = document.createElement('tr');
+                const prs = item.pre ? (parseFloat(item.pre) * txChg).toFixed(2) : '';
+                const pvus = calculatePVS(item.pre);
+                const pvsTotal = pvus ? (parseFloat(pvus) * item.quantity).toFixed(2) : '';
+
+                row.innerHTML = `
+                    <td>${item.description}</td>
+                    <td style="text-align: right;">${item.quantity}</td>
+                    <td>
+                        <input type="number" step="0.01" value="${item.pre}"
+                            onchange="updateItemPrice('${item.description}', this.value)"
+                            style="width: 80px; padding: 4px;">
+                    </td>
+                    <td style="text-align: right;">${prs}</td>
+                    <td style="text-align: right;">${pvus}</td>
+                    <td style="text-align: right;">${pvsTotal}</td>
+                    <td>
+                        <button onclick="removeItem('${item.description}')" style="padding: 2px 5px; background-color: #ff4444; color: white; border: none; border-radius: 3px; cursor: pointer;">
+                            X
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            calculateTotals();
+        }
+
+        function updateLaborTable() {
+            const tbody = document.querySelector('#labor-table tbody');
+            tbody.innerHTML = '';
+
+            laborItems.forEach((item, index) => {
+                const row = document.createElement('tr');
+                const weekendText = item.weekend === 1.6 ? 'Weekend' : 'Normal';
+                const prs = (parseFloat(item.pre) * item.nbTech * item.nbHours * item.weekend * moTxChg).toFixed(2);
+                const pvsTotal = (parseFloat(calculateMOPVS(item.pre, item.weekend, item.nbTech, item.nbHours))).toFixed(2);
+
+                row.innerHTML = `
+                    <td style="text-align: right;">${item.nbTech}</td>
+                    <td style="text-align: right;">${item.nbHours}</td>
+                    <td style="text-align: center;">${weekendText}</td>
+                    <td style="text-align: right;">${item.pre}</td>
+                    <td style="text-align: right;">${prs}</td>
+                    <td style="text-align: right;">${pvsTotal}</td>
+                    <td>
+                        <button onclick="removeLaborItem(${index})" style="padding: 2px 5px; background-color: #ff4444; color: white; border: none; border-radius: 3px; cursor: pointer;">
+                            X
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            calculateTotals();
+        }
+
+        function updateItemPrice(description, newPrice) {
+            const item = selectedItems.find(i => i.description === description);
+            if (item) {
+                item.pre = newPrice;
+                updateTable();
+            }
+        }
+
+        function removeItem(description) {
+            selectedItems = selectedItems.filter(item => item.description !== description);
+            updateTable();
+        }
+
+        function removeLaborItem(index) {
+            laborItems.splice(index, 1);
+            updateLaborTable();
+        }
+
+        function calculateTotals() {
+            let totalHT = 0;
+            let totalMO = 0;
+
+
+            selectedItems.forEach(item => {
+                if (item.pre && item.pre !== '') {
+                    const pvus = parseFloat(calculatePVS(item.pre));
+                    const quantity = parseInt(item.quantity) || 0;
+                    if (!isNaN(pvus) && !isNaN(quantity)) {
+                        totalHT += pvus * quantity;
+                    }
+                }
+            });
+
+
+            laborItems.forEach(item => {
+                const pvs = parseFloat(calculateMOPVS(item.pre, item.weekend, item.nbTech, item.nbHours));
+                if (!isNaN(pvs)) {
+                    totalMO += pvs;
+                }
+            });
+
+            const totalOffreHT = totalHT + totalMO;
+            const tva = totalOffreHT * 0.16;
+            const totalTTC = totalOffreHT + tva;
+
+
+            document.getElementById('total-fournitures').textContent = totalOffreHT.toFixed(2);
+            document.getElementById('table-total-fournitures').textContent = totalHT.toFixed(2);
+            document.getElementById('tva').textContent = tva.toFixed(2);
+            document.getElementById('total-ttc').textContent = totalTTC.toFixed(2);
+            document.getElementById('total-mo').textContent = totalMO.toFixed(2);
+            document.getElementById('table-total-mo').textContent = totalMO.toFixed(2);
+            document.getElementById('total-general').textContent = totalTTC.toFixed(2);
+        }
+
+        function prepareAndPrint() {
+
+            const tables = ['fournitures-table', 'labor-table'];
+            tables.forEach(tableId => {
+                const table = document.getElementById(tableId);
+                const rows = table.getElementsByTagName('tr');
+
+
+                if (rows[0]) {
+                    const headerCells = rows[0].getElementsByTagName('th');
+                    if (headerCells.length > 0) {
+                        headerCells[headerCells.length - 1].classList.add('hidden-for-print');
+                    }
+                }
+
+
+                for (let i = 1; i < rows.length - 1; i++) {
+                    const cells = rows[i].getElementsByTagName('td');
+                    if (cells.length > 0) {
+                        cells[cells.length - 1].classList.add('hidden-for-print');
+                    }
+                }
+            });
+
+
+            document.querySelectorAll('.add-item-section').forEach(section => {
+                section.classList.add('hidden-for-print');
+            });
+
+
+            const customForm = document.getElementById('custom-item-form');
+            if (customForm) {
+                customForm.classList.add('hidden-for-print');
+            }
+
+
+            document.getElementById('ready-button').classList.add('hidden-for-print');
+
+
+            setTimeout(() => {
+                window.print();
+
+
+                document.querySelectorAll('.hidden-for-print').forEach(element => {
+                    element.classList.remove('hidden-for-print');
+                });
+            }, 100);
+        }
+
+
+        window.onload = async function() {
+            await loadItems();
+            populateDropdown();
+            updateTable();
+            updateLaborTable();
+
+            document.getElementById('date-input').valueAsDate = new Date();
+        };
+    </script>
+</body>
+</html>
