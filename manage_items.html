@@ -306,6 +306,67 @@
         window.onload = function() {
             items = loadItems();
             updateTable();
+
+            // Initialize items if not exists
+            if (!localStorage.getItem('items')) {
+                const initialItems = [
+                    { description: "ACETYLYNE", pre: "" },
+                    { description: "ANTI ROUILLE", pre: "" },
+                    { description: "AZOTE", pre: "" },
+                    { description: "BAGUETTE EN ARGENT", pre: "0.73" },
+                    { description: "BANDE ADHESIVE ALU", pre: "14.95" },
+                    { description: "BANDE ARMAFLEX", pre: "27.52" },
+                    { description: "BANDE VINYLE", pre: "1.85" },
+                    { description: "BUTANE 400G", pre: "12.29" },
+                    { description: "CABLE RIGIDE 3x2,5", pre: "1.81" },
+                    { description: "CABLE SOUPLE 3x2,5", pre: "1.36" },
+                    { description: "COLLE ARMAFLEX", pre: "36.91" },
+                    { description: "COLLE PATEX", pre: "7.45" },
+                    { description: "COUDE PVC 32MM", pre: "0.94" },
+                    { description: "DILUANT", pre: "41.36" },
+                    { description: "DISJONCTEUR ELECTRONIQUE", pre: "64.83" },
+                    { description: "FEUILLE ARMAFLEX 19", pre: "25.27" },
+                    { description: "FEUILLE ARMAFLEX 25", pre: "81.37" },
+                    { description: "FEUILLE ARMAFLEX 32", pre: "84.24" },
+                    { description: "FILTRE DESHYDRATEUR 1/2", pre: "" },
+                    { description: "FILTRE DESHYDRATEUR 3/8", pre: "32.86" },
+                    { description: "FILTRE DESHYDRATEUR 5/8", pre: "" },
+                    { description: "FREON R134", pre: "10.09" },
+                    { description: "FREON R22", pre: "7.07" },
+                    { description: "FREON R404A", pre: "12.97" },
+                    { description: "FREON R407", pre: "12.96" },
+                    { description: "FREON R410A", pre: "12.77" },
+                    { description: "GOULOTTE", pre: "" },
+                    { description: "GOULOTTE MOSAIQUE", pre: "" },
+                    { description: "LAINE DE VERRE", pre: "33.76" },
+                    { description: "MANCHON PVC 32MM", pre: "0.88" },
+                    { description: "OXYGENE", pre: "" },
+                    { description: "SPLIT 12000BTU", pre: "362.33" },
+                    { description: "SPLIT 18000BTU", pre: "529.69" },
+                    { description: "SPLIT 24000BTU", pre: "651.74" },
+                    { description: "SUPPORT CONDENSEUR", pre: "16.86" },
+                    { description: "SUPPORT MURAL 3/24", pre: "6.54" },
+                    { description: "THINNER", pre: "" },
+                    { description: "TOLE GALVA 0.6", pre: "" },
+                    { description: "TOLE GALVA 0.8", pre: "" },
+                    { description: "TUBE ARMAFLEX 60", pre: "32.39" },
+                    { description: "TUBE ARMAFLEX M114", pre: "62.43" },
+                    { description: "TUBE ARMAFLEX M22", pre: "14.79" },
+                    { description: "TUBE ARMAFLEX M28", pre: "11.93" },
+                    { description: "TUBE ARMAFLEX M32", pre: "103.64" },
+                    { description: "TUBE ARMAFLEX M35", pre: "17.11" },
+                    { description: "TUBE ARMAFLEX M42", pre: "21.93" },
+                    { description: "TUBE ARMAFLEX M48", pre: "25.5" },
+                    { description: "TUBE ARMAFLEX M76", pre: "41.45" },
+                    { description: "TUBE ARMAFLEX M89", pre: "29.19" },
+                    { description: "TUBE CUIVRE 1/2", pre: "16.77" },
+                    { description: "TUBING 3/8", pre: "9.44" },
+                    { description: "TUBING 3/8-5/8", pre: "17.47" },
+                    { description: "TUYAU ECOULEMENT/FLEXIBLE", pre: "" },
+                    { description: "TUYAU PVC 32MM", pre: "2.47" }
+                ];
+                saveItems(initialItems);
+            }
         };
     </script>
 </body>
