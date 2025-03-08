@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion des Articles</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -169,12 +170,63 @@
             border-top: 5px solid #666;
             pointer-events: none;
         }
+
+        .upload-section {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            border: 2px dashed #4CAF50;
+        }
+
+        .upload-section:hover {
+            border-color: #45a049;
+            background-color: #f0f2f0;
+        }
+
+        .file-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            display: none;
+        }
+
+        .file-input-wrapper label {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .file-input-wrapper label:hover {
+            background-color: #45a049;
+        }
+
+        .file-name {
+            color: #666;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <a href="index.html" class="back-link">← Retour au calculateur de prix</a>
         <h1>Gestion des Articles</h1>
+
+        <div class="upload-section">
+            <h2>Importer depuis Excel</h2>
+            <p>Format attendu: Colonne A = Description, Colonne B = Prix</p>
+            <div class="file-input-wrapper">
+                <label for="excel-file">Choisir un fichier Excel</label>
+                <input type="file" id="excel-file" accept=".xlsx,.xls">
+                <span class="file-name" id="file-name">Aucun fichier choisi</span>
+            </div>
+        </div>
 
         <div class="add-item-form">
             <h2>Ajouter un nouvel article</h2>
@@ -368,6 +420,77 @@
                 saveItems(initialItems);
             }
         };
+
+        document.getElementById('excel-file').addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name || 'Aucun fichier choisi';
+            document.getElementById('file-name').textContent = fileName;
+
+            if (e.target.files.length) {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+
+                    // Get the first worksheet
+                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+
+                    // Convert to JSON
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: ['description', 'pre'] });
+
+                    // Remove header row if it exists
+                    if (jsonData.length > 0 &&
+                        (jsonData[0].description.toLowerCase().includes('description') ||
+                         jsonData[0].pre.toLowerCase().includes('prix') ||
+                         jsonData[0].pre.toLowerCase().includes('pr'))) {
+                        jsonData.shift();
+                    }
+
+                    // Update existing items and add new ones
+                    let updatedCount = 0;
+                    let addedCount = 0;
+
+                    jsonData.forEach(row => {
+                        if (row.description && row.pre !== undefined) {
+                            const description = row.description.toString().trim().toUpperCase();
+                            const pre = row.pre.toString().trim();
+
+                            // Skip empty rows
+                            if (!description) return;
+
+                            // Find existing item
+                            const existingItem = items.find(item =>
+                                item.description.toUpperCase() === description
+                            );
+
+                            if (existingItem) {
+                                // Update existing item
+                                existingItem.pre = pre;
+                                updatedCount++;
+                            } else {
+                                // Add new item
+                                items.push({ description, pre });
+                                addedCount++;
+                            }
+                        }
+                    });
+
+                    // Save and update display
+                    saveItems(items);
+                    updateTable();
+
+                    // Show results
+                    alert(`Importation terminée!\n${updatedCount} articles mis à jour\n${addedCount} nouveaux articles ajoutés`);
+
+                    // Reset file input
+                    e.target.value = '';
+                    document.getElementById('file-name').textContent = 'Aucun fichier choisi';
+                };
+
+                reader.readAsArrayBuffer(file);
+            }
+        });
     </script>
 </body>
 </html>
