@@ -184,7 +184,9 @@
             </div>
             <div class="form-group">
                 <label for="new-pre">PR €:</label>
-                <input type="number" id="new-pre" step="0.01" required>
+                <div class="number-input-container">
+                    <input type="number" id="new-pre" step="0.01" required>
+                </div>
             </div>
             <button onclick="addNewItem()">Ajouter l'article</button>
         </div>
@@ -205,34 +207,15 @@
     <script>
         let items = [];
 
-        // Load items from JSON file through API
-        async function loadItems() {
-            try {
-                const response = await fetch('/api/items');
-                const data = await response.json();
-                items = data.items;
-                updateTable();
-            } catch (error) {
-                console.error('Error loading items:', error);
-                items = [];
-                updateTable();
-            }
+        // Load items from localStorage
+        function loadItems() {
+            const items = JSON.parse(localStorage.getItem('items') || '[]');
+            return items;
         }
 
-        // Save items to JSON file through API
-        async function saveItems() {
-            try {
-                await fetch('/api/items', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(items)
-                });
-            } catch (error) {
-                console.error('Error saving items:', error);
-                alert('Erreur lors de la sauvegarde des articles');
-            }
+        // Save items to localStorage
+        function saveItems(items) {
+            localStorage.setItem('items', JSON.stringify(items));
         }
 
         // Update the table display
@@ -267,7 +250,7 @@
         }
 
         // Update item
-        async function updateItem(index, field, value) {
+        function updateItem(index, field, value) {
             const item = items[index];
 
             if (field === 'description') {
@@ -282,20 +265,20 @@
             }
 
             item[field] = value;
-            await saveItems();
+            saveItems(items);
         }
 
         // Delete item
-        async function deleteItem(index) {
+        function deleteItem(index) {
             if (confirm('Êtes-vous sûr de vouloir supprimer cet article ?')) {
                 items.splice(index, 1);
-                await saveItems();
+                saveItems(items);
                 updateTable();
             }
         }
 
         // Add new item
-        async function addNewItem() {
+        function addNewItem() {
             const description = document.getElementById('new-description').value.trim();
             const pre = document.getElementById('new-pre').value;
 
@@ -311,7 +294,7 @@
             }
 
             items.push({ description, pre });
-            await saveItems();
+            saveItems(items);
             updateTable();
 
             // Clear form
@@ -320,8 +303,9 @@
         }
 
         // Initialize the page
-        window.onload = async function() {
-            await loadItems();
+        window.onload = function() {
+            items = loadItems();
+            updateTable();
         };
     </script>
 </body>
