@@ -101,74 +101,62 @@
         }
         /* Custom styles for number inputs */
         input[type="number"] {
-            position: relative;
-            padding-right: 25px;
+            padding: 8px 30px 8px 8px;
+            font-size: 14px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            background-color: white;
+            transition: all 0.2s ease;
+            -moz-appearance: textfield;
+            width: calc(100% - 1%);
+            margin-right: 1%;
+            height: 38px;
+            box-sizing: border-box;
         }
 
         /* Webkit browsers (Chrome, Safari, newer Edge) */
         input[type="number"]::-webkit-inner-spin-button {
             opacity: 1;
-            background: transparent;
-            border-left: 1px solid #ddd;
-            height: 38px;
-            width: 25px;
+            height: 34px; /* 4px less than input height to account for borders */
             position: absolute;
-            right: 0;
-            top: 0;
+            right: 2px;
+            top: 2px;
             cursor: pointer;
+            display: block;
+            background: #f8f9fa;
+            border-left: 1px solid #ddd;
+            margin: 0;
         }
 
         input[type="number"]::-webkit-outer-spin-button {
             display: none;
         }
 
-        /* Style for when input is focused */
-        input[type="number"]:focus::-webkit-inner-spin-button {
-            border-left: 1px solid #4CAF50;
+        input[type="number"]:hover {
+            border-color: #4CAF50;
         }
 
-        /* Hover effect */
         input[type="number"]:hover::-webkit-inner-spin-button {
-            background-color: #f8f9fa;
+            background: #e8f5e9;
+            border-left-color: #4CAF50;
         }
 
-        /* Firefox */
-        input[type="number"] {
-            -moz-appearance: textfield;
+        input[type="number"]:focus {
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+            outline: none;
         }
 
-        /* Custom arrow buttons for Firefox */
+        /* Remove all the overlay styles */
         .number-input-container {
-            position: relative;
             display: inline-block;
-            width: 100%;
+            width: auto;
+            position: relative;
         }
 
-        .number-input-container::after {
-            content: "";
-            position: absolute;
-            right: 5px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 0;
-            height: 0;
-            border-left: 5px solid transparent;
-            border-right: 5px solid transparent;
-            border-bottom: 5px solid #666;
-            pointer-events: none;
-        }
-
+        .number-input-container::after,
         .number-input-container::before {
-            content: "";
-            position: absolute;
-            right: 5px;
-            top: calc(50% + 7px);
-            width: 0;
-            height: 0;
-            border-left: 5px solid transparent;
-            border-right: 5px solid transparent;
-            border-top: 5px solid #666;
-            pointer-events: none;
+            display: none;
         }
 
         .upload-section {
