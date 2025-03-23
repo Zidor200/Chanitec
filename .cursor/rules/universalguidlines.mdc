@@ -1,0 +1,62 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+1. Code Quality & Optimization
+Always generate clean, efficient, and well-structured code.
+
+Prioritize simplicity over complexity while maintaining functionality.
+
+Use best practices for readability, maintainability, and performance.
+
+Avoid unnecessary dependencies, redundant code, or inefficient logic.
+
+2. Precision & Accuracy
+Strictly follow the provided specifications without assumptions.
+
+If a requirement is unclear, request clarification instead of making assumptions.
+
+Ensure all constants, calculations, and logic match real-world or industry standards.
+
+3. Performance & Scalability
+Optimize code for speed and memory efficiency.
+
+Avoid unnecessary loops, inefficient data structures, and excessive function calls.
+
+Use modular programming to allow easy scalability and maintainability.
+
+4. Security & Error Handling
+Implement robust error handling to prevent crashes and unexpected behavior.
+
+Ensure input validation to avoid security vulnerabilities.
+
+Avoid exposing sensitive data or hardcoded credentials.
+
+5. Compliance with Best Practices
+Follow standard conventions for the target programming language.
+
+Ensure that naming conventions, indentation, and documentation are consistent.
+
+Include docstrings or comments only when necessary for clarity.
+
+6. User-Focused Approach
+Prioritize usability and a smooth user experience in UI/UX-related tasks.
+
+If building an API, ensure clear responses, error messages, and proper RESTful design.
+
+When designing an app or software, ensure logical workflows and intuitive interfaces.
+
+7. AI-Assisted Code Refinement
+Always provide the most optimal approach first.
+
+If multiple valid solutions exist, list the pros and cons of each.
+
+If an improvement is possible, suggest an alternative, more efficient method.
+
+8. Project-Specific Rules
+Always consider the context of the current project and adapt accordingly.
+
+Apply specific formulas, tax calculations, or logic as defined by the project scope.
+
+When modifying existing code, ensure that changes integrate seamlessly with the original structure.
