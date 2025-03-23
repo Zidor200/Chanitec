@@ -60,3 +60,8 @@ Always consider the context of the current project and adapt accordingly.
 Apply specific formulas, tax calculations, or logic as defined by the project scope.
 
 When modifying existing code, ensure that changes integrate seamlessly with the original structure.
+9. always spereate commands when using powershell commands . 
+
+
+
+
