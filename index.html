@@ -620,6 +620,7 @@
 
     <div class="fournitures-section">
         <h2>FOURNITURES</h2>
+        <input type="text" id="fournitures-description" value="en Arrêt de la machine, découpage de l'ancienne isolation, fourniture, et pose de la nouvelle isolation, séchage et remise en service" style="font-size:12px; color:#1976D2; width: 95%; margin: 00px 00px 20px 00px;">
 
         <div class="rates-section">
             <div class="rate-item">
@@ -675,9 +676,7 @@
 
         <div class="add-item-section" style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
             <h3>Ajouter Main d'oeuvre</h3>
-            <h4>Chef main d'oeuvre</h4>
-            <input type="text" id="mo-description" value="en Arrêt de la machine, découpage de l'ancienne isolation, fourniture, et pose de la nouvelle isolation, séchage et remise en service" style="font-size:12px; width: 95%; margin: 00px 00px 20px 00px;">
-            <div style="display: grid; gap: 10px;">
+             <div style="display: grid; gap: 10px;">
                 <div style="display: flex; gap: 20px; align-items: flex-start;">
                     <div style="display: flex; flex-direction: column; align-items: center;">
                         <input type="number" id="mo-nb-tech" value="1" min="1" style="padding: 8px; width: 110px;" placeholder="Nb technicien">
@@ -704,6 +703,8 @@
                 </div>
             </div>
         </div>
+        <h3>Chef main d'oeuvre</h3>
+        <input type="text" id="mo-description" value="en Arrêt de la machine, découpage de l'ancienne isolation, fourniture, et pose de la nouvelle isolation, séchage et remise en service" style="font-size:12px; color:#1976D2; width: 95%; margin: 00px 00px 20px 00px;">
 
         <table id="labor-table">
             <thead>
@@ -901,6 +902,7 @@
                     <td style="text-align: center;">${weekendText}</td>
                     <td style="text-align: right;">${item.pre}</td>
                     <td style="text-align: right;">${prs}</td>
+                     <td style="text-align: right;">${pvsTotal}</td>
                     <td style="text-align: right;">${pvsTotal}</td>
                     <td>
                         <button onclick="removeLaborItem(${index})" style="padding: 2px 5px; background-color: #ff4444; color: white; border: none; border-radius: 3px; cursor: pointer;">
@@ -970,6 +972,28 @@
         }
 
         function prepareAndPrint() {
+            // Convert mo-description input to text
+            const moDescriptionInput = document.getElementById('mo-description');
+            const moDescriptionText = moDescriptionInput.value;
+            const moDescriptionContainer = moDescriptionInput.parentNode;
+            const moDescriptionParagraph = document.createElement('p');
+            moDescriptionParagraph.textContent = moDescriptionText;
+            moDescriptionParagraph.style.fontSize = '14px';
+            moDescriptionParagraph.style.margin = '0 0 20px 0';
+            moDescriptionParagraph.style.color = '#1976D2';
+            moDescriptionContainer.replaceChild(moDescriptionParagraph, moDescriptionInput);
+
+            // Convert fournitures-description input to text
+            const fournituresDescriptionInput = document.getElementById('fournitures-description');
+            const fournituresDescriptionText = fournituresDescriptionInput.value;
+            const fournituresDescriptionContainer = fournituresDescriptionInput.parentNode;
+            const fournituresDescriptionParagraph = document.createElement('p');
+            fournituresDescriptionParagraph.textContent = fournituresDescriptionText;
+            fournituresDescriptionParagraph.style.fontSize = '14px';
+            fournituresDescriptionParagraph.style.margin = '0 0 20px 0';
+            fournituresDescriptionParagraph.style.color = '#1976D2';
+            fournituresDescriptionContainer.replaceChild(fournituresDescriptionParagraph, fournituresDescriptionInput);
+
             // Hide the select-item-section
             document.querySelector('.select-item-section').classList.add('hidden-for-print');
 
@@ -1012,6 +1036,28 @@
                 document.querySelectorAll('.hidden-for-print').forEach(element => {
                     element.classList.remove('hidden-for-print');
                 });
+
+                // Restore the mo-description input field
+                const restoredMoInput = document.createElement('input');
+                restoredMoInput.type = 'text';
+                restoredMoInput.id = 'mo-description';
+                restoredMoInput.value = moDescriptionText;
+                restoredMoInput.style.fontSize = '12px';
+                restoredMoInput.style.width = '95%';
+                restoredMoInput.style.margin = '0 0 20px 0';
+                restoredMoInput.style.color = '#1976D2';
+                moDescriptionContainer.replaceChild(restoredMoInput, moDescriptionParagraph);
+
+                // Restore the fournitures-description input field
+                const restoredFournituresInput = document.createElement('input');
+                restoredFournituresInput.type = 'text';
+                restoredFournituresInput.id = 'fournitures-description';
+                restoredFournituresInput.value = fournituresDescriptionText;
+                restoredFournituresInput.style.fontSize = '12px';
+                restoredFournituresInput.style.width = '95%';
+                restoredFournituresInput.style.margin = '0 0 20px 0';
+                restoredFournituresInput.style.color = '#1976D2';
+                fournituresDescriptionContainer.replaceChild(restoredFournituresInput, fournituresDescriptionParagraph);
             }, 100);
         }
 
