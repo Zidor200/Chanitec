@@ -15,14 +15,48 @@
             width: 210mm;
             min-height: 297mm;
             margin: 0 auto;
-            padding: 20px;
+            padding: 30mm 20mm;
             background: white;
             box-sizing: border-box;
             font-size: 11px;
+            position: relative;
+            background-color: white;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+            background-image: url('logo-header.png');
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-size: 80% auto;
+            opacity: 0;
+            margin: 20mm;
+            pointer-events: none;
+            display: none;
         }
         .header {
             text-align: center;
             margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+        .header-logo {
+            width: 150px;
+            height: auto;
+            display: none;
+        }
+        .header-content {
+            flex-grow: 1;
+            text-align: center;
         }
         .info-section {
             margin-bottom: 15px;
@@ -95,6 +129,31 @@
             body {
                 padding: 15px;
                 font-size: 11px;
+                position: relative;
+            }
+            body::before {
+                content: '';
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: -1;
+                background-image: url('logo-header.png');
+                background-repeat: no-repeat;
+                background-position: center center;
+                background-size: 80% auto;
+                opacity: 0.05;
+                margin: 0;
+                pointer-events: none;
+                display: block !important;
+            }
+            .header {
+                margin-bottom: 30px;
+            }
+            .header-logo {
+                display: block;
+                width: 120px;
             }
             button {
                 display: none;
@@ -374,13 +433,30 @@
         .item-selector-button:hover {
             border-color: #4CAF50;
         }
+
+        /* Make all content appear above the background */
+        .info-section,
+        .info-grid,
+        table,
+        .total-section,
+        .rates-section,
+        .add-item-section,
+        #custom-item-form {
+            position: relative;
+            z-index: 1;
+            background-color: rgba(255, 255, 255, 0.9);
+        }
     </style>
 </head>
 <body>
     <button id="ready-button" onclick="prepareAndPrint()">Ready</button>
     <div class="header">
-        <h1>CALCUL DE PRIX OFFRE CLIMATISATION</h1>
-        <a href="manage_items.html" style="color: #2196F3; text-decoration: none; font-size: 14px;">Gérer les articles</a>
+        <img src="logo-header.png" alt="Logo" class="header-logo">
+        <div class="header-content">
+            <h1>CALCUL DE PRIX OFFRE CLIMATISATION</h1>
+            <a href="manage_items.html" style="color: #2196F3; text-decoration: none; font-size: 14px;">Gérer les articles</a>
+        </div>
+        <div style="width: 150px;"></div> <!-- Spacer for alignment -->
     </div>
 
     <div class="info-section">
