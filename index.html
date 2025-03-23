@@ -15,7 +15,7 @@
             width: 210mm;
             min-height: 297mm;
             margin: 0 auto;
-            padding: 30mm 20mm;
+            padding: 10mm 0mm;
             background: white;
             box-sizing: border-box;
             font-size: 11px;
@@ -46,11 +46,11 @@
             z-index: 1;
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: center;
             padding: 0 20px;
         }
         .header-logo {
-            width: 150px;
+            width: 80px;
             height: auto;
             display: none;
         }
@@ -419,7 +419,7 @@
             border-top: none;
             max-height: 300px;
             overflow-y: auto;
-            z-index: 1000;
+            z-index: 20;
             border-radius: 0 0 4px 4px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             display: none;
@@ -468,7 +468,7 @@
         .add-item-section,
         #custom-item-form {
             position: relative;
-            z-index: 1;
+            z-index: 0;
             background-color: rgba(255, 255, 255, 0.9);
         }
 
@@ -599,7 +599,7 @@
     </table>
 
 
-    <div class="add-item-section" style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
+    <div class="select-item-section" style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
         <h3>Ajouter un article</h3>
         <div style="display: flex; gap: 10px; align-items: center;">
             <div class="search-container" style="flex-grow: 1; position: relative;">
@@ -617,117 +617,104 @@
         </div>
     </div>
 
-    <div id="custom-item-form" style="display: none; margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
-        <h3>Nouvel Article</h3>
-        <div style="display: grid; gap: 10px;">
-            <div>
-                <label>Description:</label>
-                <input type="text" id="custom-description" style="padding: 8px; width: 200px;">
+    <div class="fournitures-section">
+        <h2>FOURNITURES</h2>
+
+        <div class="rates-section">
+            <div class="rate-item">
+                <span>Tx de chg:</span>
+                <div class="number-input-container">
+                    <input type="number" id="tx-chg" value="1.15" step="0.01" style="width: 60px; padding: 2px;" onchange="updateRatesAndRecalculate()">
+                </div>
             </div>
-            <div>
-                <label>PR £:</label>
-                <input type="number" id="custom-pre" step="0.01" style="padding: 8px; width: 100px;">
+            <div class="rate-item">
+                <span>Tx de marge:</span>
+                <div class="number-input-container">
+                    <input type="number" id="tx-marge" value="0.75" step="0.01" style="width: 60px; padding: 2px;" onchange="updateRatesAndRecalculate()">
+                </div>
             </div>
-            <button onclick="addCustomItem()" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; width: fit-content;">
-                Ajouter l'article
-            </button>
         </div>
+        <table id="fournitures-table">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Qté</th>
+                    <th>PR €</th>
+                    <th>PR $</th>
+                    <th>PV/u $</th>
+                    <th>PV $ Total HT</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+            <tfoot>
+                <tr style="font-weight: bold; background-color: #f9f9f9;">
+                    <td colspan="5" style="text-align: right;">TOTAL FOURNITURE $ HT:</td>
+                    <td id="table-total-fournitures" style="text-align: right;">-</td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
     </div>
 
-    <h2>FOURNITURES</h2>
+    <div class="MaindOuever-section">
+        <h2>MAIN D'OEUVRE</h2>
+        <p>Chef main d'oeuvre (en Arrêt de la machine, découpage de l'ancienne isolation, fourniture, et pose de la nouvelle isolation, séchage et remise en service)</p>
 
-    <div class="rates-section">
-        <div class="rate-item">
-            <span>Tx de chg:</span>
-            <div class="number-input-container">
-                <input type="number" id="tx-chg" value="1.15" step="0.01" style="width: 60px; padding: 2px;" onchange="updateRatesAndRecalculate()">
+        <div class="rates-section">
+            <div class="rate-item">
+                <span>Tx de chg:</span>
+                <input type="number" id="mo-tx-chg" value="1.2" step="0.01" style="width: 60px; padding: 2px;" onchange="updateRatesAndRecalculate()">
+            </div>
+            <div class="rate-item">
+                <span>Tx de marge:</span>
+                <input type="number" id="mo-tx-marge" value="0.8" step="0.01" style="width: 60px; padding: 2px;" onchange="updateRatesAndRecalculate()">
             </div>
         </div>
-        <div class="rate-item">
-            <span>Tx de marge:</span>
-            <div class="number-input-container">
-                <input type="number" id="tx-marge" value="0.75" step="0.01" style="width: 60px; padding: 2px;" onchange="updateRatesAndRecalculate()">
+
+        <div class="add-item-section" style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
+            <h3>Ajouter Main d'oeuvre</h3>
+            <div style="display: grid; gap: 10px;">
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="number" id="mo-nb-tech" value="1" min="1" style="padding: 8px; width: 80px;" placeholder="Nb technicien">
+                    <input type="number" id="mo-nb-hours" value="1" min="1" style="padding: 8px; width: 80px;" placeholder="Nb heures">
+                    <select id="mo-weekend" style="padding: 8px; width: 120px;">
+                        <option value="1">1</option>
+                        <option value="1.6">1.6</option>
+                    </select>
+                    <input type="number" id="mo-pre" value="10.00" step="0.01" style="padding: 8px; width: 80px;" placeholder="PRÉ">
+                    <button onclick="addLabor()" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        Ajouter
+                    </button>
+                </div>
             </div>
         </div>
+
+        <table id="labor-table">
+            <thead>
+                <tr>
+                    <th>Nb technicien</th>
+                    <th>Nb heures</th>
+                    <th>Majo Weekend</th>
+                    <th>PR €</th>
+                    <th>PR $</th>
+                    <th>PV/u $</th>
+                    <th>PV $ Total HT</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+            <tfoot>
+                <tr style="font-weight: bold; background-color: #f9f9f9;">
+                    <td colspan="5" style="text-align: right;">TOTAL MO $ HT:</td>
+                    <td id="table-total-mo" style="text-align: right;">-</td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
     </div>
-    <table id="fournitures-table">
-        <thead>
-            <tr>
-                <th>Description</th>
-                <th>Qté</th>
-                <th>PR €</th>
-                <th>PR $</th>
-                <th>PV/u $</th>
-                <th>PV $ Total HT</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        </tbody>
-        <tfoot>
-            <tr style="font-weight: bold; background-color: #f9f9f9;">
-                <td colspan="5" style="text-align: right;">TOTAL FOURNITURE $ HT:</td>
-                <td id="table-total-fournitures" style="text-align: right;">-</td>
-                <td></td>
-            </tr>
-        </tfoot>
-    </table>
-
-    <h2>MAIN D'OEUVRE</h2>
-    <p>Chef main d'oeuvre (en Arrêt de la machine, découpage de l'ancienne isolation, fourniture, et pose de la nouvelle isolation, séchage et remise en service)</p>
-
-    <div class="rates-section">
-        <div class="rate-item">
-            <span>Tx de chg:</span>
-            <input type="number" id="mo-tx-chg" value="1.2" step="0.01" style="width: 60px; padding: 2px;" onchange="updateRatesAndRecalculate()">
-        </div>
-        <div class="rate-item">
-            <span>Tx de marge:</span>
-            <input type="number" id="mo-tx-marge" value="0.8" step="0.01" style="width: 60px; padding: 2px;" onchange="updateRatesAndRecalculate()">
-        </div>
-    </div>
-
-    <div class="add-item-section" style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
-        <h3>Ajouter Main d'oeuvre</h3>
-        <div style="display: grid; gap: 10px;">
-            <div style="display: flex; gap: 10px; align-items: center;">
-                <input type="number" id="mo-nb-tech" value="1" min="1" style="padding: 8px; width: 80px;" placeholder="Nb technicien">
-                <input type="number" id="mo-nb-hours" value="1" min="1" style="padding: 8px; width: 80px;" placeholder="Nb heures">
-                <select id="mo-weekend" style="padding: 8px; width: 120px;">
-                    <option value="1">1</option>
-                    <option value="1.6">1.6</option>
-                </select>
-                <input type="number" id="mo-pre" value="10.00" step="0.01" style="padding: 8px; width: 80px;" placeholder="PRÉ">
-                <button onclick="addLabor()" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                    Ajouter
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <table id="labor-table">
-        <thead>
-            <tr>
-                <th>Nb technicien</th>
-                <th>Nb heures</th>
-                <th>Majo Weekend</th>
-                <th>PR €</th>
-                <th>PR $</th>
-                <th>PV/u $</th>
-                <th>PV $ Total HT</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        </tbody>
-        <tfoot>
-            <tr style="font-weight: bold; background-color: #f9f9f9;">
-                <td colspan="5" style="text-align: right;">TOTAL MO $ HT:</td>
-                <td id="table-total-mo" style="text-align: right;">-</td>
-                <td></td>
-            </tr>
-        </tfoot>
-    </table>
 
     <div class="total-section">
         <div>TOTAL MO $ HT: <span id="total-mo">-</span></div>
@@ -969,12 +956,13 @@
         }
 
         function prepareAndPrint() {
+            // Hide the select-item-section
+            document.querySelector('.select-item-section').classList.add('hidden-for-print');
 
             const tables = ['fournitures-table', 'labor-table'];
             tables.forEach(tableId => {
                 const table = document.getElementById(tableId);
                 const rows = table.getElementsByTagName('tr');
-
 
                 if (rows[0]) {
                     const headerCells = rows[0].getElementsByTagName('th');
@@ -982,7 +970,6 @@
                         headerCells[headerCells.length - 1].classList.add('hidden-for-print');
                     }
                 }
-
 
                 for (let i = 1; i < rows.length - 1; i++) {
                     const cells = rows[i].getElementsByTagName('td');
@@ -992,25 +979,22 @@
                 }
             });
 
-
             document.querySelectorAll('.add-item-section').forEach(section => {
                 section.classList.add('hidden-for-print');
             });
-
 
             const customForm = document.getElementById('custom-item-form');
             if (customForm) {
                 customForm.classList.add('hidden-for-print');
             }
 
-
             document.getElementById('ready-button').classList.add('hidden-for-print');
-
 
             setTimeout(() => {
                 window.print();
 
-
+                // Restore visibility after printing
+                document.querySelector('.select-item-section').classList.remove('hidden-for-print');
                 document.querySelectorAll('.hidden-for-print').forEach(element => {
                     element.classList.remove('hidden-for-print');
                 });
