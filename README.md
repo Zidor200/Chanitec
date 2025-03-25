@@ -1,36 +1,31 @@
-# Calcul de Prix Offre Climatisation
+# Facteur Bilel - Calcul de Prix Offre Climatisation
 
-A web-based application for calculating air conditioning service quotes. This tool helps calculate prices for both equipment and labor, including various factors such as weekend rates and number of technicians.
+A web application for calculating and generating price quotes for air conditioning services.
 
 ## Features
 
-- Add predefined or custom items with quantities
-- Calculate labor costs with multiple factors:
-  - Number of technicians
-  - Number of hours
-  - Weekend surcharge
-  - Base rate (PRÉ)
-- Automatic calculation of:
-  - PRS (Prix de Revient Service)
-  - PVS (Prix de Vente Service)
-  - TVA (Tax)
-  - Total amounts
-
-## Setup
-
-1. Clone the repository
-2. Open `index.html` in a web browser
-3. Start adding items and calculating prices
+- Calculate prices for supplies and labor
+- Support for weekend rates and multiple technicians
+- Automatic currency conversion
+- PDF generation
+- Item management system
+- Modern and responsive UI
 
 ## Usage
 
-1. Fill in the client information at the top
-2. Add items from the predefined list or create custom items
-3. Add labor entries with specific rates and conditions
-4. View the automatically calculated totals
+1. Open `index.html` in a web browser
+2. Fill in client information
+3. Add items from the catalog or create custom items
+4. Add labor costs with technician count and hours
+5. Click "Ready" to generate a printable quote
 
-## Technologies Used
+## Technical Details
 
-- HTML5
-- JavaScript
-- CSS3
+- Pure HTML, CSS, and JavaScript implementation
+- Uses localStorage for item persistence
+- Responsive design for all screen sizes
+- Print-friendly layout
+
+## License
+
+This project is proprietary and confidential.

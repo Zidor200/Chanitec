@@ -15,7 +15,7 @@
             width: 210mm;
             min-height: 297mm;
             margin: 0 auto;
-            padding: 10mm 0mm;
+            padding: 00mm 0mm;
             background: white;
             box-sizing: border-box;
             font-size: 11px;
@@ -316,7 +316,7 @@
             background-color: white;
             transition: all 0.2s ease;
             width: 100%;
-            min-width: 80px;
+            min-width: 100px;
             position: relative;
             box-sizing: border-box;
         }
@@ -545,7 +545,21 @@
 
         /* Adjust input padding to accommodate spinners */
         input[type="number"] {
-            padding-right: 35px !important;
+            padding-right: 40px !important;
+        }
+
+        #fournitures-table input[type="number"] {
+            -moz-appearance: textfield;
+            -webkit-appearance: textfield;
+            appearance: textfield;
+        }
+
+        #fournitures-table input[type="number"]::-webkit-outer-spin-button,
+        #fournitures-table input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            appearance: none;
+            display: none;
+            margin: 0;
         }
     </style>
 </head>
@@ -755,6 +769,10 @@
         let moTxChg = 1.2;
         let moTxMarge = 0.8;
 
+        function roundToTwo(num) {
+            return (Math.round(num * 100) / 100).toFixed(2);
+        }
+
         function updateRatesAndRecalculate() {
             txChg = parseFloat(document.getElementById('tx-chg').value) || 1.15;
             txMarge = parseFloat(document.getElementById('tx-marge').value) || 0.75;
@@ -765,19 +783,13 @@
             updateLaborTable();
         }
 
-        function calculatePVS(pre) {
-            if (!pre || pre === '') return '';
-            const prs = parseFloat(pre) * txChg;
-            const pvus = prs / txMarge;
-            return pvus.toFixed(2);
-        }
 
         function calculateMOPVS(pre, weekend = 1, nbTech = 1, nbHours = 1) {
             if (!pre || pre === '') return '';
             const weekendMultiplier = parseFloat(weekend);
             const prs = parseFloat(pre) * nbTech * nbHours * weekendMultiplier * moTxChg;
             const pvs = prs / moTxMarge;
-            return pvs.toFixed(2);
+            return roundToTwo(pvs);
         }
 
         function populateDropdown() {
@@ -859,9 +871,11 @@
 
             selectedItems.forEach(item => {
                 const row = document.createElement('tr');
-                const prs = item.pre ? (parseFloat(item.pre) * txChg).toFixed(2) : '';
-                const pvus = calculatePVS(item.pre);
-                const pvsTotal = pvus ? (parseFloat(pvus) * item.quantity).toFixed(2) : '';
+                const prs = item.pre ? roundToTwo(parseFloat(item.pre) * txChg) : '';
+                const pvus = prs ? roundToTwo(parseFloat(prs) / txMarge) : '';
+                const pvsTotal = pvus ? roundToTwo(parseFloat(pvus) * item.quantity) : '';
+
+                console.log("item.pre",item.pre,"prs",prs,"pvus",pvus,"pvsTotal",pvsTotal);
 
                 row.innerHTML = `
                     <td>${item.description}</td>
@@ -893,8 +907,8 @@
             laborItems.forEach((item, index) => {
                 const row = document.createElement('tr');
                 const weekendText = item.weekend === 1.6 ? 'Weekend' : 'Normal';
-                const prs = (parseFloat(item.pre) * item.nbTech * item.nbHours * item.weekend * moTxChg).toFixed(2);
-                const pvsTotal = (parseFloat(calculateMOPVS(item.pre, item.weekend, item.nbTech, item.nbHours))).toFixed(2);
+                const prs = roundToTwo(parseFloat(item.pre) * item.nbTech * item.nbHours * item.weekend * moTxChg);
+                const pvsTotal = roundToTwo(parseFloat(calculateMOPVS(item.pre, item.weekend, item.nbTech, item.nbHours)));
 
                 row.innerHTML = `
                     <td style="text-align: right;">${item.nbTech}</td>
@@ -920,6 +934,7 @@
             const item = selectedItems.find(i => i.description === description);
             if (item) {
                 item.pre = newPrice;
+                console.log("item.pre",item.pre,"newPrice",newPrice,"description",description,"i.description",item.description);
                 updateTable();
             }
         }
@@ -938,17 +953,17 @@
             let totalHT = 0;
             let totalMO = 0;
 
-
             selectedItems.forEach(item => {
                 if (item.pre && item.pre !== '') {
-                    const pvus = parseFloat(calculatePVS(item.pre));
+                    const prs = roundToTwo(parseFloat(item.pre) * txChg);
+                    const pvus = prs ? roundToTwo(parseFloat(prs) / txMarge) : '';
                     const quantity = parseInt(item.quantity) || 0;
                     if (!isNaN(pvus) && !isNaN(quantity)) {
-                        totalHT += pvus * quantity;
+                        totalHT += parseFloat(pvus) * quantity;
+                        console.log("pvus",pvus,"quantity",quantity,"totalHT",totalHT);
                     }
                 }
             });
-
 
             laborItems.forEach(item => {
                 const pvs = parseFloat(calculateMOPVS(item.pre, item.weekend, item.nbTech, item.nbHours));
@@ -961,14 +976,13 @@
             const tva = totalOffreHT * 0.16;
             const totalTTC = totalOffreHT + tva;
 
-
-            document.getElementById('total-fournitures').textContent = totalOffreHT.toFixed(2);
-            document.getElementById('table-total-fournitures').textContent = totalHT.toFixed(2);
-            document.getElementById('tva').textContent = tva.toFixed(2);
-            document.getElementById('total-ttc').textContent = totalTTC.toFixed(2);
-            document.getElementById('total-mo').textContent = totalMO.toFixed(2);
-            document.getElementById('table-total-mo').textContent = totalMO.toFixed(2);
-            document.getElementById('total-general').textContent = totalTTC.toFixed(2);
+            document.getElementById('total-fournitures').textContent = roundToTwo(totalOffreHT);
+            document.getElementById('table-total-fournitures').textContent = roundToTwo(totalHT);
+            document.getElementById('tva').textContent = roundToTwo(tva);
+            document.getElementById('total-ttc').textContent = roundToTwo(totalTTC);
+            document.getElementById('total-mo').textContent = roundToTwo(totalMO);
+            document.getElementById('table-total-mo').textContent = roundToTwo(totalMO);
+            document.getElementById('total-general').textContent = roundToTwo(totalTTC);
         }
 
         function prepareAndPrint() {
