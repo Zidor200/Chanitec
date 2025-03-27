@@ -135,6 +135,7 @@
                 min-height: 297mm !important;
                 padding: 10mm !important;
                 margin: 0 !important;
+                font-size: 10pt !important;
             }
 
             body::before {
@@ -158,7 +159,51 @@
             .header-logo {
                 display: block !important;
                 width: 100px !important;
-                margin-bottom: 20mm !important;
+                margin-bottom: 5mm !important;
+            }
+
+            .header h1 {
+                font-size: 16pt !important;
+                margin-bottom: 2mm !important;
+            }
+
+            .client-info {
+                margin-bottom: 3mm !important;
+            }
+
+            .client-info p {
+                margin: 0.5mm 0 !important;
+                font-size: 10pt !important;
+            }
+
+            table {
+                width: 100% !important;
+                margin: 1mm 0 !important;
+                font-size: 9pt !important;
+                border-collapse: collapse !important;
+            }
+
+            th, td {
+                padding: 0.5mm !important;
+                border: 1px solid #ddd !important;
+            }
+
+            .totals {
+                margin-top: 3mm !important;
+                font-size: 10pt !important;
+            }
+
+            .totals p {
+                margin: 0.5mm 0 !important;
+            }
+
+            .signatures {
+                margin-top: 10mm !important;
+                font-size: 10pt !important;
+            }
+
+            .signatures p {
+                margin: 0.5mm 0 !important;
             }
 
             .add-item-section,
@@ -171,6 +216,31 @@
             * {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
+            }
+
+            .container {
+                padding: 5mm !important;
+            }
+
+            .section-title {
+                font-size: 11pt !important;
+                margin: 1mm 0 !important;
+            }
+
+            .section {
+                margin-bottom: 2mm !important;
+            }
+
+            input[type="text"],
+            input[type="number"] {
+                font-size: 9pt !important;
+                padding: 0.5mm !important;
+            }
+
+            .mo-description,
+            .fournitures-description {
+                font-size: 9pt !important;
+                margin-bottom: 1mm !important;
             }
         }
         #item-quantity::-webkit-inner-spin-button,
@@ -1334,6 +1404,7 @@
 
         class FACTEUR {
             constructor(clientName, site, object, date, fournitures, maindoeuvre) {
+                this.id = this.generateUniqueId();
                 this.clientName = clientName;
                 this.site = site;
                 this.object = object;
@@ -1343,8 +1414,12 @@
                 this.timestamp = new Date().toISOString();
             }
 
+            generateUniqueId() {
+                return 'FACT-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+            }
+
             static fromJSON(json) {
-                return new FACTEUR(
+                const facteur = new FACTEUR(
                     json.clientName,
                     json.site,
                     json.object,
@@ -1352,10 +1427,13 @@
                     json.fournitures,
                     json.maindoeuvre
                 );
+                facteur.id = json.id; // Preserve the original ID
+                return facteur;
             }
 
             toJSON() {
                 return {
+                    id: this.id,
                     clientName: this.clientName,
                     site: this.site,
                     object: this.object,

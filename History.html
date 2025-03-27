@@ -168,6 +168,7 @@
                     <div class="history-details">
                         <div class="history-section">
                             <h3>Client</h3>
+                            <p>ID: ${item.id}</p>
                             <p>Nom: ${item.clientName}</p>
                             <p>Site: ${item.site}</p>
                             <p>Objet: ${item.object}</p>
@@ -187,8 +188,8 @@
                         </div>
                     </div>
                     <div class="actions">
-                        <button class="btn btn-view" onclick="viewQuote(${index})">Voir</button>
-                        <button class="btn btn-delete" onclick="deleteQuote(${index})">Supprimer</button>
+                        <button class="btn btn-view" onclick="viewQuote('${item.id}')">Voir</button>
+                        <button class="btn btn-delete" onclick="deleteQuote('${item.id}')">Supprimer</button>
                     </div>
                 </div>
             `).join('');
@@ -207,23 +208,25 @@
         }
 
         // Function to view a quote
-        function viewQuote(index) {
+        function viewQuote(id) {
             const history = JSON.parse(localStorage.getItem('quoteHistory') || '[]');
-            const quote = history[index];
+            const quote = history.find(item => item.id === id);
 
-            // Store the quote data in localStorage for the main page to load
-            localStorage.setItem('currentQuote', JSON.stringify(quote));
+            if (quote) {
+                // Store the quote data in localStorage for the main page to load
+                localStorage.setItem('currentQuote', JSON.stringify(quote));
 
-            // Redirect to the main page
-            window.location.href = 'index.html';
+                // Redirect to the main page
+                window.location.href = 'index.html';
+            }
         }
 
         // Function to delete a quote
-        function deleteQuote(index) {
+        function deleteQuote(id) {
             if (confirm('Êtes-vous sûr de vouloir supprimer cette facture ?')) {
                 const history = JSON.parse(localStorage.getItem('quoteHistory') || '[]');
-                history.splice(index, 1);
-                localStorage.setItem('quoteHistory', JSON.stringify(history));
+                const newHistory = history.filter(item => item.id !== id);
+                localStorage.setItem('quoteHistory', JSON.stringify(newHistory));
                 loadQuoteHistory(); // Reload the history display
             }
         }
