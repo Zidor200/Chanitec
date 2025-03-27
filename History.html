@@ -130,32 +130,247 @@
                 display: none;
             }
         }
+
+        /* Add these new styles */
+        .filters-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-group label {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            border-color: #4CAF50;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+        }
+
+        .date-range {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .date-range input {
+            width: 100%;
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .filter-button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .apply-filter {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .clear-filter {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .filter-button:hover {
+            opacity: 0.9;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 20px;
+            font-size: 16px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <a href="index.html" class="history-link">Retour a la page principale</a>
         <h1>Historique des Factures</h1>
+
+        <!-- Add the filters section -->
+        <div class="filters-section">
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label>ID Facture</label>
+                    <input type="text" id="filter-id" placeholder="Rechercher par ID">
+                </div>
+                <div class="filter-group">
+                    <label>Nom du Client</label>
+                    <input type="text" id="filter-client" placeholder="Rechercher par client">
+                </div>
+                <div class="filter-group">
+                    <label>Site</label>
+                    <input type="text" id="filter-site" placeholder="Rechercher par site">
+                </div>
+                <div class="filter-group">
+                    <label>Période</label>
+                    <select id="filter-period">
+                        <option value="all">Tout</option>
+                        <option value="today">Aujourd'hui</option>
+                        <option value="week">Cette semaine</option>
+                        <option value="month">Ce mois</option>
+                        <option value="year">Cette année</option>
+                        <option value="custom">Personnalisé</option>
+                    </select>
+                </div>
+                <div class="filter-group date-range" id="custom-date-range" style="display: none;">
+                    <div>
+                        <label>Du</label>
+                        <input type="date" id="filter-date-from">
+                    </div>
+                    <div>
+                        <label>Au</label>
+                        <input type="date" id="filter-date-to">
+                    </div>
+                </div>
+            </div>
+            <div class="filter-actions">
+                <button class="filter-button clear-filter" onclick="clearFilters()">Effacer les filtres</button>
+            </div>
+        </div>
+
         <div id="history-list" class="history-list">
             <!-- History items will be dynamically added here -->
         </div>
     </div>
 
     <script>
-        // Function to load quote history from localStorage
+        let allQuotes = [];
+        let filteredQuotes = [];
+        let filterTimeout;
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('fr-FR', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function applyFilters() {
+            const idFilter = document.getElementById('filter-id').value.toLowerCase();
+            const clientFilter = document.getElementById('filter-client').value.toLowerCase();
+            const siteFilter = document.getElementById('filter-site').value.toLowerCase();
+            const periodFilter = document.getElementById('filter-period').value;
+            const dateFrom = document.getElementById('filter-date-from').value;
+            const dateTo = document.getElementById('filter-date-to').value;
+
+            filteredQuotes = allQuotes.filter(quote => {
+                const matchesId = !idFilter || quote.id.toLowerCase().includes(idFilter);
+                const matchesClient = !clientFilter || quote.clientName.toLowerCase().includes(clientFilter);
+                const matchesSite = !siteFilter || quote.site.toLowerCase().includes(siteFilter);
+
+                let matchesDate = true;
+                if (periodFilter !== 'all') {
+                    const quoteDate = new Date(quote.date);
+                    const today = new Date();
+                    const startOfDay = new Date(today.setHours(0,0,0,0));
+                    const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
+                    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                    const startOfYear = new Date(today.getFullYear(), 0, 1);
+
+                    switch(periodFilter) {
+                        case 'today':
+                            matchesDate = quoteDate >= startOfDay;
+                            break;
+                        case 'week':
+                            matchesDate = quoteDate >= startOfWeek;
+                            break;
+                        case 'month':
+                            matchesDate = quoteDate >= startOfMonth;
+                            break;
+                        case 'year':
+                            matchesDate = quoteDate >= startOfYear;
+                            break;
+                        case 'custom':
+                            if (dateFrom && dateTo) {
+                                matchesDate = quoteDate >= new Date(dateFrom) && quoteDate <= new Date(dateTo);
+                            }
+                            break;
+                    }
+                }
+
+                return matchesId && matchesClient && matchesSite && matchesDate;
+            });
+
+            displayQuotes();
+        }
+
+        function debouncedApplyFilters() {
+            clearTimeout(filterTimeout);
+            filterTimeout = setTimeout(applyFilters, 300); // 300ms delay
+        }
+
+        function clearFilters() {
+            document.getElementById('filter-id').value = '';
+            document.getElementById('filter-client').value = '';
+            document.getElementById('filter-site').value = '';
+            document.getElementById('filter-period').value = 'all';
+            document.getElementById('filter-date-from').value = '';
+            document.getElementById('filter-date-to').value = '';
+            document.getElementById('custom-date-range').style.display = 'none';
+
+            filteredQuotes = allQuotes;
+            displayQuotes();
+        }
+
         function loadQuoteHistory() {
             const history = JSON.parse(localStorage.getItem('quoteHistory') || '[]');
+            allQuotes = history.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            filteredQuotes = allQuotes;
+            displayQuotes();
+        }
+
+        function displayQuotes() {
             const historyList = document.getElementById('history-list');
 
-            if (history.length === 0) {
-                historyList.innerHTML = '<div class="no-history">Aucun historique disponible</div>';
+            if (filteredQuotes.length === 0) {
+                historyList.innerHTML = '<div class="no-results">Aucune facture ne correspond à vos critères de recherche</div>';
                 return;
             }
 
-            // Sort history by date (newest first)
-            history.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-            historyList.innerHTML = history.map((item, index) => `
+            historyList.innerHTML = filteredQuotes.map(item => `
                 <div class="history-item">
                     <div class="history-header">
                         <div class="history-client">
@@ -195,44 +410,39 @@
             `).join('');
         }
 
-        // Function to format date
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('fr-FR', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        }
-
-        // Function to view a quote
         function viewQuote(id) {
-            const history = JSON.parse(localStorage.getItem('quoteHistory') || '[]');
-            const quote = history.find(item => item.id === id);
-
+            const quote = allQuotes.find(item => item.id === id);
             if (quote) {
-                // Store the quote data in localStorage for the main page to load
                 localStorage.setItem('currentQuote', JSON.stringify(quote));
-
-                // Redirect to the main page
                 window.location.href = 'index.html';
             }
         }
 
-        // Function to delete a quote
         function deleteQuote(id) {
             if (confirm('Êtes-vous sûr de vouloir supprimer cette facture ?')) {
-                const history = JSON.parse(localStorage.getItem('quoteHistory') || '[]');
-                const newHistory = history.filter(item => item.id !== id);
-                localStorage.setItem('quoteHistory', JSON.stringify(newHistory));
-                loadQuoteHistory(); // Reload the history display
+                allQuotes = allQuotes.filter(item => item.id !== id);
+                filteredQuotes = filteredQuotes.filter(item => item.id !== id);
+                localStorage.setItem('quoteHistory', JSON.stringify(allQuotes));
+                displayQuotes();
             }
         }
 
-        // Load history when page loads
-        document.addEventListener('DOMContentLoaded', loadQuoteHistory);
+        // Initialize the page and add event listeners
+        window.onload = function() {
+            loadQuoteHistory();
+
+            // Add real-time filter listeners
+            document.getElementById('filter-id').addEventListener('input', debouncedApplyFilters);
+            document.getElementById('filter-client').addEventListener('input', debouncedApplyFilters);
+            document.getElementById('filter-site').addEventListener('input', debouncedApplyFilters);
+            document.getElementById('filter-period').addEventListener('change', function() {
+                const customDateRange = document.getElementById('custom-date-range');
+                customDateRange.style.display = this.value === 'custom' ? 'flex' : 'none';
+                debouncedApplyFilters();
+            });
+            document.getElementById('filter-date-from').addEventListener('change', debouncedApplyFilters);
+            document.getElementById('filter-date-to').addEventListener('change', debouncedApplyFilters);
+        };
     </script>
 </body>
 </html>

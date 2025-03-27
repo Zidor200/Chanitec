@@ -242,6 +242,24 @@
                 font-size: 9pt !important;
                 margin-bottom: 1mm !important;
             }
+
+            #total-table {
+                width: 40% !important;
+                margin-left: auto !important;
+                margin-right: 0 !important;
+                margin-bottom: 30px !important;
+                border: 2px solid #ddd !important;
+                color: #1976D2 !important;
+            }
+
+            #total-table td {
+                padding: 8px !important;
+                font-weight: bold !important;
+            }
+
+            #total-table td:last-child {
+                text-align: right !important;
+            }
         }
         #item-quantity::-webkit-inner-spin-button,
         #item-quantity::-webkit-outer-spin-button {
@@ -722,7 +740,7 @@
     </div>
 
 
-    <table style="width: 40%; margin-left: auto; margin-bottom: 30px; border: 2px solid #ddd;">
+    <table id="total-table" style="width: 40%; margin-left: auto; margin-bottom: 30px; border: 2px solid #ddd; color:#1976D2">
         <tr>
             <td style="font-weight: bold; padding: 8px;">TOTAL OFFRE USD HT:</td>
             <td style="text-align: right; padding: 8px;"><span id="total-fournitures">-</span></td>
