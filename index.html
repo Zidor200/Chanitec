@@ -15,7 +15,7 @@
             width: 210mm;
             min-height: 297mm;
             margin: 0 auto;
-            padding: 00mm 0mm;
+            padding: 0mm 0mm;
             background: white;
             box-sizing: border-box;
             font-size: 11px;
@@ -35,7 +35,7 @@
             background-position: center center;
             background-size: 80% auto;
             opacity: 0;
-            margin: 20mm;
+            margin: 10mm;
             pointer-events: none;
             display: none;
         }
@@ -133,7 +133,7 @@
                 color-adjust: exact !important;
                 background-color: white !important;
                 min-height: 297mm !important;
-                padding: 20mm !important;
+                padding: 10mm !important;
                 margin: 0 !important;
             }
 
@@ -157,7 +157,7 @@
 
             .header-logo {
                 display: block !important;
-                width: 120px !important;
+                width: 100px !important;
                 margin-bottom: 20mm !important;
             }
 
@@ -561,6 +561,57 @@
             display: none;
             margin: 0;
         }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .header-links {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 5px;
+        }
+
+        .history-link {
+            background-color: #3498db;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+
+        .history-link:hover {
+            background-color: #2980b9;
+        }
+
+        .ready-button {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 30px;
+            font-size: 16px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: all 0.2s ease;
+            z-index: 1000;
+        }
+
+        .ready-button:hover {
+            background-color: #1976D2;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body>
@@ -570,7 +621,10 @@
             <img src="logo-header.png" alt="Logo" class="header-logo">
             <div class="header-content">
                 <h1>CALCUL DE PRIX OFFRE CLIMATISATION</h1>
-                <a href="manage_items.html" style="color: #2196F3; text-decoration: none; font-size: 14px;">Gérer les articles</a>
+                <div class="header-links">
+                    <a href="manage_items.html" style="color: #2196F3; text-decoration: none; font-size: 14px; margin-right: 15px;">Gérer les articles</a>
+                    <a href="History.html" class="history-link">Historique</a>
+                </div>
             </div>
             <div style="width: 150px;"></div> <!-- Spacer for alignment -->
         </div>
@@ -986,6 +1040,9 @@
         }
 
         function prepareAndPrint() {
+            // Save to history first
+            saveToHistory();
+
             // Convert mo-description input to text
             const moDescriptionInput = document.getElementById('mo-description');
             const moDescriptionText = moDescriptionInput.value;
@@ -1182,6 +1239,43 @@
 
             // Setup modern spinners
             setupModernSpinners();
+
+            // Load quote from history if available
+            const currentQuote = localStorage.getItem('currentQuote');
+            if (currentQuote) {
+                const quoteData = JSON.parse(currentQuote);
+                const facteur = FACTEUR.fromJSON(quoteData);
+
+                // Load client information
+                document.getElementById('client-input').value = facteur.clientName;
+                document.getElementById('site-input').value = facteur.site;
+                document.getElementById('object-input').value = facteur.object;
+                document.getElementById('date-input').value = facteur.date;
+
+                // Load fournitures
+                selectedItems = facteur.fournitures.map(item => ({
+                    description: item.description,
+                    quantity: parseInt(item.quantity),
+                    pre: item.pre
+                }));
+                updateTable();
+
+                // Load main d'œuvre
+                laborItems = facteur.maindoeuvre.map(item => ({
+                    nbTech: parseInt(item.nbTech),
+                    nbHours: parseInt(item.nbHours),
+                    weekend: parseFloat(item.weekend),
+                    pre: item.pre
+                }));
+                updateLaborTable();
+
+                // Load descriptions
+                document.getElementById('mo-description').value = facteur.maindoeuvre[0]?.description || '';
+                document.getElementById('fournitures-description').value = facteur.fournitures[0]?.description || '';
+
+                // Clear the current quote from localStorage
+                localStorage.removeItem('currentQuote');
+            }
         };
 
         function setupModernSpinners() {
@@ -1236,6 +1330,75 @@
                     }
                 });
             });
+        }
+
+        class FACTEUR {
+            constructor(clientName, site, object, date, fournitures, maindoeuvre) {
+                this.clientName = clientName;
+                this.site = site;
+                this.object = object;
+                this.date = date;
+                this.fournitures = fournitures;
+                this.maindoeuvre = maindoeuvre;
+                this.timestamp = new Date().toISOString();
+            }
+
+            static fromJSON(json) {
+                return new FACTEUR(
+                    json.clientName,
+                    json.site,
+                    json.object,
+                    json.date,
+                    json.fournitures,
+                    json.maindoeuvre
+                );
+            }
+
+            toJSON() {
+                return {
+                    clientName: this.clientName,
+                    site: this.site,
+                    object: this.object,
+                    date: this.date,
+                    fournitures: this.fournitures,
+                    maindoeuvre: this.maindoeuvre,
+                    timestamp: this.timestamp
+                };
+            }
+        }
+
+        function saveToHistory() {
+            const history = JSON.parse(localStorage.getItem('quoteHistory') || '[]');
+
+            // Create a new FACTEUR instance
+            const facteur = new FACTEUR(
+                document.getElementById('client-input').value,
+                document.getElementById('site-input').value,
+                document.getElementById('object-input').value,
+                document.getElementById('date-input').value,
+                selectedItems.map(item => ({
+                    description: item.description,
+                    quantity: item.quantity,
+                    pre: item.pre,
+                    prs: (parseFloat(item.pre) * txChg).toFixed(2),
+                    pvus: (parseFloat(item.pre) * txChg / txMarge).toFixed(2),
+                    pvs: (parseFloat(item.pre) * txChg / txMarge * item.quantity).toFixed(2)
+                })),
+                laborItems.map(item => ({
+                    description: document.getElementById('mo-description').value,
+                    nbTech: item.nbTech,
+                    nbHours: item.nbHours,
+                    weekend: item.weekend,
+                    pre: item.pre,
+                    prs: (parseFloat(item.pre) * item.nbTech * item.nbHours * item.weekend * moTxChg).toFixed(2),
+                    pvus: (parseFloat(item.pre) * item.nbTech * item.nbHours * item.weekend * moTxChg / moTxMarge).toFixed(2),
+                    pvs: (parseFloat(item.pre) * item.nbTech * item.nbHours * item.weekend * moTxChg / moTxMarge).toFixed(2)
+                }))
+            );
+
+            history.push(facteur.toJSON());
+            localStorage.setItem('quoteHistory', JSON.stringify(history));
+            console.log('Facteur saved to history:', facteur);
         }
     </script>
 </body>
