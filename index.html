@@ -60,16 +60,39 @@
             text-align: center;
         }
         .info-section {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #ddd;
         }
         .info-grid {
             display: grid;
-            grid-template-columns: auto 1fr;
-            gap: 8px;
-            margin-bottom: 15px;
+            grid-template-columns: 100px 1fr;
+            gap: 10px;
+            align-items: center;
         }
         .info-label {
             font-weight: bold;
+            color: #333;
+            text-align: right;
+        }
+        .info-value {
+            width: 100%;
+        }
+        .info-value input,
+        .info-value select {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .info-value input:focus,
+        .info-value select:focus {
+            border-color: #4CAF50;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
         }
         table {
             width: 100%;
@@ -700,17 +723,40 @@
             background-color: #1976D2;
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
+
+        /* Add these new styles */
+        .input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .input-group input {
+            flex: 1;
+        }
+        .input-group button {
+            white-space: nowrap;
+        }
+
+        /* Add styles for the update button */
+        .btn-update {
+            background-color: #2196F3;
+            color: white;
+            margin-right: 10px;
+        }
+        .btn-update:hover {
+            background-color: #1976D2;
+        }
     </style>
 </head>
 <body>
-    <button id="ready-button" onclick="prepareAndPrint()">Ready</button>
     <div class="container">
-        <div class="header">
+    <div class="header">
             <img src="logo-header.png" alt="Logo" class="header-logo">
             <div class="header-content">
-                <h1>CALCUL DE PRIX OFFRE CLIMATISATION</h1>
+        <h1>CALCUL DE PRIX OFFRE CLIMATISATION</h1>
                 <div class="header-links">
                     <a href="manage_items.html" style="color: #2196F3; text-decoration: none; font-size: 14px; margin-right: 15px;">Gérer les articles</a>
+                    <a href="clients.html" style="color: #2196F3; text-decoration: none; font-size: 14px; margin-right: 15px;">Clients</a>
                     <a href="History.html" class="history-link">Historique</a>
                 </div>
             </div>
@@ -722,11 +768,15 @@
         <div class="info-grid">
             <div class="info-label">CLIENT:</div>
             <div class="info-value">
-                <input type="text" id="client-input" style="width: 100%; padding: 5px;" placeholder="Nom du client">
+                <select id="client-input" style="width: 100%; padding: 5px;" onchange="updateSiteOptions()">
+                    <option value="">Sélectionnez un client</option>
+                </select>
             </div>
             <div class="info-label">SITE:</div>
             <div class="info-value">
-                <input type="text" id="site-input" style="width: 100%; padding: 5px;" placeholder="Adresse du site">
+                <select id="site-input" style="width: 100%; padding: 5px;">
+                    <option value="">Sélectionnez un site</option>
+                </select>
             </div>
             <div class="info-label">OBJET:</div>
             <div class="info-value">
@@ -738,7 +788,6 @@
             </div>
         </div>
     </div>
-
 
     <table id="total-table" style="width: 40%; margin-left: auto; margin-bottom: 30px; border: 2px solid #ddd; color:#1976D2">
         <tr>
@@ -755,7 +804,6 @@
         </tr>
     </table>
 
-
     <div class="select-item-section" style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
         <h3>Ajouter un article</h3>
         <div style="display: flex; gap: 10px; align-items: center;">
@@ -766,7 +814,7 @@
                 <div id="search-results" class="search-results"></div>
             </div>
             <div class="number-input-container" style="width: auto;">
-                <input type="number" id="item-quantity" value="1" min="1" style="padding: 8px; width: 80px; font-size: 20px;" placeholder="Quantité">
+            <input type="number" id="item-quantity" value="1" min="1" style="padding: 8px; width: 80px; font-size: 20px;" placeholder="Quantité">
             </div>
             <button onclick="addSelectedItem()" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
                 Ajouter
@@ -775,78 +823,78 @@
     </div>
 
     <div class="fournitures-section">
-        <h2>FOURNITURES</h2>
+    <h2>FOURNITURES</h2>
         <input type="text" id="fournitures-description" value="en Arrêt de la machine, découpage de l'ancienne isolation, fourniture, et pose de la nouvelle isolation, séchage et remise en service" style="font-size:12px; color:#1976D2; width: 95%; margin: 00px 00px 20px 00px;">
 
-        <div class="rates-section">
-            <div class="rate-item">
-                <span>Tx de chg:</span>
+    <div class="rates-section">
+        <div class="rate-item">
+            <span>Tx de chg:</span>
                 <div class="number-input-container">
-                    <input type="number" id="tx-chg" value="1.15" step="0.01" style="width: 60px; padding: 2px;" onchange="updateRatesAndRecalculate()">
+            <input type="number" id="tx-chg" value="1.15" step="0.01" style="width: 60px; padding: 2px;" onchange="updateRatesAndRecalculate()">
                 </div>
-            </div>
-            <div class="rate-item">
-                <span>Tx de marge:</span>
-                <div class="number-input-container">
-                    <input type="number" id="tx-marge" value="0.75" step="0.01" style="width: 60px; padding: 2px;" onchange="updateRatesAndRecalculate()">
-                </div>
-            </div>
         </div>
-        <table id="fournitures-table">
-            <thead>
-                <tr>
-                    <th>Description</th>
-                    <th>Qté</th>
-                    <th>PR €</th>
-                    <th>PR $</th>
-                    <th>PV/u $</th>
-                    <th>PV $ Total HT</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-            <tfoot>
-                <tr style="font-weight: bold; background-color: #f9f9f9;">
-                    <td colspan="5" style="text-align: right;">TOTAL FOURNITURE $ HT:</td>
-                    <td id="table-total-fournitures" style="text-align: right;">-</td>
-                    <td></td>
-                </tr>
-            </tfoot>
-        </table>
+        <div class="rate-item">
+            <span>Tx de marge:</span>
+                <div class="number-input-container">
+            <input type="number" id="tx-marge" value="0.75" step="0.01" style="width: 60px; padding: 2px;" onchange="updateRatesAndRecalculate()">
+                </div>
+        </div>
+    </div>
+    <table id="fournitures-table">
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th>Qté</th>
+                <th>PR €</th>
+                <th>PR $</th>
+                <th>PV/u $</th>
+                <th>PV $ Total HT</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+        <tfoot>
+            <tr style="font-weight: bold; background-color: #f9f9f9;">
+                <td colspan="5" style="text-align: right;">TOTAL FOURNITURE $ HT:</td>
+                <td id="table-total-fournitures" style="text-align: right;">-</td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
     </div>
 
     <div class="MaindOuever-section">
-        <h2>MAIN D'OEUVRE</h2>
+    <h2>MAIN D'OEUVRE</h2>
 
-        <div class="rates-section">
-            <div class="rate-item">
-                <span>Tx de chg:</span>
-                <input type="number" id="mo-tx-chg" value="1.2" step="0.01" style="width: 60px; padding: 2px;" onchange="updateRatesAndRecalculate()">
-            </div>
-            <div class="rate-item">
-                <span>Tx de marge:</span>
-                <input type="number" id="mo-tx-marge" value="0.8" step="0.01" style="width: 60px; padding: 2px;" onchange="updateRatesAndRecalculate()">
-            </div>
+    <div class="rates-section">
+        <div class="rate-item">
+            <span>Tx de chg:</span>
+            <input type="number" id="mo-tx-chg" value="1.2" step="0.01" style="width: 60px; padding: 2px;" onchange="updateRatesAndRecalculate()">
         </div>
+        <div class="rate-item">
+            <span>Tx de marge:</span>
+            <input type="number" id="mo-tx-marge" value="0.8" step="0.01" style="width: 60px; padding: 2px;" onchange="updateRatesAndRecalculate()">
+        </div>
+    </div>
 
-        <div class="add-item-section" style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
-            <h3>Ajouter Main d'oeuvre</h3>
-             <div style="display: grid; gap: 10px;">
+    <div class="add-item-section" style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
+        <h3>Ajouter Main d'oeuvre</h3>
+        <div style="display: grid; gap: 10px;">
                 <div style="display: flex; gap: 20px; align-items: flex-start;">
                     <div style="display: flex; flex-direction: column; align-items: center;">
                         <input type="number" id="mo-nb-tech" value="1" min="1" style="padding: 8px; width: 110px;" placeholder="Nb technicien">
                         <span style="font-size: 10px; font-weight: bold; color: #666; margin-top: 2px;">Nb technicien</span>
                     </div>
                     <div style="display: flex; flex-direction: column; align-items: center;">
-                        <input type="number" id="mo-nb-hours" value="1" min="1" style="padding: 8px; width: 80px;" placeholder="Nb heures">
+                <input type="number" id="mo-nb-hours" value="1" min="1" style="padding: 8px; width: 80px;" placeholder="Nb heures">
                         <span style="font-size: 10px; font-weight: bold; color: #666; margin-top: 2px;">Nb heures</span>
                     </div>
                     <div style="display: flex; flex-direction: column; align-items: center;">
-                        <select id="mo-weekend" style="padding: 8px; width: 120px;">
-                            <option value="1">1</option>
-                            <option value="1.6">1.6</option>
-                        </select>
+                <select id="mo-weekend" style="padding: 8px; width: 120px;">
+                    <option value="1">1</option>
+                    <option value="1.6">1.6</option>
+                </select>
                         <span style="font-size: 10px; font-weight: bold; color: #666; margin-top: 2px;">Majo Weekend</span>
                     </div>
                     <div style="display: flex; flex-direction: column; align-items: center;">
@@ -854,37 +902,37 @@
                         <span style="font-size: 10px; font-weight: bold; color: #666; margin-top: 2px;">PR €</span>
                     </div>
                     <button onclick="addLabor()" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 8px;">
-                        Ajouter
-                    </button>
-                </div>
+                    Ajouter
+                </button>
             </div>
         </div>
+    </div>
         <h3>Chef main d'oeuvre</h3>
         <input type="text" id="mo-description" value="en Arrêt de la machine, découpage de l'ancienne isolation, fourniture, et pose de la nouvelle isolation, séchage et remise en service" style="font-size:12px; color:#1976D2; width: 95%; margin: 00px 00px 20px 00px;">
 
-        <table id="labor-table">
-            <thead>
-                <tr>
-                    <th>Nb technicien</th>
-                    <th>Nb heures</th>
-                    <th>Majo Weekend</th>
-                    <th>PR €</th>
-                    <th>PR $</th>
-                    <th>PV/u $</th>
-                    <th>PV $ Total HT</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-            <tfoot>
-                <tr style="font-weight: bold; background-color: #f9f9f9;">
-                    <td colspan="5" style="text-align: right;">TOTAL MO $ HT:</td>
-                    <td id="table-total-mo" style="text-align: right;">-</td>
-                    <td></td>
-                </tr>
-            </tfoot>
-        </table>
+    <table id="labor-table">
+        <thead>
+            <tr>
+                <th>Nb technicien</th>
+                <th>Nb heures</th>
+                <th>Majo Weekend</th>
+                <th>PR €</th>
+                <th>PR $</th>
+                <th>PV/u $</th>
+                <th>PV $ Total HT</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+        <tfoot>
+            <tr style="font-weight: bold; background-color: #f9f9f9;">
+                <td colspan="5" style="text-align: right;">TOTAL MO $ HT:</td>
+                <td id="table-total-mo" style="text-align: right;">-</td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
     </div>
 
     <div class="total-section">
@@ -893,6 +941,14 @@
 
     <div class="total-section" style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #ddd;">
         <div style="font-size: 1.2em; font-weight: bold;">TOTAL GENERAL: <span id="total-general">-</span></div>
+    </div>
+
+    <div class="quote-header">
+        <h2>Devis</h2>
+        <div class="quote-actions">
+            <button id="update-quote-btn" class="btn btn-update" style="display: none;" onclick="saveQuote()">Mettre à jour</button>
+            <button class="btn btn-print" id="ready-button"  onclick="prepareAndPrint()">Imprimer</button>
+        </div>
     </div>
 
     <script>
@@ -925,7 +981,6 @@
             updateLaborTable();
         }
 
-
         function calculateMOPVS(pre, weekend = 1, nbTech = 1, nbHours = 1) {
             if (!pre || pre === '') return '';
             const weekendMultiplier = parseFloat(weekend);
@@ -945,7 +1000,6 @@
                 select.appendChild(option);
             });
 
-
             select.addEventListener('change', function() {
                 const customForm = document.getElementById('custom-item-form');
                 customForm.style.display = this.value === 'custom' ? 'block' : 'none';
@@ -962,15 +1016,15 @@
             const quantity = parseInt(quantityInput.value) || 1;
 
             const existingItem = selectedItems.find(i => i.description === selectedItem.description);
-            if (existingItem) {
-                existingItem.quantity += quantity;
-            } else {
+                if (existingItem) {
+                    existingItem.quantity += quantity;
+                } else {
                 selectedItems.push({ ...selectedItem, quantity });
-            }
+                }
 
-            updateTable();
+                updateTable();
             document.getElementById('item-selector').textContent = 'Sélectionner un article ▼';
-            quantityInput.value = '1';
+                quantityInput.value = '1';
             selectedItem = null;
         }
 
@@ -987,11 +1041,9 @@
             items.push(newItem);
             selectedItems.push({ ...newItem, quantity: 1 });
 
-
             document.getElementById('custom-description').value = '';
             document.getElementById('custom-pre').value = '';
             document.getElementById('custom-item-form').style.display = 'none';
-
 
             populateDropdown();
             updateTable();
@@ -1325,14 +1377,25 @@
             updateLaborTable();
             document.getElementById('date-input').valueAsDate = new Date();
 
+            // Load clients into dropdown
+            const clientSelect = document.getElementById('client-input');
+            const clients = loadClients();
+            clientSelect.innerHTML = '<option value="">Sélectionnez un client</option>';
+            clients.forEach(client => {
+                const option = document.createElement('option');
+                option.value = client.name;
+                option.textContent = client.name;
+                clientSelect.appendChild(option);
+            });
+
             // Setup modern spinners
             setupModernSpinners();
 
             // Load quote from history if available
             const currentQuote = localStorage.getItem('currentQuote');
             if (currentQuote) {
-                const quoteData = JSON.parse(currentQuote);
-                const facteur = FACTEUR.fromJSON(quoteData);
+                const quote = JSON.parse(currentQuote);
+                const facteur = FACTEUR.fromJSON(quote);
 
                 // Load client information
                 document.getElementById('client-input').value = facteur.clientName;
@@ -1364,6 +1427,8 @@
                 // Clear the current quote from localStorage
                 localStorage.removeItem('currentQuote');
             }
+
+            loadQuote();  // Load quote information if originalQuoteId exists
         };
 
         function setupModernSpinners() {
@@ -1495,6 +1560,149 @@
             history.push(facteur.toJSON());
             localStorage.setItem('quoteHistory', JSON.stringify(history));
             console.log('Facteur saved to history:', facteur);
+        }
+
+        function loadQuote() {
+            const originalQuoteId = localStorage.getItem('originalQuoteId');
+            const isFromHistory = localStorage.getItem('fromHistory');
+
+            if (originalQuoteId && isFromHistory === 'true') {
+                // Get quote history and find the quote with matching ID
+                const history = JSON.parse(localStorage.getItem('quoteHistory') || '[]');
+                const quote = history.find(q => q.id === originalQuoteId);
+
+                if (quote) {
+                    // Display quote ID information
+                    const quoteHeader = document.querySelector('.quote-header');
+                    if (quoteHeader) {
+                        const quoteIdInfo = document.createElement('div');
+                        quoteIdInfo.style.marginBottom = '10px';
+                        quoteIdInfo.style.fontSize = '12px';
+                        quoteIdInfo.style.color = '#666';
+                        quoteIdInfo.innerHTML = `ID du devis: ${quote.id}`;
+                        quoteHeader.insertBefore(quoteIdInfo, quoteHeader.firstChild);
+                    }
+
+                    // Set client first
+                    document.getElementById('client-input').value = quote.clientName;
+
+                    // Update site options based on selected client
+                    updateSiteOptions();
+
+                    // Set site after options are loaded
+                    const siteSelect = document.getElementById('site-input');
+                    const siteOptions = Array.from(siteSelect.options);
+                    const siteExists = siteOptions.some(option => option.value === quote.site);
+
+                    if (siteExists) {
+                        siteSelect.value = quote.site;
+                    } else {
+                        // If site doesn't exist in options, add it as the first option
+                        const newOption = document.createElement('option');
+                        newOption.value = quote.site;
+                        newOption.textContent = quote.site;
+                        siteSelect.insertBefore(newOption, siteSelect.firstChild);
+                        siteSelect.value = quote.site;
+                    }
+
+                    document.getElementById('object-input').value = quote.object;
+                    document.getElementById('date-input').value = quote.date;
+
+                    // Load fournitures
+                    selectedItems = quote.fournitures.map(item => ({
+                        description: item.description,
+                        quantity: parseInt(item.quantity),
+                        pre: item.pre
+                    }));
+                    updateTable();
+
+                    // Load main d'œuvre
+                    laborItems = quote.maindoeuvre.map(item => ({
+                        description: item.description,
+                        nbTech: parseInt(item.nbTech),
+                        nbHours: parseInt(item.nbHours),
+                        weekend: parseFloat(item.weekend),
+                        pre: item.pre
+                    }));
+                    updateLaborTable();
+
+                    // Load descriptions
+                    document.getElementById('mo-description').value = quote.maindoeuvre[0]?.description || '';
+                    document.getElementById('fournitures-description').value = quote.fournitures[0]?.description || '';
+
+                    // Show update button if this is an edit
+                    document.getElementById('update-quote-btn').style.display = 'inline-block';
+
+                    // Clear the fromHistory flag after loading
+                    localStorage.removeItem('fromHistory');
+                }
+            }
+        }
+
+
+        function saveQuote() {
+            const facteur = new FACTEUR(
+                document.getElementById('client-input').value,
+                document.getElementById('site-input').value,
+                document.getElementById('object-input').value,
+                document.getElementById('date-input').value,
+                selectedItems.map(item => ({
+                    description: item.description,
+                    quantity: item.quantity,
+                    pre: item.pre
+                })),
+                laborItems.map(item => ({
+                    description: item.description,
+                    nbTech: item.nbTech,
+                    nbHours: item.nbHours,
+                    weekend: item.weekend,
+                    pre: item.pre
+                }))
+            );
+
+            const history = JSON.parse(localStorage.getItem('quoteHistory') || '[]');
+            history.push(facteur.toJSON());
+            localStorage.setItem('quoteHistory', JSON.stringify(history));
+            document.getElementById('update-quote-btn').style.display = 'none';
+            alert('Devis enregistré avec succès!');
+        }
+
+        function addFournitureItem(item) {
+            // Implementation of addFournitureItem function
+        }
+
+        function addLaborItem(item) {
+            // Implementation of addLaborItem function
+        }
+
+        function updateTotals() {
+            // Implementation of updateTotals function
+        }
+
+        function loadClients() {
+            return JSON.parse(localStorage.getItem('clients') || '[]');
+        }
+
+        function updateSiteOptions() {
+            const clientSelect = document.getElementById('client-input');
+            const siteSelect = document.getElementById('site-input');
+            const selectedClient = clientSelect.value;
+
+            // Clear current options
+            siteSelect.innerHTML = '<option value="">Sélectionnez un site</option>';
+
+            if (selectedClient) {
+                const clients = loadClients();
+                const client = clients.find(c => c.name === selectedClient);
+                if (client) {
+                    client.sites.forEach(site => {
+                        const option = document.createElement('option');
+                        option.value = site;
+                        option.textContent = site;
+                        siteSelect.appendChild(option);
+                    });
+                }
+            }
         }
     </script>
 </body>
