@@ -944,9 +944,8 @@
     </div>
 
     <div class="quote-header">
-        <h2>Devis</h2>
         <div class="quote-actions">
-            <button id="update-quote-btn" class="btn btn-update" style="display: none;" onclick="saveQuote()">Mettre à jour</button>
+            <button id="update-quote-btn" class="btn btn-update" style="display: none;" onclick="updateQuote()">Mettre à jour</button>
             <button class="btn btn-print" id="ready-button"  onclick="prepareAndPrint()">Imprimer</button>
         </div>
     </div>
@@ -1498,7 +1497,20 @@
             }
 
             generateUniqueId() {
-                return 'FACT-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+                // Generate an 8-digit random number
+                const randomNum = Math.floor(10000000 + Math.random() * 90000000);
+                // Start with version 000
+                const version = '000';
+                // Combine in the required format
+                return `FACT-${randomNum}-${version}`;
+            }
+
+            // When updating a quote, we'll need to increment the version
+            incrementVersion(currentId) {
+                const parts = currentId.split('-');
+                const currentVersion = parseInt(parts[2], 10);
+                const newVersion = (currentVersion + 1).toString().padStart(3, '0');
+                return `${parts[0]}-${parts[1]}-${newVersion}`;
             }
 
             static fromJSON(json) {
@@ -1639,32 +1651,72 @@
             }
         }
 
+        function updateQuote() {
+            const originalQuoteId = localStorage.getItem('originalQuoteId');
+            if (!originalQuoteId) return;
 
-        function saveQuote() {
-            const facteur = new FACTEUR(
-                document.getElementById('client-input').value,
-                document.getElementById('site-input').value,
-                document.getElementById('object-input').value,
-                document.getElementById('date-input').value,
-                selectedItems.map(item => ({
+            // Get current values
+            const clientName = document.getElementById('client-input').value;
+            const site = document.getElementById('site-input').value;
+            const object = document.getElementById('object-input').value;
+            const date = document.getElementById('date-input').value;
+
+            // Get the history
+            let history = JSON.parse(localStorage.getItem('quoteHistory') || '[]');
+
+            // Find the original quote to get its ID parts
+            const originalQuote = history.find(quote => quote.id === originalQuoteId);
+            if (!originalQuote) return;
+
+            // Split the ID into parts (FACT-NUMBER-VERSION)
+            const parts = originalQuote.id.split('-');
+            const currentVersion = parseInt(parts[2], 10);
+            const newVersion = (currentVersion + 1).toString().padStart(3, '0');
+
+            // Create the new ID with incremented version
+            const newId = `${parts[0]}-${parts[1]}-${newVersion}`;
+
+            // Create the updated quote object
+            const updatedQuote = {
+                id: newId,
+                clientName: clientName,
+                site: site,
+                object: object,
+                date: date,
+                fournitures: selectedItems.map(item => ({
                     description: item.description,
                     quantity: item.quantity,
                     pre: item.pre
                 })),
-                laborItems.map(item => ({
+                maindoeuvre: laborItems.map(item => ({
                     description: item.description,
                     nbTech: item.nbTech,
                     nbHours: item.nbHours,
                     weekend: item.weekend,
                     pre: item.pre
-                }))
-            );
+                })),
+                timestamp: new Date().toISOString(),
+                parentId: originalQuoteId
+            };
 
-            const history = JSON.parse(localStorage.getItem('quoteHistory') || '[]');
-            history.push(facteur.toJSON());
+            // Add the new version to history (don't modify original)
+            history.push(updatedQuote);
+
+            // Save the updated history
             localStorage.setItem('quoteHistory', JSON.stringify(history));
+
+            // Clear the original quote ID and fromHistory flag
+            localStorage.removeItem('originalQuoteId');
+            localStorage.removeItem('fromHistory');
+
+            // Hide the update button
             document.getElementById('update-quote-btn').style.display = 'none';
-            alert('Devis enregistré avec succès!');
+
+            // Show success message
+            alert('Nouvelle version du devis créée avec succès!');
+
+            // Clear the form
+            clearForm();
         }
 
         function addFournitureItem(item) {
