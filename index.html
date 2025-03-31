@@ -1776,6 +1776,7 @@
         }
 
         function clearForm() {
+            // Clear all input fields
             document.getElementById('client-input').value = '';
             document.getElementById('site-input').value = '';
             document.getElementById('object-input').value = '';
@@ -1783,13 +1784,25 @@
             document.getElementById('mo-description').value = '';
             document.getElementById('fournitures-description').value = '';
 
+            // Clear arrays
             selectedItems = [];
             laborItems = [];
 
+            // Update tables
             updateTable();
             updateLaborTable();
 
-            sessionStorage.removeItem('formState');
+            // Clear any quote ID info if it exists
+            const quoteIdInfo = document.querySelector('.quote-header div');
+            if (quoteIdInfo) {
+                quoteIdInfo.remove();
+            }
+
+            // Hide update button if visible
+            const updateButton = document.getElementById('update-quote-btn');
+            if (updateButton) {
+                updateButton.style.display = 'none';
+            }
         }
 
         function saveFormState() {
@@ -1903,6 +1916,7 @@
 
             // Show success message
             alert('Devis enregistré avec succès!');
+            clearForm(); // Clear the form after saving
         }
 
         // Add new function for save and print
@@ -1942,9 +1956,10 @@
             // Prepare for printing
             makeReady();
 
-            // Add a small delay to ensure makeReady completes
+            // Print with delay
             setTimeout(() => {
                 window.print();
+                clearForm(); // Clear the form after printing
             }, 100);
         }
     </script>
