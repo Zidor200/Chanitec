@@ -746,6 +746,33 @@
         .btn-update:hover {
             background-color: #1976D2;
         }
+
+        .btn-save {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        .btn-print {
+            background-color: #008CBA;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-save:hover {
+            background-color: #45a049;
+        }
+
+        .btn-print:hover {
+            background-color: #007399;
+        }
     </style>
 </head>
 <body>
@@ -946,7 +973,12 @@
     <div class="quote-header">
         <div class="quote-actions">
             <button id="update-quote-btn" class="btn btn-update" style="display: none;" onclick="updateQuote()">Mettre à jour</button>
-            <button class="btn btn-print" id="ready-button"  onclick="prepareAndPrint()">Imprimer</button>
+            <button onclick="saveQuote()" class="btn btn-save">
+                Enregistrer
+            </button>
+            <button onclick="saveAndPrint()" class="btn btn-print">
+                Imprimer
+            </button>
         </div>
     </div>
 
@@ -1720,15 +1752,79 @@
         }
 
         function addFournitureItem(item) {
-            // Implementation of addFournitureItem function
+            selectedItems.push(item);
+            updateTable();
+            saveFormState();
         }
 
         function addLaborItem(item) {
-            // Implementation of addLaborItem function
+            laborItems.push(item);
+            updateLaborTable();
+            saveFormState();
         }
 
-        function updateTotals() {
-            // Implementation of updateTotals function
+        function removeFournitureItem(index) {
+            selectedItems.splice(index, 1);
+            updateTable();
+            saveFormState();
+        }
+
+        function removeLaborItem(index) {
+            laborItems.splice(index, 1);
+            updateLaborTable();
+            saveFormState();
+        }
+
+        function clearForm() {
+            document.getElementById('client-input').value = '';
+            document.getElementById('site-input').value = '';
+            document.getElementById('object-input').value = '';
+            document.getElementById('date-input').value = '';
+            document.getElementById('mo-description').value = '';
+            document.getElementById('fournitures-description').value = '';
+
+            selectedItems = [];
+            laborItems = [];
+
+            updateTable();
+            updateLaborTable();
+
+            sessionStorage.removeItem('formState');
+        }
+
+        function saveFormState() {
+            const tempState = {
+                clientName: document.getElementById('client-input').value,
+                site: document.getElementById('site-input').value,
+                object: document.getElementById('object-input').value,
+                date: document.getElementById('date-input').value,
+                selectedItems: selectedItems,
+                laborItems: laborItems,
+                moDescription: document.getElementById('mo-description').value,
+                fournituresDescription: document.getElementById('fournitures-description').value
+            };
+            sessionStorage.setItem('formState', JSON.stringify(tempState));
+        }
+
+        function loadFormState() {
+            const tempState = sessionStorage.getItem('formState');
+            if (tempState) {
+                const state = JSON.parse(tempState);
+
+                document.getElementById('client-input').value = state.clientName || '';
+                document.getElementById('site-input').value = state.site || '';
+                document.getElementById('object-input').value = state.object || '';
+                document.getElementById('date-input').value = state.date || '';
+
+                selectedItems = state.selectedItems || [];
+                laborItems = state.laborItems || [];
+
+                document.getElementById('mo-description').value = state.moDescription || '';
+                document.getElementById('fournitures-description').value = state.fournituresDescription || '';
+
+                updateTable();
+                updateLaborTable();
+            }
         }
 
         function loadClients() {
@@ -1755,6 +1851,101 @@
                     });
                 }
             }
+        }
+
+        // Add event listeners to save state on changes
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load any saved state
+            loadFormState();
+
+            // Add change listeners to all form inputs
+            const inputs = document.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                input.addEventListener('change', saveFormState);
+                input.addEventListener('input', saveFormState); // For real-time saving
+            });
+        });
+
+        // Modify the existing saveQuote function to only save
+        function saveQuote() {
+            // Get all required values
+            const clientName = document.getElementById('client-input').value.trim();
+            const site = document.getElementById('site-input').value.trim();
+            const object = document.getElementById('object-input').value.trim();
+            const date = document.getElementById('date-input').value.trim();
+
+            // Check if any required field is empty
+            if (!clientName || !site || !object || !date) {
+                alert('Veuillez remplir tous les champs obligatoires (Client, Site, Objet, Date)');
+                return;
+            }
+
+            // Check if there are any items in fournitures or main d'oeuvre
+            if (selectedItems.length === 0 && laborItems.length === 0) {
+                alert('Veuillez ajouter au moins un élément (Fournitures ou Main d\'œuvre)');
+                return;
+            }
+
+            // Create new quote
+            const quote = new FACTEUR(
+                clientName,
+                site,
+                object,
+                date,
+                selectedItems,
+                laborItems
+            );
+
+            // Save to history
+            const history = JSON.parse(localStorage.getItem('quoteHistory') || '[]');
+            history.push(quote.toJSON());
+            localStorage.setItem('quoteHistory', JSON.stringify(history));
+
+            // Show success message
+            alert('Devis enregistré avec succès!');
+        }
+
+        // Add new function for save and print
+        function saveAndPrint() {
+            // Get all required values
+            const clientName = document.getElementById('client-input').value.trim();
+            const site = document.getElementById('site-input').value.trim();
+            const object = document.getElementById('object-input').value.trim();
+            const date = document.getElementById('date-input').value.trim();
+
+            // Check if any required field is empty
+            if (!clientName || !site || !object || !date) {
+                alert('Veuillez remplir tous les champs obligatoires (Client, Site, Objet, Date)');
+                return;
+            }
+
+            // Check if there are any items in fournitures or main d'oeuvre
+            if (selectedItems.length === 0 && laborItems.length === 0) {
+                alert('Veuillez ajouter au moins un élément (Fournitures ou Main d\'œuvre)');
+                return;
+            }
+
+            // Save first
+            const quote = new FACTEUR(
+                clientName,
+                site,
+                object,
+                date,
+                selectedItems,
+                laborItems
+            );
+
+            const history = JSON.parse(localStorage.getItem('quoteHistory') || '[]');
+            history.push(quote.toJSON());
+            localStorage.setItem('quoteHistory', JSON.stringify(history));
+
+            // Prepare for printing
+            makeReady();
+
+            // Add a small delay to ensure makeReady completes
+            setTimeout(() => {
+                window.print();
+            }, 100);
         }
     </script>
 </body>
