@@ -283,6 +283,10 @@
             #total-table td:last-child {
                 text-align: right !important;
             }
+
+            .select-item-section {
+                display: none !important;
+            }
         }
         #item-quantity::-webkit-inner-spin-button,
         #item-quantity::-webkit-outer-spin-button {
@@ -773,6 +777,32 @@
         .btn-print:hover {
             background-color: #007399;
         }
+
+        .nav-links {
+            background-color: #f8f9fa;
+            padding: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .nav-links a {
+            color: #0275d8;
+            text-decoration: none;
+            padding: 8px 16px;
+            margin: 0 5px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .nav-links a:hover {
+            background-color: #0275d8;
+            color: white;
+        }
+
+        .nav-links a.active {
+            background-color: #0275d8;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -780,12 +810,15 @@
     <div class="header">
             <img src="logo-header.png" alt="Logo" class="header-logo">
             <div class="header-content">
-        <h1>CALCUL DE PRIX OFFRE CLIMATISATION</h1>
-                <div class="header-links">
-                    <a href="manage_items.html" style="color: #2196F3; text-decoration: none; font-size: 14px; margin-right: 15px;">Gérer les articles</a>
-                    <a href="clients.html" style="color: #2196F3; text-decoration: none; font-size: 14px; margin-right: 15px;">Clients</a>
-                    <a href="History.html" class="history-link">Historique</a>
+                <div class="nav-links">
+                    <a href="index.html" class="active">Accueil</a>
+                    <a href="History.html">Historique</a>
+                    <a href="clients.html">Clients</a>
+                    <a href="manage_items.html">Gérer les articles</a>
                 </div>
+
+        <h1>CALCUL DE PRIX OFFRE CLIMATISATION</h1>
+
             </div>
             <div style="width: 150px;"></div> <!-- Spacer for alignment -->
         </div>
@@ -976,11 +1009,12 @@
             <button onclick="saveQuote()" class="btn btn-save">
                 Enregistrer
             </button>
-            <button onclick="saveAndPrint()" class="btn btn-print">
+            <button onclick="prepareAndPrint()" class="btn btn-print">
                 Imprimer
             </button>
         </div>
     </div>
+
 
     <script>
         let items = [];
@@ -1211,96 +1245,43 @@
         }
 
         function prepareAndPrint() {
-            // Save to history first
-            saveToHistory();
-
-            // Convert mo-description input to text
-            const moDescriptionInput = document.getElementById('mo-description');
-            const moDescriptionText = moDescriptionInput.value;
-            const moDescriptionContainer = moDescriptionInput.parentNode;
-            const moDescriptionParagraph = document.createElement('p');
-            moDescriptionParagraph.textContent = moDescriptionText;
-            moDescriptionParagraph.style.fontSize = '14px';
-            moDescriptionParagraph.style.margin = '0 0 20px 0';
-            moDescriptionParagraph.style.color = '#1976D2';
-            moDescriptionContainer.replaceChild(moDescriptionParagraph, moDescriptionInput);
-
-            // Convert fournitures-description input to text
-            const fournituresDescriptionInput = document.getElementById('fournitures-description');
-            const fournituresDescriptionText = fournituresDescriptionInput.value;
-            const fournituresDescriptionContainer = fournituresDescriptionInput.parentNode;
-            const fournituresDescriptionParagraph = document.createElement('p');
-            fournituresDescriptionParagraph.textContent = fournituresDescriptionText;
-            fournituresDescriptionParagraph.style.fontSize = '14px';
-            fournituresDescriptionParagraph.style.margin = '0 0 20px 0';
-            fournituresDescriptionParagraph.style.color = '#1976D2';
-            fournituresDescriptionContainer.replaceChild(fournituresDescriptionParagraph, fournituresDescriptionInput);
-
-            // Hide the select-item-section
-            document.querySelector('.select-item-section').classList.add('hidden-for-print');
-
-            const tables = ['fournitures-table', 'labor-table'];
-            tables.forEach(tableId => {
-                const table = document.getElementById(tableId);
-                const rows = table.getElementsByTagName('tr');
-
-                if (rows[0]) {
-                    const headerCells = rows[0].getElementsByTagName('th');
-                    if (headerCells.length > 0) {
-                        headerCells[headerCells.length - 1].classList.add('hidden-for-print');
-                    }
+            try {
+                // Hide elements that shouldn't be printed
+                const elementsToHide = document.querySelectorAll('.nav-links, .btn-save, .btn-print, #update-quote-btn, .select-item-section');
+                if (elementsToHide) {
+                    elementsToHide.forEach(el => {
+                        if (el) el.style.display = 'none';
+                    });
                 }
 
-                for (let i = 1; i < rows.length - 1; i++) {
-                    const cells = rows[i].getElementsByTagName('td');
-                    if (cells.length > 0) {
-                        cells[cells.length - 1].classList.add('hidden-for-print');
-                    }
+                // Show only the print-friendly content
+                const printContent = document.querySelectorAll('.quote-content');
+                if (printContent) {
+                    printContent.forEach(el => {
+                        if (el) el.classList.add('print-ready');
+                    });
                 }
-            });
 
-            document.querySelectorAll('.add-item-section').forEach(section => {
-                section.classList.add('hidden-for-print');
-            });
-
-            const customForm = document.getElementById('custom-item-form');
-            if (customForm) {
-                customForm.classList.add('hidden-for-print');
-            }
-
-            document.getElementById('ready-button').classList.add('hidden-for-print');
-
-            setTimeout(() => {
+                // Trigger print
                 window.print();
 
-                // Restore visibility after printing
-                document.querySelector('.select-item-section').classList.remove('hidden-for-print');
-                document.querySelectorAll('.hidden-for-print').forEach(element => {
-                    element.classList.remove('hidden-for-print');
-                });
+                // Restore elements after printing
+                setTimeout(() => {
+                    if (elementsToHide) {
+                        elementsToHide.forEach(el => {
+                            if (el) el.style.display = '';
+                        });
+                    }
+                    if (printContent) {
+                        printContent.forEach(el => {
+                            if (el) el.classList.remove('print-ready');
+                        });
+                    }
+                }, 500);
 
-                // Restore the mo-description input field
-                const restoredMoInput = document.createElement('input');
-                restoredMoInput.type = 'text';
-                restoredMoInput.id = 'mo-description';
-                restoredMoInput.value = moDescriptionText;
-                restoredMoInput.style.fontSize = '12px';
-                restoredMoInput.style.width = '95%';
-                restoredMoInput.style.margin = '0 0 20px 0';
-                restoredMoInput.style.color = '#1976D2';
-                moDescriptionContainer.replaceChild(restoredMoInput, moDescriptionParagraph);
-
-                // Restore the fournitures-description input field
-                const restoredFournituresInput = document.createElement('input');
-                restoredFournituresInput.type = 'text';
-                restoredFournituresInput.id = 'fournitures-description';
-                restoredFournituresInput.value = fournituresDescriptionText;
-                restoredFournituresInput.style.fontSize = '12px';
-                restoredFournituresInput.style.width = '95%';
-                restoredFournituresInput.style.margin = '0 0 20px 0';
-                restoredFournituresInput.style.color = '#1976D2';
-                fournituresDescriptionContainer.replaceChild(restoredFournituresInput, fournituresDescriptionParagraph);
-            }, 100);
+            } catch (error) {
+                console.error('Error during print preparation:', error);
+            }
         }
 
         function setupSearch() {
@@ -1658,7 +1639,7 @@
                         quantity: parseInt(item.quantity),
                         pre: item.pre
                     }));
-                    updateTable();
+            updateTable();
 
                     // Load main d'œuvre
                     laborItems = quote.maindoeuvre.map(item => ({
@@ -1668,18 +1649,23 @@
                         weekend: parseFloat(item.weekend),
                         pre: item.pre
                     }));
-                    updateLaborTable();
+            updateLaborTable();
 
                     // Load descriptions
                     document.getElementById('mo-description').value = quote.maindoeuvre[0]?.description || '';
                     document.getElementById('fournitures-description').value = quote.fournitures[0]?.description || '';
 
-                    // Show update button if this is an edit
+                    // Show update button and hide save button
                     document.getElementById('update-quote-btn').style.display = 'inline-block';
+                    document.querySelector('.btn-save').style.display = 'none';
 
                     // Clear the fromHistory flag after loading
                     localStorage.removeItem('fromHistory');
                 }
+            } else {
+                // Normal new quote mode
+                document.getElementById('update-quote-btn').style.display = 'none';
+                document.querySelector('.btn-save').style.display = 'inline-block';
             }
         }
 
@@ -1798,11 +1784,9 @@
                 quoteIdInfo.remove();
             }
 
-            // Hide update button if visible
-            const updateButton = document.getElementById('update-quote-btn');
-            if (updateButton) {
-                updateButton.style.display = 'none';
-            }
+            // Restore buttons to default state
+            document.getElementById('update-quote-btn').style.display = 'none';
+            document.querySelector('.btn-save').style.display = 'inline-block';
         }
 
         function saveFormState() {
@@ -1917,50 +1901,6 @@
             // Show success message
             alert('Devis enregistré avec succès!');
             clearForm(); // Clear the form after saving
-        }
-
-        // Add new function for save and print
-        function saveAndPrint() {
-            // Get all required values
-            const clientName = document.getElementById('client-input').value.trim();
-            const site = document.getElementById('site-input').value.trim();
-            const object = document.getElementById('object-input').value.trim();
-            const date = document.getElementById('date-input').value.trim();
-
-            // Check if any required field is empty
-            if (!clientName || !site || !object || !date) {
-                alert('Veuillez remplir tous les champs obligatoires (Client, Site, Objet, Date)');
-                return;
-            }
-
-            // Check if there are any items in fournitures or main d'oeuvre
-            if (selectedItems.length === 0 && laborItems.length === 0) {
-                alert('Veuillez ajouter au moins un élément (Fournitures ou Main d\'œuvre)');
-                return;
-            }
-
-            // Save first
-            const quote = new FACTEUR(
-                clientName,
-                site,
-                object,
-                date,
-                selectedItems,
-                laborItems
-            );
-
-            const history = JSON.parse(localStorage.getItem('quoteHistory') || '[]');
-            history.push(quote.toJSON());
-            localStorage.setItem('quoteHistory', JSON.stringify(history));
-
-            // Prepare for printing
-            makeReady();
-
-            // Print with delay
-            setTimeout(() => {
-                window.print();
-                clearForm(); // Clear the form after printing
-            }, 100);
         }
     </script>
 </body>

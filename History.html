@@ -359,11 +359,42 @@
         .quote-details strong {
             color: #333;
         }
+
+        .nav-links {
+            background-color: #f8f9fa;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        .nav-links a {
+            color: #0275d8;
+            text-decoration: none;
+            padding: 8px 16px;
+            margin: 0 5px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            background-color: #0275d8;
+            color: white;
+        }
+
+        .nav-links a.active {
+            background-color: #0275d8;
+            color: white;
+        }
+
     </style>
 </head>
 <body>
     <div class="container">
-        <a href="index.html" class="history-link">Retour a la page principale</a>
+        <div class="nav-links">
+            <a href="index.html">Accueil</a>
+            <a href="History.html" class="active">Historique</a>
+            <a href="clients.html">Clients</a>
+            <a href="manage_items.html">Gérer les articles</a>
+        </div>
         <h1>Historique des Factures</h1>
 
         <!-- Add the filters section -->

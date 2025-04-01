@@ -160,15 +160,42 @@
             font-size: 24px;
             cursor: pointer;
         }
+        .nav-links {
+            background-color: #f8f9fa;
+            padding: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .nav-links a {
+            color: #0275d8;
+            text-decoration: none;
+            padding: 8px 16px;
+            margin: 0 5px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .nav-links a:hover {
+            background-color: #0275d8;
+            color: white;
+        }
+
+        .nav-links a.active {
+            background-color: #0275d8;
+            color: white;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="nav-links">
-            <a href="index.html">Accueil</a>
-            <a href="History.html" target="_blank">Historique</a>
-            <a href="manage-items.html" target="_blank">Gérer les articles</a>
+            <a href="index.html" class="active">Accueil</a>
+            <a href="History.html">Historique</a>
+            <a href="clients.html">Clients</a>
+            <a href="manage_items.html">Gérer les articles</a>
         </div>
+
         <h1>Gestion des Clients</h1>
 
         <div class="client-form">
