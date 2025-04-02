@@ -388,48 +388,50 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="page-container">
         <div class="nav-links">
-            <a href="index.html">Accueil</a>
-            <a href="History.html" class="active">Historique</a>
+            <a href="index.html" >Accueil</a>
+            <a href="History.html" class="active" >Historique</a>
             <a href="clients.html">Clients</a>
             <a href="manage_items.html">Gérer les articles</a>
         </div>
-        <h1>Historique des Factures</h1>
+        <div class="container">
+            <h1>Historique des Factures</h1>
 
-        <!-- Add the filters section -->
-        <div class="filters">
-            <div class="filter-group">
-                <label for="filter-id">ID:</label>
-                <input type="text" id="filter-id" placeholder="Rechercher par ID">
+            <!-- Add the filters section -->
+            <div class="filters">
+                <div class="filter-group">
+                    <label for="filter-id">ID:</label>
+                    <input type="text" id="filter-id" placeholder="Rechercher par ID">
+                </div>
+                <div class="filter-group">
+                    <label for="filter-client">Client:</label>
+                    <select id="filter-client" onchange="updateSiteFilter()">
+                        <option value="">Tous les clients</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-site">Site:</label>
+                    <select id="filter-site">
+                        <option value="">Tous les sites</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-date">Période:</label>
+                    <select id="filter-date">
+                        <option value="all">Toutes les dates</option>
+                        <option value="today">Aujourd'hui</option>
+                        <option value="week">Cette semaine</option>
+                        <option value="month">Ce mois</option>
+                        <option value="year">Cette année</option>
+                    </select>
+                </div>
+                <button onclick="clearFilters()" class="clear-filters">Effacer les filtres</button>
             </div>
-            <div class="filter-group">
-                <label for="filter-client">Client:</label>
-                <select id="filter-client" onchange="updateSiteFilter()">
-                    <option value="">Tous les clients</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label for="filter-site">Site:</label>
-                <select id="filter-site">
-                    <option value="">Tous les sites</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label for="filter-date">Période:</label>
-                <select id="filter-date">
-                    <option value="all">Toutes les dates</option>
-                    <option value="today">Aujourd'hui</option>
-                    <option value="week">Cette semaine</option>
-                    <option value="month">Ce mois</option>
-                    <option value="year">Cette année</option>
-                </select>
-            </div>
-            <button onclick="clearFilters()" class="clear-filters">Effacer les filtres</button>
-        </div>
 
-        <div id="history-list" class="history-list">
-            <!-- History items will be dynamically added here -->
+            <div id="history-list" class="history-list">
+                <!-- History items will be dynamically added here -->
+            </div>
         </div>
     </div>
 

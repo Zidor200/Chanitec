@@ -781,8 +781,11 @@
         .nav-links {
             background-color: #f8f9fa;
             padding: 10px;
-            margin-bottom: 20px;
+            margin: 20px auto;
             text-align: center;
+            max-width: 800px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .nav-links a {
@@ -806,37 +809,36 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="page-container">
+        <div class="nav-links">
+        <a href="index.html" class="active">Accueil</a>
+        <a href="History.html">Historique</a>
+        <a href="clients.html">Clients</a>
+        <a href="manage_items.html">Gérer les articles</a>
+    </div>
+        <div class="container">
     <div class="header">
-            <img src="logo-header.png" alt="Logo" class="header-logo">
-            <div class="header-content">
-                <div class="nav-links">
-                    <a href="index.html" class="active">Accueil</a>
-                    <a href="History.html">Historique</a>
-                    <a href="clients.html">Clients</a>
-                    <a href="manage_items.html">Gérer les articles</a>
-                </div>
-
+                <img src="logo-header.png" alt="Logo" class="header-logo">
+                <div class="header-content">
         <h1>CALCUL DE PRIX OFFRE CLIMATISATION</h1>
-
+                </div>
+                <div style="width: 150px;"></div> <!-- Spacer for alignment -->
             </div>
-            <div style="width: 150px;"></div> <!-- Spacer for alignment -->
-        </div>
     </div>
 
     <div class="info-section">
         <div class="info-grid">
             <div class="info-label">CLIENT:</div>
             <div class="info-value">
-                <select id="client-input" style="width: 100%; padding: 5px;" onchange="updateSiteOptions()">
-                    <option value="">Sélectionnez un client</option>
-                </select>
+                    <select id="client-input" style="width: 100%; padding: 5px;" onchange="updateSiteOptions()">
+                        <option value="">Sélectionnez un client</option>
+                    </select>
             </div>
             <div class="info-label">SITE:</div>
             <div class="info-value">
-                <select id="site-input" style="width: 100%; padding: 5px;">
-                    <option value="">Sélectionnez un site</option>
-                </select>
+                    <select id="site-input" style="width: 100%; padding: 5px;">
+                        <option value="">Sélectionnez un site</option>
+                    </select>
             </div>
             <div class="info-label">OBJET:</div>
             <div class="info-value">
@@ -849,7 +851,7 @@
         </div>
     </div>
 
-    <table id="total-table" style="width: 40%; margin-left: auto; margin-bottom: 30px; border: 2px solid #ddd; color:#1976D2">
+        <table id="total-table" style="width: 40%; margin-left: auto; margin-bottom: 30px; border: 2px solid #ddd; color:#1976D2">
         <tr>
             <td style="font-weight: bold; padding: 8px;">TOTAL OFFRE USD HT:</td>
             <td style="text-align: right; padding: 8px;"><span id="total-fournitures">-</span></td>
@@ -864,40 +866,40 @@
         </tr>
     </table>
 
-    <div class="select-item-section" style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
+        <div class="select-item-section" style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
         <h3>Ajouter un article</h3>
         <div style="display: flex; gap: 10px; align-items: center;">
-            <div class="search-container" style="flex-grow: 1; position: relative;">
-                <button id="item-selector" class="item-selector-button" onclick="toggleItemsList()">
-                    Sélectionner un article ▼
-                </button>
-                <div id="search-results" class="search-results"></div>
-            </div>
-            <div class="number-input-container" style="width: auto;">
+                <div class="search-container" style="flex-grow: 1; position: relative;">
+                    <button id="item-selector" class="item-selector-button" onclick="toggleItemsList()">
+                        Sélectionner un article ▼
+                    </button>
+                    <div id="search-results" class="search-results"></div>
+                </div>
+                <div class="number-input-container" style="width: auto;">
             <input type="number" id="item-quantity" value="1" min="1" style="padding: 8px; width: 80px; font-size: 20px;" placeholder="Quantité">
-            </div>
+                </div>
             <button onclick="addSelectedItem()" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
                 Ajouter
             </button>
         </div>
     </div>
 
-    <div class="fournitures-section">
+        <div class="fournitures-section">
     <h2>FOURNITURES</h2>
-        <input type="text" id="fournitures-description" value="en Arrêt de la machine, découpage de l'ancienne isolation, fourniture, et pose de la nouvelle isolation, séchage et remise en service" style="font-size:12px; color:#1976D2; width: 95%; margin: 00px 00px 20px 00px;">
+            <input type="text" id="fournitures-description" value="en Arrêt de la machine, découpage de l'ancienne isolation, fourniture, et pose de la nouvelle isolation, séchage et remise en service" style="font-size:12px; color:#1976D2; width: 95%; margin: 00px 00px 20px 00px;">
 
     <div class="rates-section">
         <div class="rate-item">
             <span>Tx de chg:</span>
-                <div class="number-input-container">
+                    <div class="number-input-container">
             <input type="number" id="tx-chg" value="1.15" step="0.01" style="width: 60px; padding: 2px;" onchange="updateRatesAndRecalculate()">
-                </div>
+                    </div>
         </div>
         <div class="rate-item">
             <span>Tx de marge:</span>
-                <div class="number-input-container">
+                    <div class="number-input-container">
             <input type="number" id="tx-marge" value="0.75" step="0.01" style="width: 60px; padding: 2px;" onchange="updateRatesAndRecalculate()">
-                </div>
+                    </div>
         </div>
     </div>
     <table id="fournitures-table">
@@ -922,9 +924,9 @@
             </tr>
         </tfoot>
     </table>
-    </div>
+        </div>
 
-    <div class="MaindOuever-section">
+        <div class="MaindOuever-section">
     <h2>MAIN D'OEUVRE</h2>
 
     <div class="rates-section">
@@ -941,34 +943,34 @@
     <div class="add-item-section" style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
         <h3>Ajouter Main d'oeuvre</h3>
         <div style="display: grid; gap: 10px;">
-                <div style="display: flex; gap: 20px; align-items: flex-start;">
-                    <div style="display: flex; flex-direction: column; align-items: center;">
-                        <input type="number" id="mo-nb-tech" value="1" min="1" style="padding: 8px; width: 110px;" placeholder="Nb technicien">
-                        <span style="font-size: 10px; font-weight: bold; color: #666; margin-top: 2px;">Nb technicien</span>
-                    </div>
-                    <div style="display: flex; flex-direction: column; align-items: center;">
+                    <div style="display: flex; gap: 20px; align-items: flex-start;">
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <input type="number" id="mo-nb-tech" value="1" min="1" style="padding: 8px; width: 110px;" placeholder="Nb technicien">
+                            <span style="font-size: 10px; font-weight: bold; color: #666; margin-top: 2px;">Nb technicien</span>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center;">
                 <input type="number" id="mo-nb-hours" value="1" min="1" style="padding: 8px; width: 80px;" placeholder="Nb heures">
-                        <span style="font-size: 10px; font-weight: bold; color: #666; margin-top: 2px;">Nb heures</span>
-                    </div>
-                    <div style="display: flex; flex-direction: column; align-items: center;">
+                            <span style="font-size: 10px; font-weight: bold; color: #666; margin-top: 2px;">Nb heures</span>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center;">
                 <select id="mo-weekend" style="padding: 8px; width: 120px;">
                     <option value="1">1</option>
                     <option value="1.6">1.6</option>
                 </select>
-                        <span style="font-size: 10px; font-weight: bold; color: #666; margin-top: 2px;">Majo Weekend</span>
-                    </div>
-                    <div style="display: flex; flex-direction: column; align-items: center;">
-                        <input type="number" id="mo-pre" value="10.00" step="0.01" style="padding: 8px; width: 100px;" placeholder="PRÉ">
-                        <span style="font-size: 10px; font-weight: bold; color: #666; margin-top: 2px;">PR €</span>
-                    </div>
-                    <button onclick="addLabor()" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 8px;">
+                            <span style="font-size: 10px; font-weight: bold; color: #666; margin-top: 2px;">Majo Weekend</span>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <input type="number" id="mo-pre" value="10.00" step="0.01" style="padding: 8px; width: 100px;" placeholder="PRÉ">
+                            <span style="font-size: 10px; font-weight: bold; color: #666; margin-top: 2px;">PR €</span>
+                        </div>
+                        <button onclick="addLabor()" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 8px;">
                     Ajouter
                 </button>
             </div>
         </div>
     </div>
-        <h3>Chef main d'oeuvre</h3>
-        <input type="text" id="mo-description" value="en Arrêt de la machine, découpage de l'ancienne isolation, fourniture, et pose de la nouvelle isolation, séchage et remise en service" style="font-size:12px; color:#1976D2; width: 95%; margin: 00px 00px 20px 00px;">
+            <h3>Chef main d'oeuvre</h3>
+            <input type="text" id="mo-description" value="en Arrêt de la machine, découpage de l'ancienne isolation, fourniture, et pose de la nouvelle isolation, séchage et remise en service" style="font-size:12px; color:#1976D2; width: 95%; margin: 00px 00px 20px 00px;">
 
     <table id="labor-table">
         <thead>
@@ -993,7 +995,7 @@
             </tr>
         </tfoot>
     </table>
-    </div>
+        </div>
 
     <div class="total-section">
         <div>TOTAL MO $ HT: <span id="total-mo">-</span></div>
@@ -1001,20 +1003,20 @@
 
     <div class="total-section" style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #ddd;">
         <div style="font-size: 1.2em; font-weight: bold;">TOTAL GENERAL: <span id="total-general">-</span></div>
-    </div>
+        </div>
 
-    <div class="quote-header">
-        <div class="quote-actions">
-            <button id="update-quote-btn" class="btn btn-update" style="display: none;" onclick="updateQuote()">Mettre à jour</button>
-            <button onclick="saveQuote()" class="btn btn-save">
-                Enregistrer
-            </button>
-            <button onclick="prepareAndPrint()" class="btn btn-print">
-                Imprimer
-            </button>
+        <div class="quote-header">
+            <div class="quote-actions">
+                <button id="update-quote-btn" class="btn btn-update" style="display: none;" onclick="updateQuote()">Mettre à jour</button>
+                <button onclick="saveQuote()" class="btn btn-save">
+                    Enregistrer
+                </button>
+                <button onclick="prepareAndPrint()" class="btn btn-print">
+                    Imprimer
+                </button>
+            </div>
         </div>
     </div>
-
 
     <script>
         let items = [];
@@ -1032,7 +1034,7 @@
         let moTxChg = 1.2;
         let moTxMarge = 0.8;
 
-        function roundToTwo(num) {
+        function (num) {
             return (Math.round(num * 100) / 100).toFixed(2);
         }
 
@@ -1051,7 +1053,7 @@
             const weekendMultiplier = parseFloat(weekend);
             const prs = parseFloat(pre) * nbTech * nbHours * weekendMultiplier * moTxChg;
             const pvs = prs / moTxMarge;
-            return roundToTwo(pvs);
+            return (pvs);
         }
 
         function populateDropdown() {
@@ -1130,9 +1132,9 @@
 
             selectedItems.forEach(item => {
                 const row = document.createElement('tr');
-                const prs = item.pre ? roundToTwo(parseFloat(item.pre) * txChg) : '';
-                const pvus = prs ? roundToTwo(parseFloat(prs) / txMarge) : '';
-                const pvsTotal = pvus ? roundToTwo(parseFloat(pvus) * item.quantity) : '';
+                const prs = item.pre ? parseFloat(item.pre) * txChg : '';
+                const pvus = prs ? parseFloat(prs) / txMarge : '';
+                const pvsTotal = pvus ? parseFloat(pvus) * item.quantity : '';
 
                 console.log("item.pre",item.pre,"prs",prs,"pvus",pvus,"pvsTotal",pvsTotal);
 
@@ -1166,8 +1168,8 @@
             laborItems.forEach((item, index) => {
                 const row = document.createElement('tr');
                 const weekendText = item.weekend === 1.6 ? 'Weekend' : 'Normal';
-                const prs = roundToTwo(parseFloat(item.pre) * item.nbTech * item.nbHours * item.weekend * moTxChg);
-                const pvsTotal = roundToTwo(parseFloat(calculateMOPVS(item.pre, item.weekend, item.nbTech, item.nbHours)));
+                const prs = (parseFloat(item.pre) * item.nbTech * item.nbHours * item.weekend * moTxChg);
+                const pvsTotal = (parseFloat(calculateMOPVS(item.pre, item.weekend, item.nbTech, item.nbHours)));
 
                 row.innerHTML = `
                     <td style="text-align: right;">${item.nbTech}</td>
@@ -1214,8 +1216,8 @@
 
             selectedItems.forEach(item => {
                 if (item.pre && item.pre !== '') {
-                    const prs = roundToTwo(parseFloat(item.pre) * txChg);
-                    const pvus = prs ? roundToTwo(parseFloat(prs) / txMarge) : '';
+                    const prs = (parseFloat(item.pre) * txChg);
+                    const pvus = prs ? (parseFloat(prs) / txMarge) : '';
                     const quantity = parseInt(item.quantity) || 0;
                     if (!isNaN(pvus) && !isNaN(quantity)) {
                         totalHT += parseFloat(pvus) * quantity;
@@ -1235,13 +1237,13 @@
             const tva = totalOffreHT * 0.16;
             const totalTTC = totalOffreHT + tva;
 
-            document.getElementById('total-fournitures').textContent = roundToTwo(totalOffreHT);
-            document.getElementById('table-total-fournitures').textContent = roundToTwo(totalHT);
-            document.getElementById('tva').textContent = roundToTwo(tva);
-            document.getElementById('total-ttc').textContent = roundToTwo(totalTTC);
-            document.getElementById('total-mo').textContent = roundToTwo(totalMO);
-            document.getElementById('table-total-mo').textContent = roundToTwo(totalMO);
-            document.getElementById('total-general').textContent = roundToTwo(totalTTC);
+            document.getElementById('total-fournitures').textContent = (totalOffreHT);
+            document.getElementById('table-total-fournitures').textContent = (totalHT);
+            document.getElementById('tva').textContent = (tva);
+            document.getElementById('total-ttc').textContent = (totalTTC);
+            document.getElementById('total-mo').textContent = (totalMO);
+            document.getElementById('table-total-mo').textContent = (totalMO);
+            document.getElementById('total-general').textContent = (totalTTC);
         }
 
         function prepareAndPrint() {
@@ -1592,6 +1594,12 @@
             const isFromHistory = localStorage.getItem('fromHistory');
 
             if (originalQuoteId && isFromHistory === 'true') {
+                // Remove any existing facture-id display
+                const existingIdDisplay = document.querySelector('.facture-id');
+                if (existingIdDisplay) {
+                    existingIdDisplay.remove();
+                }
+
                 // Get quote history and find the quote with matching ID
                 const history = JSON.parse(localStorage.getItem('quoteHistory') || '[]');
                 const quote = history.find(q => q.id === originalQuoteId);
@@ -1610,7 +1618,7 @@
 
                     // Set client first
                     document.getElementById('client-input').value = quote.clientName;
-
+                    document.getElementsByClassName('facture-id').style.display = 'none';
                     // Update site options based on selected client
                     updateSiteOptions();
 
@@ -1863,45 +1871,122 @@
             });
         });
 
-        // Modify the existing saveQuote function to only save
+        // Function to generate a new Facture ID
+        function generateFactureId() {
+            const randomNum = Math.floor(10000000 + Math.random() * 90000000);
+            return `FACT-${randomNum}-000`;
+        }
+
+        // Function to check if ID exists
+        function checkIdExists(id) {
+            const history = JSON.parse(localStorage.getItem('quoteHistory') || '[]');
+            return history.some(quote => quote.id === id);
+        }
+
+        // Function to initialize page with a new FACT ID
+        function initializePage() {
+            // Only generate new ID if one doesn't exist in session
+            if (!sessionStorage.getItem('currentFactureId')) {
+                let newId;
+                // Keep generating until we get a unique ID
+                do {
+                    newId = generateFactureId();
+                } while (checkIdExists(newId));
+
+                // Store the new ID
+                sessionStorage.setItem('currentFactureId', newId);
+            }
+
+            // Display the current ID
+            displayFactureId();
+        }
+
+        // Function to display the current FACT ID
+        function displayFactureId() {
+            const currentId = sessionStorage.getItem('currentFactureId');
+            if (currentId) {
+                const quoteHeader = document.querySelector('.quote-header');
+                if (quoteHeader) {
+                    // Remove any existing ID display
+                    const existingIdDisplay = quoteHeader.querySelector('.facture-id');
+                    if (existingIdDisplay) {
+                        existingIdDisplay.remove();
+                    }
+
+                    // Add new ID display
+                    const quoteIdInfo = document.createElement('div');
+                    quoteIdInfo.className = 'facture-id';
+                    quoteIdInfo.style.marginBottom = '10px';
+                    quoteIdInfo.style.fontSize = '12px';
+                    quoteIdInfo.style.color = '#666';
+                    quoteIdInfo.innerHTML = `ID du devis: ${currentId}`;
+                    quoteHeader.insertBefore(quoteIdInfo, quoteHeader.firstChild);
+                }
+            }
+        }
+
+        // Modified saveQuote function
         function saveQuote() {
+            const currentId = sessionStorage.getItem('currentFactureId');
+
+            if (!currentId) {
+                alert('Erreur: ID du devis non trouvé');
+                return;
+            }
+
             // Get all required values
             const clientName = document.getElementById('client-input').value.trim();
             const site = document.getElementById('site-input').value.trim();
             const object = document.getElementById('object-input').value.trim();
             const date = document.getElementById('date-input').value.trim();
 
-            // Check if any required field is empty
+            // Validation checks
             if (!clientName || !site || !object || !date) {
                 alert('Veuillez remplir tous les champs obligatoires (Client, Site, Objet, Date)');
                 return;
             }
 
-            // Check if there are any items in fournitures or main d'oeuvre
             if (selectedItems.length === 0 && laborItems.length === 0) {
                 alert('Veuillez ajouter au moins un élément (Fournitures ou Main d\'œuvre)');
                 return;
             }
 
-            // Create new quote
-            const quote = new FACTEUR(
-                clientName,
-                site,
-                object,
-                date,
-                selectedItems,
-                laborItems
-            );
+            // Create quote object with current ID
+            const quote = {
+                id: currentId,
+                clientName: clientName,
+                site: site,
+                object: object,
+                date: date,
+                fournitures: selectedItems,
+                maindoeuvre: laborItems,
+                timestamp: new Date().toISOString()
+            };
 
             // Save to history
             const history = JSON.parse(localStorage.getItem('quoteHistory') || '[]');
-            history.push(quote.toJSON());
+            history.push(quote);
             localStorage.setItem('quoteHistory', JSON.stringify(history));
+
+            // Generate and store new ID for next quote
+            let newId;
+            do {
+                newId = generateFactureId();
+            } while (checkIdExists(newId));
+            sessionStorage.setItem('currentFactureId', newId);
 
             // Show success message
             alert('Devis enregistré avec succès!');
-            clearForm(); // Clear the form after saving
+
+            // Clear form and display new ID
+            clearForm();
+            displayFactureId();
         }
+
+        // Add event listener for page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializePage();
+        });
     </script>
 </body>
 </html>
