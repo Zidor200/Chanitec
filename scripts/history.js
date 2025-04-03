@@ -121,12 +121,15 @@ function displayQuoteHistory(quotes) {
                     ${quote.fournitures.map(f => `
                         <p>${f.description} - ${f.quantity} unités - ${f.pre} €</p>
                     `).join('')}
+                    <p>Total Fournitures: ${quote.totalFournitures} €</p>
+
                 </div>
                 <div class="history-section">
                     <h3>Main d'œuvre</h3>
                     ${quote.maindoeuvre.map(m => `
                         <p>${m.description} - ${m.nbTech} tech(s) - ${m.nbHours}h - ${m.pre} €</p>
                     `).join('')}
+                    <p>Total Main d'œuvre: ${quote.totalMaindoeuvre} €</p>
                 </div>
             </div>
             <div class="actions">

@@ -796,3 +796,17 @@
             background-color: #0275d8;
             color: white;
         }
+
+        .quote-id-container {
+            margin: 10px 0;
+            padding: 5px 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .quote-id {
+            font-weight: bold;
+            color: #007bff;
+            margin-left: 5px;
+        }

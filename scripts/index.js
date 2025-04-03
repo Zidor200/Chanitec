@@ -14,7 +14,8 @@
         let moTxMarge = 0.8;
 
         function roundToTwo(num) {
-            return (Math.round(num * 100) / 100).toFixed(2);
+            return num;
+
         }
 
         function updateRatesAndRecalculate() {
@@ -125,9 +126,9 @@
                             onchange="updateItemPrice('${item.description}', this.value)"
                             style="width: 80px; padding: 4px;">
                     </td>
-                    <td style="text-align: right;">${prs}</td>
-                    <td style="text-align: right;">${pvus}</td>
-                    <td style="text-align: right;">${pvsTotal}</td>
+                    <td style="text-align: right;">${prs.toFixed(2)}</td>
+                    <td style="text-align: right;">${pvus.toFixed(2)}</td>
+                    <td style="text-align: right;">${pvsTotal.toFixed(2)}</td>
                     <td>
                         <button onclick="removeItem('${item.description}')" style="padding: 2px 5px; background-color: #ff4444; color: white; border: none; border-radius: 3px; cursor: pointer;">
                             X
@@ -200,7 +201,6 @@
                     const quantity = parseInt(item.quantity) || 0;
                     if (!isNaN(pvus) && !isNaN(quantity)) {
                         totalHT += parseFloat(pvus) * quantity;
-                        console.log("pvus",pvus,"quantity",quantity,"totalHT",totalHT);
                     }
                 }
             });
@@ -216,13 +216,13 @@
             const tva = totalOffreHT * 0.16;
             const totalTTC = totalOffreHT + tva;
 
-            document.getElementById('total-fournitures').textContent = roundToTwo(totalOffreHT);
-            document.getElementById('table-total-fournitures').textContent = roundToTwo(totalHT);
-            document.getElementById('tva').textContent = roundToTwo(tva);
-            document.getElementById('total-ttc').textContent = roundToTwo(totalTTC);
-            document.getElementById('total-mo').textContent = roundToTwo(totalMO);
-            document.getElementById('table-total-mo').textContent = roundToTwo(totalMO);
-            document.getElementById('total-general').textContent = roundToTwo(totalTTC);
+            document.getElementById('total-fournitures').textContent = roundToTwo(totalOffreHT).toFixed(2);
+            document.getElementById('table-total-fournitures').textContent = roundToTwo(totalHT).toFixed(2);
+            document.getElementById('tva').textContent = roundToTwo(tva).toFixed(2);
+            document.getElementById('total-ttc').textContent = roundToTwo(totalTTC).toFixed(2);
+            document.getElementById('total-mo').textContent = roundToTwo(totalMO).toFixed(2);
+            document.getElementById('table-total-mo').textContent = roundToTwo(totalMO).toFixed(2);
+            document.getElementById('total-general').textContent = roundToTwo(totalTTC).toFixed(2);
         }
 
         function prepareAndPrint() {
@@ -421,7 +421,15 @@
                 localStorage.removeItem('currentQuote');
             }
 
-            loadQuote();  // Load quote information if originalQuoteId exists
+            // Load quote information if originalQuoteId exists
+            const originalQuoteId = localStorage.getItem('originalQuoteId');
+            const isFromHistory = localStorage.getItem('fromHistory');
+
+            if (originalQuoteId && isFromHistory === 'true') {
+                loadQuote(); // This will display the original quote ID
+            } else {
+                generateNewQuoteId(); // Only generate new ID for new quotes
+            }
         };
 
         function setupModernSpinners() {
@@ -479,24 +487,30 @@
         }
 
         class FACTEUR {
-            constructor(clientName, site, object, date, fournitures, maindoeuvre) {
-                this.id = this.generateUniqueId();
-                this.clientName = clientName;
-                this.site = site;
-                this.object = object;
-                this.date = date;
-                this.fournitures = fournitures;
-                this.maindoeuvre = maindoeuvre;
-                this.timestamp = new Date().toISOString();
-            }
-
-            generateUniqueId() {
+            static generateId() {
                 // Generate an 8-digit random number
                 const randomNum = Math.floor(10000000 + Math.random() * 90000000);
                 // Start with version 000
                 const version = '000';
                 // Combine in the required format
                 return `FACT-${randomNum}-${version}`;
+            }
+
+            constructor(clientName, site, object, date, fournitures, maindoeuvre, fout_TxChn, fout_TxMarge, mo_TxChn, mo_TxMarge, totalFournitures, totalMaindoeuvre) {
+                this.id = FACTEUR.generateId();
+                this.clientName = clientName;
+                this.site = site;
+                this.object = object;
+                this.date = date;
+                this.fournitures = fournitures;
+                this.maindoeuvre = maindoeuvre;
+                this.fout_TxChn = fout_TxChn;
+                this.fout_TxMarge = fout_TxMarge;
+                this.mo_TxChn = mo_TxChn;
+                this.mo_TxMarge = mo_TxMarge;
+                this.totalFournitures = totalFournitures;
+                this.totalMaindoeuvre = totalMaindoeuvre;
+                this.timestamp = new Date().toISOString();
             }
 
             // When updating a quote, we'll need to increment the version
@@ -514,7 +528,13 @@
                     json.object,
                     json.date,
                     json.fournitures,
-                    json.maindoeuvre
+                    json.maindoeuvre,
+                    json.fout_TxChn,
+                    json.fout_TxMarge,
+                    json.mo_TxChn,
+                    json.mo_TxMarge,
+                    json.totalFournitures,
+                    json.totalMaindoeuvre
                 );
                 facteur.id = json.id; // Preserve the original ID
                 return facteur;
@@ -529,6 +549,12 @@
                     date: this.date,
                     fournitures: this.fournitures,
                     maindoeuvre: this.maindoeuvre,
+                    fout_TxChn: this.fout_TxChn,
+                    fout_TxMarge: this.fout_TxMarge,
+                    mo_TxChn: this.mo_TxChn,
+                    mo_TxMarge: this.mo_TxMarge,
+                    totalFournitures: this.totalFournitures,
+                    totalMaindoeuvre: this.totalMaindoeuvre,
                     timestamp: this.timestamp
                 };
             }
@@ -578,16 +604,8 @@
                 const quote = history.find(q => q.id === originalQuoteId);
 
                 if (quote) {
-                    // Display quote ID information
-                    const quoteHeader = document.querySelector('.quote-header');
-                    if (quoteHeader) {
-                        const quoteIdInfo = document.createElement('div');
-                        quoteIdInfo.style.marginBottom = '10px';
-                        quoteIdInfo.style.fontSize = '12px';
-                        quoteIdInfo.style.color = '#666';
-                        quoteIdInfo.innerHTML = `ID du devis: ${quote.id}`;
-                        quoteHeader.insertBefore(quoteIdInfo, quoteHeader.firstChild);
-                    }
+                    // Display the original quote ID in the existing container
+                    document.getElementById('quote-id-display').textContent = originalQuoteId;
 
                     // Set client first
                     document.getElementById('client-input').value = quote.clientName;
@@ -620,7 +638,7 @@
                         quantity: parseInt(item.quantity),
                         pre: item.pre
                     }));
-            updateTable();
+                    updateTable();
 
                     // Load main d'œuvre
                     laborItems = quote.maindoeuvre.map(item => ({
@@ -630,7 +648,7 @@
                         weekend: parseFloat(item.weekend),
                         pre: item.pre
                     }));
-            updateLaborTable();
+                    updateLaborTable();
 
                     // Load descriptions
                     document.getElementById('mo-description').value = quote.maindoeuvre[0]?.description || '';
@@ -647,6 +665,7 @@
                 // Normal new quote mode
                 document.getElementById('update-quote-btn').style.display = 'none';
                 document.querySelector('.btn-save').style.display = 'inline-block';
+                generateNewQuoteId(); // Generate new ID for new quotes
             }
         }
 
@@ -768,6 +787,7 @@
             // Restore buttons to default state
             document.getElementById('update-quote-btn').style.display = 'none';
             document.querySelector('.btn-save').style.display = 'inline-block';
+            generateNewQuoteId(); // Generate new ID when form is cleared
         }
 
         function saveFormState() {
@@ -844,13 +864,19 @@
             });
         });
 
-        // Modify the existing saveQuote function to only save
+        // Modify the existing saveQuote function to check for existing ID
         function saveQuote() {
             // Get all required values
             const clientName = document.getElementById('client-input').value.trim();
             const site = document.getElementById('site-input').value.trim();
             const object = document.getElementById('object-input').value.trim();
             const date = document.getElementById('date-input').value.trim();
+            const fout_TxChn = document.getElementById('tx-chg').value.trim();
+            const fout_TxMarge = document.getElementById('tx-marge').value.trim();
+            const mo_TxChn = document.getElementById('mo-tx-chg').value.trim();
+            const mo_TxMarge = document.getElementById('mo-tx-marge').value.trim();
+            const totalFournitures = document.getElementById('total-fournitures').textContent.trim();
+            const totalMaindoeuvre = document.getElementById('total-mo').textContent.trim();
 
             // Check if any required field is empty
             if (!clientName || !site || !object || !date) {
@@ -870,8 +896,24 @@
                 site,
                 object,
                 date,
-                selectedItems,
-                laborItems
+                selectedItems.map(item => ({
+                    description: item.description,
+                    quantity: item.quantity,
+                    pre: item.pre
+                })),
+                laborItems.map(item => ({
+                    description: document.getElementById('mo-description').value,
+                    nbTech: item.nbTech,
+                    nbHours: item.nbHours,
+                    weekend: item.weekend,
+                    pre: item.pre
+                })),
+                fout_TxChn,
+                fout_TxMarge,
+                mo_TxChn,
+                mo_TxMarge,
+                totalFournitures,
+                totalMaindoeuvre
             );
 
             // Save to history
@@ -882,4 +924,11 @@
             // Show success message
             alert('Devis enregistré avec succès!');
             clearForm(); // Clear the form after saving
+        }
+
+        let currentQuoteId = null;
+
+        function generateNewQuoteId() {
+            currentQuoteId = FACTEUR.generateId();
+            document.getElementById('quote-id-display').textContent = currentQuoteId;
         }
