@@ -651,9 +651,9 @@
                     }));
                     updateLaborTable();
 
-                    // Load descriptions
-                    document.getElementById('mo-description').value = quote.maindoeuvre[0]?.description || '';
-                    document.getElementById('fournitures-description').value = quote.fournitures[0]?.description || '';
+                    // Load descriptions - use the stored descriptions from the quote
+                    document.getElementById('mo-description').value = quote.Mo_description || '';
+                    document.getElementById('fournitures-description').value = quote.Fout_description || '';
 
                     // Show update button and hide save button
                     document.getElementById('update-quote-btn').style.display = 'inline-block';
@@ -679,6 +679,17 @@
             const site = document.getElementById('site-input').value;
             const object = document.getElementById('object-input').value;
             const date = document.getElementById('date-input').value;
+            const fout_TxChn = document.getElementById('tx-chg').value;
+            const fout_TxMarge = document.getElementById('tx-marge').value;
+            const mo_TxChn = document.getElementById('mo-tx-chg').value;
+            const mo_TxMarge = document.getElementById('mo-tx-marge').value;
+            const Fout_description = document.getElementById('fournitures-description').value;
+            const Mo_description = document.getElementById('mo-description').value;
+
+            // Calculate totals before creating the updated quote
+            calculateTotals();
+            const totalFournitures = document.getElementById('total-fournitures').textContent;
+            const totalMaindoeuvre = document.getElementById('total-mo').textContent;
 
             // Get the history
             let history = JSON.parse(localStorage.getItem('quoteHistory') || '[]');
@@ -689,11 +700,29 @@
 
             // Split the ID into parts (FACT-NUMBER-VERSION)
             const parts = originalQuote.id.split('-');
-            const currentVersion = parseInt(parts[2], 10);
-            const newVersion = (currentVersion + 1).toString().padStart(3, '0');
+            const baseId = `${parts[0]}-${parts[1]}`;
+
+            // Find all quotes with the same base ID (ignoring version)
+            const relatedQuotes = history.filter(quote => {
+                const quoteParts = quote.id.split('-');
+                return `${quoteParts[0]}-${quoteParts[1]}` === baseId;
+            });
+
+            // Find the highest version number among related quotes
+            let maxVersion = 0;
+            relatedQuotes.forEach(quote => {
+                const quoteParts = quote.id.split('-');
+                const version = parseInt(quoteParts[2], 10);
+                if (version > maxVersion) {
+                    maxVersion = version;
+                }
+            });
+
+            // Increment the version number
+            const newVersion = (maxVersion + 1).toString().padStart(3, '0');
 
             // Create the new ID with incremented version
-            const newId = `${parts[0]}-${parts[1]}-${newVersion}`;
+            const newId = `${baseId}-${newVersion}`;
 
             // Create the updated quote object
             const updatedQuote = {
@@ -714,6 +743,14 @@
                     weekend: item.weekend,
                     pre: item.pre
                 })),
+                fout_TxChn: fout_TxChn,
+                fout_TxMarge: fout_TxMarge,
+                mo_TxChn: mo_TxChn,
+                mo_TxMarge: mo_TxMarge,
+                totalFournitures: totalFournitures,
+                totalMaindoeuvre: totalMaindoeuvre,
+                Fout_description: Fout_description,
+                Mo_description: Mo_description,
                 timestamp: new Date().toISOString(),
                 parentId: originalQuoteId
             };
@@ -878,7 +915,8 @@
             const mo_TxMarge = document.getElementById('mo-tx-marge').value.trim();
             const totalFournitures = document.getElementById('total-fournitures').textContent.trim();
             const totalMaindoeuvre = document.getElementById('total-mo').textContent.trim();
-
+            const Fout_description = document.getElementById('fournitures-description').value.trim();
+            const Mo_description = document.getElementById('mo-description').value.trim();
             // Check if any required field is empty
             if (!clientName || !site || !object || !date) {
                 alert('Veuillez remplir tous les champs obligatoires (Client, Site, Objet, Date)');
@@ -914,7 +952,9 @@
                 mo_TxChn,
                 mo_TxMarge,
                 totalFournitures,
-                totalMaindoeuvre
+                totalMaindoeuvre,
+                Fout_description,
+                Mo_description
             );
 
             // Save to history

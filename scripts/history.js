@@ -118,6 +118,8 @@ function displayQuoteHistory(quotes) {
                 </div>
                 <div class="history-section">
                     <h3>Fournitures</h3>
+                    <span>Tx de chg: ${quote.fout_TxChn}</span>
+                    <span>Tx de Marge: ${quote.fout_TxMarge}</span>
                     ${quote.fournitures.map(f => `
                         <p>${f.description} - ${f.quantity} unités - ${f.pre} €</p>
                     `).join('')}
