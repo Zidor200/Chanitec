@@ -265,92 +265,92 @@
             }
         }
 
-        function setupSearch() {
-            const itemSelector = document.getElementById('item-selector');
+        function toggleItemsList() {
             const searchResults = document.getElementById('search-results');
-            let selectedIndex = -1;
-            let selectedItem = null;
+            const itemSearch = document.getElementById('item-search');
+            const itemSelector = document.getElementById('item-selector');
 
-            // Function to toggle items list
-            window.toggleItemsList = function() {
-                if (searchResults.style.display === 'block') {
-                    searchResults.style.display = 'none';
-                } else {
-                    showAllItems();
-                }
-            }
-
-            function showAllItems() {
-                searchResults.innerHTML = items
-                    .sort((a, b) => a.description.localeCompare(b.description))
-                    .map((item, index) => {
-                        const safeDescription = item.description
-                            .replace(/&/g, '&amp;')
-                            .replace(/</g, '&lt;')
-                            .replace(/>/g, '&gt;')
-                            .replace(/"/g, '&quot;')
-                            .replace(/'/g, '&#039;');
-
-                        const safePrice = (item.pre || '')
-                            .replace(/&/g, '&amp;')
-                            .replace(/</g, '&lt;')
-                            .replace(/>/g, '&gt;')
-                            .replace(/"/g, '&quot;')
-                            .replace(/'/g, '&#039;');
-
-                        return `
-                            <div class="search-result-item"
-                                 data-index="${index}"
-                                 data-description="${safeDescription}"
-                                 data-price="${safePrice}"
-                                 onclick="selectSearchItem(this)">
-                                ${safeDescription}${safePrice ? ` - ${safePrice} €` : ''}
-                            </div>
-                        `;
-                    }).join('');
+            if (searchResults.style.display === 'block') {
+                searchResults.style.display = 'none';
+                itemSearch.style.display = 'none';
+                itemSelector.textContent = 'Sélectionner un article ▼';
+            } else {
                 searchResults.style.display = 'block';
+                itemSearch.style.display = 'block';
+                itemSelector.textContent = 'Sélectionner un article ▲';
+                itemSearch.focus();
+                setupSearch();
             }
-
-            // Close search results when clicking outside
-            document.addEventListener('click', function(e) {
-                if (!itemSelector.contains(e.target) && !searchResults.contains(e.target)) {
-                    searchResults.style.display = 'none';
-                }
-            });
-
-            // Handle keyboard navigation for the dropdown
-            document.addEventListener('keydown', function(e) {
-                if (searchResults.style.display !== 'block') return;
-
-                const results = document.querySelectorAll('.search-result-item');
-                if (!results.length) return;
-
-                if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    selectedIndex = Math.min(selectedIndex + 1, results.length - 1);
-                    updateSelection(results);
-                } else if (e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    selectedIndex = Math.max(selectedIndex - 1, 0);
-                    updateSelection(results);
-                } else if (e.key === 'Enter' && selectedIndex >= 0) {
-                    e.preventDefault();
-                    results[selectedIndex].click();
-                } else if (e.key === 'Escape') {
-                    searchResults.style.display = 'none';
-                }
-            });
         }
 
-        function updateSelection(results) {
-            results.forEach((result, index) => {
-                if (index === selectedIndex) {
-                    result.classList.add('selected');
-                    result.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        function setupSearch() {
+            const searchInput = document.getElementById('item-search');
+            const searchResults = document.getElementById('search-results');
+            let currentHighlightIndex = -1;
+
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const filteredItems = items.filter(item =>
+                    item.description.toLowerCase().includes(searchTerm)
+                );
+
+                searchResults.innerHTML = filteredItems.map(item => `
+                    <div class="search-result-item"
+                         data-description="${item.description}"
+                         data-price="${item.price}"
+                         onclick="selectSearchItem(this)">
+                        ${item.description}
+                    </div>
+                `).join('');
+
+                if (filteredItems.length > 0) {
+                    searchResults.style.display = 'block';
+                    currentHighlightIndex = 0;
+                    highlightCurrentItem();
                 } else {
-                    result.classList.remove('selected');
+                    searchResults.style.display = 'none';
+                    currentHighlightIndex = -1;
                 }
             });
+
+            searchInput.addEventListener('keydown', function(e) {
+                const items = searchResults.getElementsByClassName('search-result-item');
+
+                switch(e.key) {
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        if (currentHighlightIndex < items.length - 1) {
+                            currentHighlightIndex++;
+                            highlightCurrentItem();
+                        }
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        if (currentHighlightIndex > 0) {
+                            currentHighlightIndex--;
+                            highlightCurrentItem();
+                        }
+                        break;
+                    case 'Enter':
+                        e.preventDefault();
+                        if (currentHighlightIndex >= 0 && items[currentHighlightIndex]) {
+                            selectSearchItem(items[currentHighlightIndex]);
+                        }
+                        break;
+                    case 'Escape':
+                        toggleItemsList();
+                        break;
+                }
+            });
+
+            function highlightCurrentItem() {
+                const items = searchResults.getElementsByClassName('search-result-item');
+                Array.from(items).forEach(item => item.classList.remove('highlight'));
+                if (currentHighlightIndex >= 0 && items[currentHighlightIndex]) {
+                    items[currentHighlightIndex].classList.add('highlight');
+                    items[currentHighlightIndex].scrollIntoView({ block: 'nearest' });
+                }
+            }
         }
 
         window.selectSearchItem = function(element) {
@@ -358,8 +358,9 @@
             const price = element.getAttribute('data-price');
 
             document.getElementById('item-selector').textContent = description;
-            selectedItem = items.find(item => item.description === description);
+            document.getElementById('item-search').style.display = 'none';
             document.getElementById('search-results').style.display = 'none';
+            selectedItem = items.find(item => item.description === description);
         }
 
         // Modify window.onload

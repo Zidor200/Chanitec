@@ -73,13 +73,16 @@
         <h3>Ajouter un article</h3>
         <div style="display: flex; gap: 10px; align-items: center;">
             <div class="search-container" style="flex-grow: 1; position: relative;">
-                <button id="item-selector" class="item-selector-button" onclick="toggleItemsList()">
-                    Sélectionner un article ▼
-                </button>
+                <div class="item-selector-wrapper">
+                    <button id="item-selector" class="item-selector-button" onclick="toggleItemsList()">
+                        Sélectionner un article ▼
+                    </button>
+                    <input type="text" id="item-search" class="item-search-input" placeholder="Rechercher un article..." style="display: none;">
+                </div>
                 <div id="search-results" class="search-results"></div>
             </div>
             <div class="number-input-container" style="width: auto;">
-            <input type="number" id="item-quantity" value="1" min="1" style="padding: 8px; width: 80px; font-size: 20px;" placeholder="Quantité">
+                <input type="number" id="item-quantity" value="1" min="1" style="padding: 8px; width: 80px; font-size: 20px;" placeholder="Quantité">
             </div>
             <button onclick="addSelectedItem()" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
                 Ajouter
