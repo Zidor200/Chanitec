@@ -79,7 +79,11 @@ function deleteClient(clientId) {
         displayClients();
     }
 }
-
+function generateNewClientId() {
+    const lastClient = clients[clients.length - 1];
+    const lastId = lastClient ? parseInt(lastClient.id) : 0;
+    return (lastId + 1).toString().padStart(4, '0');
+}
 // Initialize the page
 window.onload = function() {
     // Add event listeners
@@ -87,15 +91,12 @@ window.onload = function() {
         e.preventDefault();
 
         const name = document.getElementById('client-name').value;
-        const id = document.getElementById('client-id').value;
+        const id = generateNewClientId();
+        console.log(id);
         const sites = Array.from(document.getElementsByClassName('site-input'))
             .map(input => input.value.trim())
             .filter(site => site !== '');
 
-        if (clients.some(c => c.id === id)) {
-            alert('Un client avec cet ID existe déjà.');
-            return;
-        }
 
         clients.push({ name, id, sites });
         localStorage.setItem('clients', JSON.stringify(clients));
