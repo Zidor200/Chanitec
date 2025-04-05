@@ -1,46 +1,72 @@
-# Getting Started with Create React App
+# FACTEUR - Application de Calcul de Prix Offre Climatisation
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Cette application permet de créer et gérer des devis pour des offres de climatisation. Elle est construite avec React, TypeScript et Material UI.
 
-## Available Scripts
+## Fonctionnalités
 
-In the project directory, you can run:
+- Création et gestion de devis
+- Calcul automatique des prix selon les taux de change et de marge
+- Gestion des articles et des clients
+- Exportation des devis en PDF
+- Interface utilisateur moderne et réactive
 
-### `npm start`
+## Prérequis
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- Node.js (version 14.x ou supérieure)
+- npm (version 6.x ou supérieure)
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## Installation
 
-### `npm test`
+1. Clonez ce dépôt ou téléchargez les fichiers sources
+2. Ouvrez un terminal et naviguez vers le dossier du projet
+3. Installez les dépendances:
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```bash
+npm install
+```
 
-### `npm run build`
+## Démarrage de l'application
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Pour lancer l'application en mode développement:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```bash
+npm start
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+L'application sera accessible à l'adresse [http://localhost:3000](http://localhost:3000).
 
-### `npm run eject`
+## Construction pour la production
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+Pour construire l'application pour la production:
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```bash
+npm run build
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+Les fichiers de production seront générés dans le dossier `build`.
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+## Structure du projet
 
-## Learn More
+- `src/components`: Composants réutilisables
+- `src/contexts`: Contextes React pour la gestion d'état
+- `src/models`: Interfaces TypeScript et types
+- `src/pages`: Composants de pages
+- `src/services`: Services pour les données et les API
+- `src/utils`: Fonctions utilitaires
+- `src/hooks`: Hooks React personnalisés
+- `src/styles`: Styles globaux et variables
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Gestion de l'état
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+L'application utilise React Context API avec useReducer pour gérer l'état global. Cela permet:
+
+- Un état prévisible grâce à un flux de données unidirectionnel
+- Une séparation claire entre l'UI et la logique métier
+- Une préparation pour une future intégration avec un backend
+
+## Futurs développements
+
+- Intégration avec un backend pour le stockage persistant des données
+- Authentification des utilisateurs
+- Améliorations de l'interface utilisateur
+- Génération de rapports

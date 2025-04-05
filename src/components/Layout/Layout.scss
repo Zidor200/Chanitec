@@ -1,0 +1,83 @@
+.layout-root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+
+  .app-bar {
+    background-color: #1976d2;
+
+    .toolbar-content {
+      display: flex;
+      width: 100%;
+      align-items: center;
+      justify-content: space-between;
+
+      .logo-container {
+        display: flex;
+        align-items: center;
+
+        .header-logo {
+          height: 60px;
+          margin-right: 1rem;
+        }
+      }
+
+      .title-container {
+        flex-grow: 1;
+        text-align: center;
+
+        .page-title {
+          font-weight: bold;
+          letter-spacing: 0.5px;
+        }
+      }
+
+      .quote-id-container {
+        min-width: 150px;
+        text-align: right;
+      }
+    }
+  }
+
+  .main-content {
+    flex-grow: 1;
+    padding: 2rem 1rem;
+    background-color: #f5f5f5;
+  }
+
+  .footer {
+    padding: 1.5rem;
+    margin-top: auto;
+    background-color: #f5f5f5;
+    border-top: 1px solid #e0e0e0;
+  }
+}
+
+// Print styles
+@media print {
+  .layout-root {
+    background-color: white;
+
+    .app-bar {
+      position: relative;
+      color: black;
+      background-color: white;
+      box-shadow: none;
+      border-bottom: 1px solid #ddd;
+      margin-bottom: 1rem;
+
+      .header-logo {
+        display: block;
+      }
+    }
+
+    .main-content {
+      padding: 0;
+      background-color: white;
+    }
+
+    .footer {
+      display: none;
+    }
+  }
+}

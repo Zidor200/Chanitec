@@ -1,0 +1,45 @@
+.history-container {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+
+  .filters-section {
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .quote-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s, box-shadow 0.2s;
+
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .quote-id {
+      font-weight: 600;
+      color: #1976d2;
+      margin-bottom: 0.5rem;
+    }
+
+    .MuiCardContent-root {
+      flex-grow: 1;
+    }
+
+    .MuiCardActions-root {
+      justify-content: flex-end;
+      padding: 0.5rem 1rem;
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 600px) {
+  .history-container {
+    .filters-section {
+      padding: 1rem;
+    }
+  }
+}

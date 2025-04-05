@@ -1,0 +1,159 @@
+.clients-page-container {
+  padding-bottom: 2rem;
+
+  .clients-paper {
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+
+    .clients-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+
+      @media (max-width: 600px) {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .section-title {
+        margin-bottom: 0.5rem;
+      }
+
+      .search-and-add {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+
+        @media (max-width: 600px) {
+          flex-direction: column;
+          align-items: stretch;
+          width: 100%;
+        }
+
+        .search-field {
+          min-width: 250px;
+        }
+      }
+    }
+
+    .clients-list {
+      .client-accordion {
+        margin-bottom: 0.5rem;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .client-summary {
+          width: 100%;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+
+          .client-name {
+            font-weight: 500;
+
+            .client-id {
+              font-size: 0.85em;
+              color: #666;
+              margin-left: 0.5rem;
+              font-weight: normal;
+            }
+          }
+
+          .client-actions {
+            display: flex;
+            gap: 0.5rem;
+          }
+        }
+
+        .sites-container {
+          width: 100%;
+
+          .sites-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+          }
+
+          .sites-divider {
+            margin-bottom: 1rem;
+          }
+
+          .no-sites {
+            margin: 1rem 0;
+            color: #666;
+            font-style: italic;
+          }
+
+          .site-name {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+
+            .site-icon {
+              color: #1976d2;
+            }
+          }
+        }
+      }
+
+      .no-clients {
+        padding: 2rem 0;
+        color: #666;
+      }
+    }
+  }
+}
+
+// Styling for the client dialog
+.sites-input-section {
+  .sites-divider {
+    margin: 0.5rem 0 1rem;
+  }
+
+  .sites-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 0.5rem 0;
+    background-color: #f9f9f9;
+
+    .MuiListItem-root {
+      border-bottom: 1px solid #f0f0f0;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      .MuiListItemText-primary {
+        font-size: 0.9rem;
+      }
+    }
+
+    .no-sites {
+      padding: 1rem;
+      text-align: center;
+    }
+  }
+
+  .add-site-form {
+    margin-top: 1rem;
+
+    .MuiButton-root {
+      min-width: 40px;
+      padding: 5px;
+    }
+  }
+}
+
+@media print {
+  .clients-page-container {
+    display: none;
+  }
+}

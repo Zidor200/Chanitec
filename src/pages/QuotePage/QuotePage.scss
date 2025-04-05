@@ -1,0 +1,25 @@
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  margin-top: 2rem;
+}
+
+.quote-content {
+  padding-bottom: 2rem;
+}
+
+// Print styles
+@media print {
+  .quote-content {
+    padding: 0;
+
+    @page {
+      size: A4;
+      margin: 15mm;
+    }
+  }
+}

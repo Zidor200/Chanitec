@@ -1,0 +1,69 @@
+.quote-header {
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+
+  .quote-id-display {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-bottom: 1rem;
+
+    .id-label {
+      margin-right: 0.5rem;
+      font-weight: 500;
+    }
+
+    .id-value {
+      font-weight: 700;
+      color: #1976d2;
+    }
+  }
+
+  .info-grid {
+    .header-field {
+      margin-top: 0.5rem;
+      margin-bottom: 0.5rem;
+
+      .MuiFormLabel-root {
+        font-weight: 600;
+        font-size: 0.875rem;
+      }
+
+      .MuiInputBase-input {
+        font-size: 0.9rem;
+      }
+    }
+  }
+}
+
+@media print {
+  .quote-header {
+    padding: 0;
+    margin-bottom: 1rem;
+    box-shadow: none;
+    background-color: white;
+
+    .quote-id-display {
+      margin-bottom: 0.5rem;
+    }
+
+    .info-grid {
+      .header-field {
+        border: none;
+
+        .MuiOutlinedInput-notchedOutline {
+          border: none;
+        }
+
+        .MuiSelect-select {
+          border: none;
+          padding-left: 0;
+        }
+
+        .MuiInputBase-input {
+          color: black;
+        }
+      }
+    }
+  }
+}
