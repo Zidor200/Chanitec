@@ -16,10 +16,38 @@
 @media print {
   .quote-content {
     padding: 0;
+    max-width: 210mm;
+    margin: 0 auto;
+    page-break-inside: avoid;
 
-    @page {
-      size: A4;
-      margin: 15mm;
+    // Prevent blank first page
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 100% !important;
+
+    // Ensure all elements display on the same page
+    > div {
+      page-break-inside: avoid !important;
+      margin-bottom: 5mm;
+      break-inside: avoid !important;
     }
+  }
+
+  // Decrease table font size to fit content
+  table {
+    font-size: 9pt;
+    width: 100%;
+    margin-bottom: 3mm;
+  }
+
+  // Make table rows more compact
+  th, td {
+    padding: 4px !important;
+  }
+
+  // Force background colors and images to be printed
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 }

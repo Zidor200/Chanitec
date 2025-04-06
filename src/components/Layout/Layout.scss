@@ -57,23 +57,47 @@
 @media print {
   .layout-root {
     background-color: white;
+    // Prevent page breaks
+    display: flex !important;
+    flex-direction: column !important;
+    page-break-before: avoid !important;
+    page-break-after: avoid !important;
+    page-break-inside: avoid !important;
 
     .app-bar {
       position: relative;
       color: black;
-      background-color: white;
+      background-color: transparent;
       box-shadow: none;
       border-bottom: 1px solid #ddd;
-      margin-bottom: 1rem;
+      margin-bottom: 0.5rem; // Reduce margin to save space
 
-      .header-logo {
-        display: block;
+      .toolbar-content {
+        .logo-container {
+          .header-logo {
+            display: block;
+            height: 60px; // Reduce logo size
+            margin-right: 1rem;
+          }
+        }
+
+        .title-container {
+          flex-grow: 1;
+
+          .page-title {
+            font-size: 16pt; // Reduce font size
+            color: #000;
+          }
+        }
       }
     }
 
     .main-content {
       padding: 0;
-      background-color: white;
+      background-color: transparent;
+      // Scale content to fit on one page
+      transform-origin: top center;
+      transform: scale(0.95);
     }
 
     .footer {

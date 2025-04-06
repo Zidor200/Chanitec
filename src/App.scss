@@ -21,8 +21,22 @@ body {
 
 // Print-specific styles
 @media print {
+  html, body {
+    width: 210mm;
+    height: auto;
+    margin: 0;
+    padding: 0;
+  }
+
   body {
     background-color: white;
+    background-image: url('./logo.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 40%;
+    opacity: 1 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   button, input[type="submit"], input[type="reset"] {
@@ -30,7 +44,26 @@ body {
   }
 
   @page {
-    size: A4;
-    margin: 20mm 15mm;
+    size: A4 portrait;
+    margin: 5mm;
+  }
+
+  .main-content {
+    page-break-inside: avoid;
+    transform-origin: top center;
+    transform: scale(0.95);
+  }
+
+  .quote-content,
+  .quote-content > div,
+  .layout-root {
+    page-break-inside: avoid !important;
+    page-break-before: avoid !important;
+    page-break-after: avoid !important;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
   }
 }

@@ -62,40 +62,9 @@ const QuoteActions: React.FC<QuoteActionsProps> = ({
   // Handle print action using browser print functionality
   const handlePrint = () => {
     if (contentRef.current) {
-      const printWindow = window.open('', '_blank');
-      if (printWindow) {
-        const printContent = contentRef.current.innerHTML;
-        const styles = Array.from(document.styleSheets)
-          .map(styleSheet => {
-            try {
-              return Array.from(styleSheet.cssRules)
-                .map(rule => rule.cssText)
-                .join('\n');
-            } catch (e) {
-              return '';
-            }
-          })
-          .join('\n');
-
-        printWindow.document.write(`
-          <html>
-            <head>
-              <title>${generatePdfFilename()}</title>
-              <style>${styles}</style>
-            </head>
-            <body class="pdf-container">
-              ${printContent}
-            </body>
-          </html>
-        `);
-
-        printWindow.document.close();
-        printWindow.focus();
-        setTimeout(() => {
-          printWindow.print();
-          printWindow.close();
-        }, 500);
-      }
+      // Instead of opening a new window, trigger the browser's native print dialog
+      // This way, all print media queries will be applied
+      window.print();
     }
   };
 
