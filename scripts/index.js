@@ -500,7 +500,7 @@
                 return `FACT-${randomNum}-${version}`;
             }
 
-            constructor(clientName, site, object, date, fournitures, maindoeuvre, fout_TxChn, fout_TxMarge, mo_TxChn, mo_TxMarge, totalFournitures, totalMaindoeuvre) {
+            constructor(clientName, site, object, date, fournitures, maindoeuvre, fout_TxChn, fout_TxMarge, mo_TxChn, mo_TxMarge, totalFournitures, totalMaindoeuvre, Fout_description, Mo_description) {
                 this.id = FACTEUR.generateId();
                 this.clientName = clientName;
                 this.site = site;
@@ -514,6 +514,8 @@
                 this.mo_TxMarge = mo_TxMarge;
                 this.totalFournitures = totalFournitures;
                 this.totalMaindoeuvre = totalMaindoeuvre;
+                this.Fout_description = Fout_description;
+                this.Mo_description = Mo_description;
                 this.timestamp = new Date().toISOString();
             }
 
@@ -538,7 +540,9 @@
                     json.mo_TxChn,
                     json.mo_TxMarge,
                     json.totalFournitures,
-                    json.totalMaindoeuvre
+                    json.totalMaindoeuvre,
+                    json.Fout_description,
+                    json.Mo_description
                 );
                 facteur.id = json.id; // Preserve the original ID
                 return facteur;
@@ -559,6 +563,8 @@
                     mo_TxMarge: this.mo_TxMarge,
                     totalFournitures: this.totalFournitures,
                     totalMaindoeuvre: this.totalMaindoeuvre,
+                    Fout_description: this.Fout_description,
+                    Mo_description: this.Mo_description,
                     timestamp: this.timestamp
                 };
             }
@@ -566,6 +572,8 @@
 
         function saveToHistory() {
             const history = JSON.parse(localStorage.getItem('quoteHistory') || '[]');
+            const Fout_description = document.getElementById('fournitures-description').value;
+            const Mo_description = document.getElementById('mo-description').value;
 
             // Create a new FACTEUR instance
             const facteur = new FACTEUR(
@@ -590,7 +598,15 @@
                     prs: (parseFloat(item.pre) * item.nbTech * item.nbHours * item.weekend * moTxChg).toFixed(2),
                     pvus: (parseFloat(item.pre) * item.nbTech * item.nbHours * item.weekend * moTxChg / moTxMarge).toFixed(2),
                     pvs: (parseFloat(item.pre) * item.nbTech * item.nbHours * item.weekend * moTxChg / moTxMarge).toFixed(2)
-                }))
+                })),
+                document.getElementById('tx-chg').value,
+                document.getElementById('tx-marge').value,
+                document.getElementById('mo-tx-chg').value,
+                document.getElementById('mo-tx-marge').value,
+                document.getElementById('total-fournitures').textContent,
+                document.getElementById('total-mo').textContent,
+                Fout_description,
+                Mo_description
             );
 
             history.push(facteur.toJSON());
@@ -682,7 +698,7 @@
                     }));
                     updateLaborTable();
 
-                    // Load descriptions - use the stored descriptions from the quote
+                    // Load descriptions
                     document.getElementById('mo-description').value = quote.Mo_description || '';
                     document.getElementById('fournitures-description').value = quote.Fout_description || '';
 
