@@ -57,6 +57,8 @@ const SuppliesSection: React.FC<SuppliesSectionProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedItem, setSelectedItem] = useState<SupplyItem | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [customPriceDialogOpen, setCustomPriceDialogOpen] = useState(false);
+  const [customPrice, setCustomPrice] = useState<number>(0);
 
   // Load catalog items on component mount
   useEffect(() => {
@@ -98,11 +100,29 @@ const SuppliesSection: React.FC<SuppliesSectionProps> = ({
   // Handle adding the selected item
   const handleAddItem = () => {
     if (selectedItem) {
+      if (selectedItem.priceEuro === 0) {
+        setCustomPrice(0);
+        setCustomPriceDialogOpen(true);
+      } else {
+        onAddItem({
+          description: selectedItem.description,
+          quantity: quantity,
+          priceEuro: selectedItem.priceEuro,
+        });
+        handleCloseSearchDialog();
+      }
+    }
+  };
+
+  // Handle adding item with custom price
+  const handleAddItemWithCustomPrice = () => {
+    if (selectedItem && customPrice > 0) {
       onAddItem({
         description: selectedItem.description,
         quantity: quantity,
-        priceEuro: selectedItem.priceEuro,
+        priceEuro: customPrice,
       });
+      setCustomPriceDialogOpen(false);
       handleCloseSearchDialog();
     }
   };
@@ -325,6 +345,51 @@ const SuppliesSection: React.FC<SuppliesSectionProps> = ({
             color="primary"
             variant="contained"
             disabled={!selectedItem}
+          >
+            Ajouter
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Custom Price Dialog */}
+      <Dialog
+        open={customPriceDialogOpen}
+        onClose={() => setCustomPriceDialogOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Entrer un prix personnalisé</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="textSecondary" paragraph>
+            L'article "{selectedItem?.description}" a un prix de 0.00€.
+            Veuillez entrer un prix personnalisé pour cet article.
+          </Typography>
+          <TextField
+            fullWidth
+            label="Prix (€)"
+            type="number"
+            value={customPrice}
+            onChange={(e) => setCustomPrice(parseFloat(e.target.value))}
+            variant="outlined"
+            margin="normal"
+            autoFocus
+            InputProps={{
+              inputProps: {
+                min: 0.01,
+                step: 0.01
+              }
+            }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCustomPriceDialogOpen(false)} color="primary">
+            Annuler
+          </Button>
+          <Button
+            onClick={handleAddItemWithCustomPrice}
+            color="primary"
+            variant="contained"
+            disabled={customPrice <= 0}
           >
             Ajouter
           </Button>

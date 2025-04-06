@@ -1,5 +1,6 @@
 import React, { ReactNode } from 'react';
 import { AppBar, Box, Container, Toolbar, Typography, CssBaseline } from '@mui/material';
+import logo from '../../logo.png'; // Import the logo from src directory
 import './Layout.scss';
 
 interface LayoutProps {
@@ -15,8 +16,7 @@ const Layout: React.FC<LayoutProps> = ({ children, title = 'CALCUL DE PRIX OFFRE
         <Toolbar>
           <Box className="toolbar-content">
             <Box className="logo-container">
-              {/* Logo can be added here */}
-              <img src="/logo-header.png" alt="Logo" className="header-logo" />
+              <img src={logo} alt="Logo" className="header-logo" />
             </Box>
             <Box className="title-container">
               <Typography variant="h6" component="h1" className="page-title">

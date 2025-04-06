@@ -15,7 +15,9 @@ This document tracks the progress of converting the original FACTEUR application
   - Date handling (date-fns)
   - Styling (sass)
   - PDF generation (react-to-pdf)
+  - Excel handling (xlsx)
 - Set up project directory structure
+- Push to GitHub repository on branch `react_version`
 
 ### Core Structure
 - Defined TypeScript models and interfaces in `models/Quote.ts`
@@ -36,49 +38,65 @@ Created the following components with their respective SCSS styles:
 
 ### Pages
 - Created QuotePage component that integrates all other components
+- Implemented HistoryPage for viewing and managing saved quotes
+- Implemented ItemsPage for managing supply items
+- Implemented ClientsPage for managing clients and sites
 - Set up basic app structure with placeholder routing in App.tsx
 
 ### UI/UX
 - Implemented consistent styling across components
-- Added responsive design with Material UI Grid system
+- Added responsive design with Material UI Box system
 - Created print-specific styles
 
-## Known Issues
+### Features
+- Quote generation with price calculations
+- PDF export functionality
+- Excel import for supply items
+- Client and site management
+- Quote history with filtering capabilities
+- Fixed calculation logic for better precision
+
+## Resolved Issues
 
 ### TypeScript Errors
-- Most components were showing TypeScript errors due to missing type declarations:
-  - React and React DOM
-  - Material UI
-  - Other libraries
+- Fixed TypeScript errors by installing required type declarations
+- Resolved Grid component errors by migrating to Box with flexbox
+- Added proper type definitions for third-party libraries
 
-### PDF Generation
-- The PDF generation functionality is implemented but needs testing
+### Calculation Logic
+- Updated calculation logic to maintain precision:
+  - PR dollar = PR euro * exchange rate
+  - PV/U dollar = PR dollar / margin rate
+  - PV dollar total HT = PV/U * Quantity
+- Set TVA rate to 16%
 
-### Form Validation
-- Need to add proper form validation using yup and react-hook-form
+### Data Management
+- Implemented complete CRUD operations for:
+  - Quotes
+  - Clients and sites
+  - Supply items
+
+## Current Work in Progress
+
+### Database Integration
+- Preparing for PostgreSQL integration:
+  - Database schema design
+  - Server-side API implementation
+  - Migration from localStorage to database storage
+
+### Deployment
+- Setting up deployment to Vercel
 
 ## What Still Needs To Be Done
 
-### Fix TypeScript Errors
-- Install missing TypeScript declarations:
-```
-npm install --save-dev @types/react @types/react-dom @types/node @types/web-vitals
-```
-
-### Implement Additional Pages
-- History Page
-  - Display list of previously saved quotes
-  - Allow loading and editing existing quotes
-
-- Clients Management Page
-  - CRUD operations for clients
-  - CRUD operations for client sites
-
-- Items Management Page
-  - CRUD operations for supply items catalog
+### Complete Database Integration
+- Implement PostgreSQL database backend
+- Create RESTful API with Express
+- Update frontend services to use API instead of localStorage
 
 ### Additional Features
-- Add data import/export functionality
+- Add user authentication
+- Enhance data import/export functionality
 - Add more detailed PDF customization
 - Implement quote templates
 - Add user preferences for default values
@@ -94,23 +112,15 @@ npm install --save-dev @types/react @types/react-dom @types/node @types/web-vita
 - Add component tests
 - Add integration tests for key workflows
 
-### Build and Deployment
-- Configure production build
-- Set up continuous integration
-- Create deployment scripts
-
 ## Next Steps (Priority Order)
-1. Fix TypeScript errors by installing all required type declarations
-2. Complete the History page to allow loading saved quotes
-3. Implement Items Management page to maintain the product catalog
-4. Implement Clients Management page
-5. Add form validation throughout the application
-6. Test and refine PDF generation
-7. Set up proper testing
+1. Complete Vercel deployment for the frontend
+2. Implement PostgreSQL database with Express backend
+3. Migrate from localStorage to database storage
+4. Add user authentication
+5. Set up proper testing
 
 ## Future Considerations
-- Backend integration for data persistence
-- User authentication
 - Multi-language support
 - Theming options
 - Advanced reporting features
+- Mobile app version

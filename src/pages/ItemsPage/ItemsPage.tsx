@@ -80,19 +80,31 @@ const ItemsPage: React.FC<ItemsPageProps> = ({ currentPath, onNavigate }) => {
   // Load all items from storage
   const loadItems = () => {
     const loadedItems = storageService.getSupplies();
-    setItems(loadedItems);
-    setFilteredItems(loadedItems);
+    // Sort items alphabetically by description
+    const sortedItems = [...loadedItems].sort((a, b) =>
+      a.description.localeCompare(b.description)
+    );
+    setItems(sortedItems);
+    setFilteredItems(sortedItems);
   };
 
   // Filter items based on search term
   const filterItems = () => {
     if (!searchTerm.trim()) {
-      setFilteredItems(items);
+      // Return all items, sorted alphabetically
+      const sortedItems = [...items].sort((a, b) =>
+        a.description.localeCompare(b.description)
+      );
+      setFilteredItems(sortedItems);
     } else {
       const filtered = items.filter(item =>
         item.description.toLowerCase().includes(searchTerm.toLowerCase())
       );
-      setFilteredItems(filtered);
+      // Sort filtered results alphabetically
+      const sortedFiltered = [...filtered].sort((a, b) =>
+        a.description.localeCompare(b.description)
+      );
+      setFilteredItems(sortedFiltered);
     }
   };
 
