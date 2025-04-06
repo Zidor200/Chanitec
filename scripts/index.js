@@ -418,6 +418,9 @@
                 document.getElementById('mo-description').value = facteur.maindoeuvre[0]?.description || '';
                 document.getElementById('fournitures-description').value = facteur.fournitures[0]?.description || '';
 
+                // Recalculate totals with the loaded data
+                calculateTotals();
+
                 // Clear the current quote from localStorage
                 localStorage.removeItem('currentQuote');
             }
@@ -608,8 +611,18 @@
                     // Display the original quote ID in the existing container
                     document.getElementById('quote-id-display').textContent = originalQuoteId;
 
-                    // Set client first
-                    document.getElementById('client-input').value = quote.clientName;
+                    // Set client first and ensure the correct option is selected
+                    const clientSelect = document.getElementById('client-input');
+                    clientSelect.value = quote.clientName;
+
+                    // If client doesn't exist in options, add it
+                    if (clientSelect.value !== quote.clientName) {
+                        const newClientOption = document.createElement('option');
+                        newClientOption.value = quote.clientName;
+                        newClientOption.textContent = quote.clientName;
+                        clientSelect.appendChild(newClientOption);
+                        clientSelect.value = quote.clientName;
+                    }
 
                     // Update site options based on selected client
                     updateSiteOptions();
@@ -633,6 +646,24 @@
                     document.getElementById('object-input').value = quote.object;
                     document.getElementById('date-input').value = quote.date;
 
+                    // Set the tx values
+                    if (quote.fout_TxChn) {
+                        document.getElementById('tx-chg').value = quote.fout_TxChn;
+                        txChg = parseFloat(quote.fout_TxChn);
+                    }
+                    if (quote.fout_TxMarge) {
+                        document.getElementById('tx-marge').value = quote.fout_TxMarge;
+                        txMarge = parseFloat(quote.fout_TxMarge);
+                    }
+                    if (quote.mo_TxChn) {
+                        document.getElementById('mo-tx-chg').value = quote.mo_TxChn;
+                        moTxChg = parseFloat(quote.mo_TxChn);
+                    }
+                    if (quote.mo_TxMarge) {
+                        document.getElementById('mo-tx-marge').value = quote.mo_TxMarge;
+                        moTxMarge = parseFloat(quote.mo_TxMarge);
+                    }
+
                     // Load fournitures
                     selectedItems = quote.fournitures.map(item => ({
                         description: item.description,
@@ -654,6 +685,9 @@
                     // Load descriptions - use the stored descriptions from the quote
                     document.getElementById('mo-description').value = quote.Mo_description || '';
                     document.getElementById('fournitures-description').value = quote.Fout_description || '';
+
+                    // Recalculate totals with the loaded data
+                    calculateTotals();
 
                     // Show update button and hide save button
                     document.getElementById('update-quote-btn').style.display = 'inline-block';
