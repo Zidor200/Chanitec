@@ -20,6 +20,7 @@ const QuotePage: React.FC<QuotePageProps> = ({ currentPath, onNavigate }) => {
     state,
     createNewQuote,
     saveQuote,
+    updateQuote,
     setQuoteField,
     addSupplyItem,
     removeSupplyItem,
@@ -28,7 +29,7 @@ const QuotePage: React.FC<QuotePageProps> = ({ currentPath, onNavigate }) => {
     recalculateTotals
   } = useQuote();
 
-  const { currentQuote, isLoading } = state;
+  const { currentQuote, isLoading, isExistingQuote } = state;
   const contentRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
 
   // Create a new quote if none exists
@@ -63,7 +64,9 @@ const QuotePage: React.FC<QuotePageProps> = ({ currentPath, onNavigate }) => {
         clientName={currentQuote.clientName}
         siteName={currentQuote.siteName}
         date={currentQuote.date}
+        isExistingQuote={isExistingQuote}
         onSave={saveQuote}
+        onUpdate={updateQuote}
         onViewHistory={handleViewHistory}
         contentRef={contentRef}
       />

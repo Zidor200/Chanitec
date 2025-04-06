@@ -8,16 +8,48 @@ export const generateId = (): string => {
 };
 
 /**
- * Generates a quote ID with F-prefix followed by current date and random characters
+ * Generates a random 8-digit number for quote IDs
  */
-export const generateQuoteId = (): string => {
-  const now = new Date();
-  const year = now.getFullYear().toString().slice(-2);
-  const month = (now.getMonth() + 1).toString().padStart(2, '0');
-  const day = now.getDate().toString().padStart(2, '0');
-  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+const generateRandomDigits = (length: number): string => {
+  return Math.floor(Math.random() * Math.pow(10, length))
+    .toString()
+    .padStart(length, '0');
+};
 
-  return `F-${year}${month}${day}-${random}`;
+/**
+ * Generates a quote ID with F-prefix followed by 8 random digits and version number
+ * Format: F-[random 8 digits]-[version number]
+ * @param baseId Optional base ID to use for versioning
+ * @param version Optional version number (defaults to 000)
+ */
+export const generateQuoteId = (baseId?: string, version: number = 0): string => {
+  // Format the version as a 3-digit string (000, 001, etc.)
+  const versionStr = version.toString().padStart(3, '0');
+
+  // If a baseId is provided, use it, otherwise generate a new one
+  const randomPart = baseId || generateRandomDigits(8);
+
+  return `F-${randomPart}-${versionStr}`;
+};
+
+/**
+ * Extracts the base ID (8 digits) from a quote ID
+ * @param quoteId The full quote ID in format F-[random 8 digits]-[version number]
+ * @returns The 8-digit base ID or null if the format is invalid
+ */
+export const extractBaseId = (quoteId: string): string | null => {
+  const match = quoteId.match(/^F-(\d{8})-\d{3}$/);
+  return match ? match[1] : null;
+};
+
+/**
+ * Extracts the version number from a quote ID
+ * @param quoteId The full quote ID in format F-[random 8 digits]-[version number]
+ * @returns The version number as a number or null if the format is invalid
+ */
+export const extractVersion = (quoteId: string): number | null => {
+  const match = quoteId.match(/^F-\d{8}-(\d{3})$/);
+  return match ? parseInt(match[1], 10) : null;
 };
 
 /**

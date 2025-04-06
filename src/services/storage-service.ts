@@ -1,5 +1,6 @@
 import { Client, Quote, Site, SupplyItem } from '../models/Quote';
 import { generateId, generateQuoteId } from '../utils/id-generator';
+import sampleItems from '../data/sample-items.json';
 
 /**
  * Storage keys used by the application
@@ -9,6 +10,7 @@ const STORAGE_KEYS = {
   CLIENTS: 'clients',
   SITES: 'sites',
   SUPPLIES: 'supplies',
+  INITIALIZED: 'app_initialized',
 };
 
 /**
@@ -16,6 +18,44 @@ const STORAGE_KEYS = {
  * This is designed to be easily replaced with a real backend API in the future
  */
 class StorageService {
+  constructor() {
+    this.initializeDataIfNeeded();
+  }
+
+  /**
+   * Initialize data from sample files if the app is running for the first time
+   */
+  private initializeDataIfNeeded(): void {
+    // Check if the app has been initialized before
+    const initialized = localStorage.getItem(STORAGE_KEYS.INITIALIZED);
+
+    if (!initialized) {
+      console.log('Initializing app with sample data...');
+
+      // Load sample items if the supplies store is empty
+      const existingSupplies = this.getSupplies();
+      if (existingSupplies.length === 0) {
+        try {
+          // Import items from sample-items.json
+          const items = sampleItems as SupplyItem[];
+          items.forEach(item => {
+            this.saveSupply({
+              description: item.description,
+              priceEuro: item.priceEuro,
+              quantity: item.quantity || 1
+            });
+          });
+          console.log(`Loaded ${items.length} sample items successfully`);
+        } catch (error) {
+          console.error('Failed to load sample items:', error);
+        }
+      }
+
+      // Mark as initialized
+      localStorage.setItem(STORAGE_KEYS.INITIALIZED, 'true');
+    }
+  }
+
   /**
    * Get data from localStorage with a fallback default value
    */

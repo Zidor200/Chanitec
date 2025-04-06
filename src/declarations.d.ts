@@ -11,3 +11,8 @@ declare module 'xlsx' {
 
   export function read(data: any, opts?: any): WorkBook;
 }
+
+declare module '*.json' {
+  const value: any;
+  export default value;
+}

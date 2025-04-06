@@ -36,7 +36,7 @@ const Layout: React.FC<LayoutProps> = ({ children, title = 'CALCUL DE PRIX OFFRE
 
       <Box component="footer" className="footer">
         <Typography variant="body2" color="textSecondary" align="center">
-          © {new Date().getFullYear()} FACTEUR App
+          © {new Date().getFullYear()} Chanitec
         </Typography>
       </Box>
     </Box>

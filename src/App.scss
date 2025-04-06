@@ -26,17 +26,13 @@ body {
     height: auto;
     margin: 0;
     padding: 0;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   body {
     background-color: white;
-    background-image: url('./logo.png');
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: 40%;
-    opacity: 1 !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+    background-image: none;
   }
 
   button, input[type="submit"], input[type="reset"] {
@@ -45,13 +41,14 @@ body {
 
   @page {
     size: A4 portrait;
-    margin: 5mm;
+    margin: 10mm;
   }
 
   .main-content {
-    page-break-inside: avoid;
     transform-origin: top center;
-    transform: scale(0.95);
+    transform: scale(1);
+    max-width: 190mm !important;
+    margin: 0 auto !important;
   }
 
   .quote-content,

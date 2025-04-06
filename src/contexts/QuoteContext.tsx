@@ -12,7 +12,7 @@ import {
   calculateTotalSupplies,
   calculateTotalTTC
 } from '../utils/calculations';
-import { generateId, generateQuoteId } from '../utils/id-generator';
+import { generateId, generateQuoteId, extractBaseId, extractVersion } from '../utils/id-generator';
 
 // Default values
 const DEFAULT_EXCHANGE_RATE = 1.15;
@@ -27,11 +27,13 @@ interface QuoteState {
   isEditing: boolean;
   isLoading: boolean;
   error: string | null;
+  isExistingQuote: boolean;
 }
 
 // Action types
 type QuoteAction =
   | { type: 'SET_QUOTE'; payload: Quote }
+  | { type: 'SET_EXISTING_QUOTE'; payload: boolean }
   | { type: 'CLEAR_QUOTE' }
   | { type: 'START_EDIT' }
   | { type: 'CANCEL_EDIT' }
@@ -52,6 +54,7 @@ const initialState: QuoteState = {
   isEditing: false,
   isLoading: false,
   error: null,
+  isExistingQuote: false,
 };
 
 // Reducer function
@@ -65,11 +68,18 @@ const quoteReducer = (state: QuoteState, action: QuoteAction): QuoteState => {
         error: null,
       };
 
+    case 'SET_EXISTING_QUOTE':
+      return {
+        ...state,
+        isExistingQuote: action.payload,
+      };
+
     case 'CLEAR_QUOTE':
       return {
         ...state,
         currentQuote: null,
         isEditing: false,
+        isExistingQuote: false,
       };
 
     case 'START_EDIT':
@@ -328,6 +338,7 @@ interface QuoteContextProps {
   createNewQuote: () => void;
   loadQuote: (id: string) => void;
   saveQuote: () => Promise<boolean>;
+  updateQuote: () => Promise<boolean>;
   setQuoteField: <K extends keyof Quote>(field: K, value: Quote[K]) => void;
   addSupplyItem: (item: Omit<SupplyItem, 'id'>) => void;
   updateSupplyItem: (item: SupplyItem) => void;
@@ -376,6 +387,7 @@ export const QuoteProvider: React.FC<QuoteProviderProps> = ({ children }) => {
     };
 
     dispatch({ type: 'SET_QUOTE', payload: newQuote });
+    dispatch({ type: 'SET_EXISTING_QUOTE', payload: false });
   };
 
   // Load a quote by ID
@@ -387,6 +399,7 @@ export const QuoteProvider: React.FC<QuoteProviderProps> = ({ children }) => {
 
       if (quote) {
         dispatch({ type: 'SET_QUOTE', payload: quote });
+        dispatch({ type: 'SET_EXISTING_QUOTE', payload: true });
       } else {
         dispatch({ type: 'SET_ERROR', payload: 'Quote not found' });
       }
@@ -406,9 +419,46 @@ export const QuoteProvider: React.FC<QuoteProviderProps> = ({ children }) => {
     try {
       const savedQuote = storageService.saveQuote(state.currentQuote);
       dispatch({ type: 'SET_QUOTE', payload: savedQuote });
+      dispatch({ type: 'SET_EXISTING_QUOTE', payload: true });
       return true;
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: 'Error saving quote' });
+      return false;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  };
+
+  // Update current quote - create a new version
+  const updateQuote = async (): Promise<boolean> => {
+    if (!state.currentQuote) return false;
+
+    dispatch({ type: 'SET_LOADING', payload: true });
+
+    try {
+      const currentQuoteId = state.currentQuote.id;
+      const baseId = extractBaseId(currentQuoteId);
+      const currentVersion = extractVersion(currentQuoteId) ?? 0;
+
+      if (!baseId) {
+        dispatch({ type: 'SET_ERROR', payload: 'Invalid quote ID format' });
+        return false;
+      }
+
+      // Create a new version of the quote with incremented version number
+      const newVersionQuote: Quote = {
+        ...state.currentQuote,
+        id: generateQuoteId(baseId, currentVersion + 1),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      const savedQuote = storageService.saveQuote(newVersionQuote);
+      dispatch({ type: 'SET_QUOTE', payload: savedQuote });
+      dispatch({ type: 'SET_EXISTING_QUOTE', payload: true });
+      return true;
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: 'Error updating quote' });
       return false;
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
@@ -473,6 +523,7 @@ export const QuoteProvider: React.FC<QuoteProviderProps> = ({ children }) => {
     createNewQuote,
     loadQuote,
     saveQuote,
+    updateQuote,
     setQuoteField,
     addSupplyItem,
     updateSupplyItem,

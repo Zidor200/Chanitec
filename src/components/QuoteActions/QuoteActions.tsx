@@ -3,7 +3,8 @@ import { Box, Button, Paper, Snackbar, Alert } from '@mui/material';
 import {
   SaveOutlined,
   PrintOutlined,
-  HistoryOutlined
+  HistoryOutlined,
+  Update as UpdateIcon
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import './QuoteActions.scss';
@@ -12,7 +13,9 @@ interface QuoteActionsProps {
   clientName: string;
   siteName: string;
   date: string;
+  isExistingQuote: boolean;
   onSave: () => Promise<boolean>;
+  onUpdate?: () => Promise<boolean>;
   onViewHistory: () => void;
   contentRef: React.RefObject<HTMLDivElement>;
 }
@@ -21,7 +24,9 @@ const QuoteActions: React.FC<QuoteActionsProps> = ({
   clientName,
   siteName,
   date,
+  isExistingQuote,
   onSave,
+  onUpdate,
   onViewHistory,
   contentRef
 }) => {
@@ -45,6 +50,29 @@ const QuoteActions: React.FC<QuoteActionsProps> = ({
       setSnackbarOpen(true);
     } catch (error) {
       setSnackbarMessage('Erreur lors de l\'enregistrement du devis.');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    }
+  };
+
+  // Handle update action
+  const handleUpdate = async () => {
+    if (!onUpdate) return;
+
+    try {
+      const success = await onUpdate();
+
+      if (success) {
+        setSnackbarMessage('Nouvelle version du devis créée avec succès!');
+        setSnackbarSeverity('success');
+      } else {
+        setSnackbarMessage('Erreur lors de la création d\'une nouvelle version.');
+        setSnackbarSeverity('error');
+      }
+
+      setSnackbarOpen(true);
+    } catch (error) {
+      setSnackbarMessage('Erreur lors de la création d\'une nouvelle version.');
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
     }
@@ -76,15 +104,27 @@ const QuoteActions: React.FC<QuoteActionsProps> = ({
   return (
     <Paper className="quote-actions" elevation={2}>
       <Box className="actions-container">
-        <Button
-          variant="contained"
-          color="primary"
-          className="action-button save-button"
-          startIcon={<SaveOutlined />}
-          onClick={handleSave}
-        >
-          Enregistrer
-        </Button>
+        {isExistingQuote ? (
+          <Button
+            variant="contained"
+            color="primary"
+            className="action-button update-button"
+            startIcon={<UpdateIcon />}
+            onClick={handleUpdate}
+          >
+            Mettre à jour
+          </Button>
+        ) : (
+          <Button
+            variant="contained"
+            color="primary"
+            className="action-button save-button"
+            startIcon={<SaveOutlined />}
+            onClick={handleSave}
+          >
+            Enregistrer
+          </Button>
+        )}
 
         <Button
           variant="contained"

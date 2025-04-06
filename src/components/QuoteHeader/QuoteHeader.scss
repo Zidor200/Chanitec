@@ -16,6 +16,19 @@
     .id-value {
       font-weight: 700;
       color: #1976d2;
+
+      &.is-revision {
+        color: #ff9800;
+      }
+
+      .version-number {
+        font-weight: 800;
+        background-color: #ff9800;
+        color: white;
+        padding: 2px 4px;
+        border-radius: 4px;
+        margin-left: 2px;
+      }
     }
   }
 
@@ -42,26 +55,46 @@
     margin-bottom: 1rem;
     box-shadow: none;
     background-color: white;
+    width: 100%;
+    max-width: 300px;
+    border: 1px solid #333;
 
     .quote-id-display {
-      margin-bottom: 0.5rem;
+      display: none;
     }
 
     .info-grid {
+      display: flex;
+      flex-direction: column;
+      padding: 5mm;
+
       .header-field {
+        margin: 0 0 3mm 0;
         border: none;
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+
+        .MuiInputLabel-root {
+          font-weight: 700;
+          font-size: 10pt;
+          color: black !important;
+          position: relative;
+          transform: none;
+          min-width: 60px;
+          margin-right: 5mm;
+        }
 
         .MuiOutlinedInput-notchedOutline {
           border: none;
         }
 
-        .MuiSelect-select {
+        .MuiSelect-select, .MuiInputBase-input {
           border: none;
-          padding-left: 0;
-        }
-
-        .MuiInputBase-input {
+          padding: 2px 0;
           color: black;
+          font-weight: 600;
+          font-size: 10pt;
         }
       }
     }

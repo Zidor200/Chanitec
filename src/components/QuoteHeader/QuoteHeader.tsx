@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Paper, TextField, Typography, MenuItem } from '@mui/material';
+import { Box, Paper, TextField, Typography, MenuItem, Tooltip } from '@mui/material';
 import { Client, Site } from '../../models/Quote';
 import { storageService } from '../../services/storage-service';
+import { extractVersion } from '../../utils/id-generator';
 import './QuoteHeader.scss';
 
 interface QuoteHeaderProps {
@@ -29,6 +30,28 @@ const QuoteHeader: React.FC<QuoteHeaderProps> = ({
 }) => {
   const [clients, setClients] = useState<Client[]>([]);
   const [sites, setSites] = useState<Site[]>([]);
+
+  // Format quoteId to display version information
+  const formatQuoteId = (id: string) => {
+    const match = id.match(/^(F-\d{8})-(\d{3})$/);
+
+    if (match) {
+      const [_, baseId, version] = match;
+      const versionNum = parseInt(version, 10);
+
+      if (versionNum === 0) {
+        return id;
+      } else {
+        return (
+          <>
+            {baseId}-<span className="version-number">{version}</span>
+          </>
+        );
+      }
+    }
+
+    return id;
+  };
 
   // Load clients on component mount
   useEffect(() => {
@@ -63,15 +86,20 @@ const QuoteHeader: React.FC<QuoteHeaderProps> = ({
     }
   };
 
+  const version = extractVersion(quoteId);
+  const isRevision = version !== null && version > 0;
+
   return (
     <Paper className="quote-header" elevation={2}>
       <Box className="quote-id-display">
         <Typography variant="subtitle1" className="id-label">
           ID Devis:
         </Typography>
-        <Typography variant="subtitle1" className="id-value">
-          {quoteId}
-        </Typography>
+        <Tooltip title={isRevision ? `Version ${version} du devis` : "Version originale"}>
+          <Typography variant="subtitle1" className={`id-value ${isRevision ? 'is-revision' : ''}`}>
+            {formatQuoteId(quoteId)}
+          </Typography>
+        </Tooltip>
       </Box>
 
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }} className="info-grid">

@@ -27,6 +27,14 @@
         }
       }
 
+      &.update-button {
+        background-color: #ff9800;
+
+        &:hover {
+          background-color: #f57c00;
+        }
+      }
+
       &.print-button {
         background-color: #2196f3;
 

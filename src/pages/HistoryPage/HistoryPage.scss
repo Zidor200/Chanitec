@@ -4,18 +4,59 @@
 
   .filters-section {
     padding: 1.5rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
   }
 
   .quote-card {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    transition: transform 0.2s, box-shadow 0.2s;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
 
     &:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    &.version-original {
+      border-left: 4px solid #4caf50;
+    }
+
+    &.version-update {
+      border-left: 4px solid #ff9800;
+    }
+
+    &.version-expanded {
+      margin-left: 3rem;
+      position: relative;
+
+      &::before {
+        content: '';
+        position: absolute;
+        left: -20px;
+        top: 0;
+        height: 50%;
+        width: 20px;
+        border-left: 2px dashed #ff9800;
+        border-bottom: 2px dashed #ff9800;
+        border-bottom-left-radius: 8px;
+      }
+    }
+
+    &.highlighted-group {
+      box-shadow: 0 0 0 2px #1976d2;
+
+      &:not(:last-child) {
+        margin-bottom: 0.5rem;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+      }
+
+      &:not(:first-child) {
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+      }
+
+      &:not(:first-child):not(:last-child) {
+        margin-bottom: 0.5rem;
+      }
     }
 
     .quote-id {
@@ -31,6 +72,87 @@
     .MuiCardActions-root {
       justify-content: flex-end;
       padding: 0.5rem 1rem;
+    }
+  }
+
+  .version-badge {
+    margin-left: 0.5rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: inline-block;
+
+    &.original {
+      background-color: #e8f5e9;
+      color: #4caf50;
+    }
+
+    &.update {
+      background-color: #fff3e0;
+      color: #ff9800;
+    }
+  }
+
+  .version-highlight {
+    font-weight: 800;
+    padding: 2px 4px;
+    border-radius: 4px;
+    margin-left: 2px;
+    display: inline-block;
+
+    &.original {
+      background-color: #e8f5e9;
+      color: #4caf50;
+    }
+
+    &.update {
+      background-color: #fff3e0;
+      color: #ff9800;
+    }
+  }
+
+  .versions-group-header {
+    padding: 0.5rem 1rem;
+    background-color: #e3f2fd;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+
+    .group-id {
+      font-weight: 600;
+      color: #1976d2;
+    }
+
+    .group-actions {
+      margin-left: auto;
+    }
+  }
+
+  .version-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+
+    .MuiButton-root {
+      margin: 4px;
+
+      &.view-all-versions {
+        background-color: #e3f2fd;
+
+        &:hover {
+          background-color: #bbdefb;
+        }
+      }
+
+      &.toggle-expand {
+        border: 1px dashed #9c27b0;
+
+        &:hover {
+          background-color: #f3e5f5;
+        }
+      }
     }
   }
 }
