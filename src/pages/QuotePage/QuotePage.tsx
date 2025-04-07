@@ -1,7 +1,6 @@
 import React, { useRef, useEffect } from 'react';
-import { Box, Container, Paper, Typography } from '@mui/material';
+import { Box, Container, Paper, Typography, AppBar, Toolbar } from '@mui/material';
 import Layout from '../../components/Layout/Layout';
-import Navigation from '../../components/Navigation/Navigation';
 import QuoteHeader from '../../components/QuoteHeader/QuoteHeader';
 import SuppliesSection from '../../components/SuppliesSection/SuppliesSection';
 import LaborSection from '../../components/LaborSection/LaborSection';
@@ -47,8 +46,12 @@ const QuotePage: React.FC<QuotePageProps> = ({ currentPath, onNavigate }) => {
   // If no quote is loaded or is still loading, show loading
   if (!currentQuote || isLoading) {
     return (
-      <Layout>
-        <Navigation currentPath={currentPath} onNavigate={onNavigate} />
+      <Layout currentPath={currentPath} onNavigate={onNavigate}>
+        <Box className="page-header">
+          <Typography variant="h6" component="h1" className="page-title">
+            CALCUL DE PRIX OFFRE CLIMATISATION
+          </Typography>
+        </Box>
         <Box className="loading-container">
           <Typography variant="h6">Chargement...</Typography>
         </Box>
@@ -57,9 +60,12 @@ const QuotePage: React.FC<QuotePageProps> = ({ currentPath, onNavigate }) => {
   }
 
   return (
-    <Layout>
-      <Navigation currentPath={currentPath} onNavigate={onNavigate} />
-
+    <Layout currentPath={currentPath} onNavigate={onNavigate}>
+      <Box className="page-header">
+        <Typography variant="h6" component="h1" className="page-title">
+          CALCUL DE PRIX OFFRE CLIMATISATION
+        </Typography>
+      </Box>
       <Container ref={contentRef} className="quote-content">
         <QuoteHeader
           quoteId={currentQuote.id}

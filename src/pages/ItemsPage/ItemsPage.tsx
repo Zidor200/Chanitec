@@ -29,7 +29,6 @@ import {
 } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
 import Layout from '../../components/Layout/Layout';
-import Navigation from '../../components/Navigation/Navigation';
 import { SupplyItem } from '../../models/Quote';
 import { storageService } from '../../services/storage-service';
 import './ItemsPage.scss';
@@ -271,9 +270,12 @@ const ItemsPage: React.FC<ItemsPageProps> = ({ currentPath, onNavigate }) => {
   };
 
   return (
-    <Layout title="Gestion des Articles">
-      <Navigation currentPath={currentPath} onNavigate={onNavigate} />
-
+    <Layout currentPath={currentPath} onNavigate={onNavigate}>
+      <Box className="page-header">
+        <Typography variant="h6" component="h1" className="page-title">
+          GESTION DES ARTICLES
+        </Typography>
+      </Box>
       <Container className="items-page-container">
         <Paper elevation={2} className="items-paper">
           <Box className="items-header">

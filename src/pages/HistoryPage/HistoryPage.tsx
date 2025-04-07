@@ -21,7 +21,6 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import ClearIcon from '@mui/icons-material/Clear';
 import InfoIcon from '@mui/icons-material/Info';
 import Layout from '../../components/Layout/Layout';
-import Navigation from '../../components/Navigation/Navigation';
 import { useQuote } from '../../contexts/QuoteContext';
 import { storageService } from '../../services/storage-service';
 import { Quote, Client, Site } from '../../models/Quote';
@@ -355,9 +354,12 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ currentPath, onNavigate }) =>
   };
 
   return (
-    <Layout>
-      <Navigation currentPath={currentPath} onNavigate={onNavigate} />
-
+    <Layout currentPath={currentPath} onNavigate={onNavigate}>
+      <Box className="page-header">
+        <Typography variant="h6" component="h1" className="page-title">
+          HISTORIQUE
+        </Typography>
+      </Box>
       <Container className="history-container">
         <Typography variant="h4" gutterBottom>
           Historique des Devis

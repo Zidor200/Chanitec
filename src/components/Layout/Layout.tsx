@@ -1,30 +1,63 @@
 import React, { ReactNode } from 'react';
-import { AppBar, Box, Container, Toolbar, Typography, CssBaseline } from '@mui/material';
+import { AppBar, Box, Container, Toolbar, Typography, CssBaseline, Button } from '@mui/material';
+import {
+  HomeOutlined,
+  HistoryOutlined,
+  PeopleOutlineOutlined,
+  InventoryOutlined
+} from '@mui/icons-material';
 import logo from '../../logo.png'; // Import the logo from src directory
 import './Layout.scss';
 
 interface LayoutProps {
   children: ReactNode;
-  title?: string;
+  currentPath: string;
+  onNavigate?: (path: string) => void;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, title = 'CALCUL DE PRIX OFFRE CLIMATISATION' }) => {
+const Layout: React.FC<LayoutProps> = ({
+  children,
+  currentPath = '/',
+  onNavigate
+}) => {
+  // Navigation items
+  const navItems = [
+    { path: '/', label: 'Accueil', icon: <HomeOutlined /> },
+    { path: '/history', label: 'Historique', icon: <HistoryOutlined /> },
+    { path: '/clients', label: 'Clients', icon: <PeopleOutlineOutlined /> },
+    { path: '/items', label: 'Gérer les articles', icon: <InventoryOutlined /> }
+  ];
+
+  const handleNavigate = (path: string) => {
+    if (onNavigate) {
+      onNavigate(path);
+    }
+  };
+
   return (
     <Box className="layout-root">
       <CssBaseline />
       <AppBar position="static" color="primary" className="app-bar">
         <Toolbar>
           <Box className="toolbar-content">
-            <Box className="logo-container">
-              <img src={logo} alt="Logo" className="header-logo" />
-            </Box>
-            <Box className="title-container">
-              <Typography variant="h6" component="h1" className="page-title">
-                {title}
-              </Typography>
-            </Box>
-            <Box className="quote-id-container">
-              {/* Quote ID will be added dynamically */}
+            {/* Only show logo on main page */}
+            {
+              <Box className="logo-container">
+                <img src={logo} alt="Logo" className="header-logo" />
+              </Box>
+            }
+            <Box className="nav-links">
+              {navItems.map((item) => (
+                <Button
+                  key={item.path}
+                  color="inherit"
+                  className={`nav-button ${currentPath === item.path ? 'active' : ''}`}
+                  startIcon={item.icon}
+                  onClick={() => handleNavigate(item.path)}
+                >
+                  {item.label}
+                </Button>
+              ))}
             </Box>
           </Box>
         </Toolbar>

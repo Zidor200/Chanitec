@@ -35,7 +35,6 @@ import {
   Place as PlaceIcon
 } from '@mui/icons-material';
 import Layout from '../../components/Layout/Layout';
-import Navigation from '../../components/Navigation/Navigation';
 import { Client, Site } from '../../models/Quote';
 import { storageService } from '../../services/storage-service';
 import { generateClientId } from '../../utils/id-generator';
@@ -63,6 +62,7 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ currentPath, onNavigate }) =>
   // State for temporary sites in client dialog
   const [tempSites, setTempSites] = useState<string[]>([]);
   const [newSiteName, setNewSiteName] = useState('');
+  const [principalSiteName, setPrincipalSiteName] = useState('Site principal');
 
   // State for dialog - site
   const [siteDialogOpen, setSiteDialogOpen] = useState(false);
@@ -119,7 +119,8 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ currentPath, onNavigate }) =>
       name: '',
       sites: []
     });
-    setTempSites(['Site principal']); // Initialize with a default site
+    setTempSites([]); // Initialize with empty sites list
+    setPrincipalSiteName('Site principal'); // Initialize with default principal site name
     setNewSiteName('');
     setIsEditingClient(false);
     setClientDialogOpen(true);
@@ -145,6 +146,11 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ currentPath, onNavigate }) =>
       ...currentClient,
       [name]: value
     });
+  };
+
+  // Handle principal site name input change
+  const handlePrincipalSiteNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPrincipalSiteName(e.target.value);
   };
 
   // Handle new site name input change
@@ -174,8 +180,8 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ currentPath, onNavigate }) =>
       return;
     }
 
-    if (!isEditingClient && tempSites.length === 0) {
-      alert('Au moins un site est requis');
+    if (!isEditingClient && !principalSiteName.trim()) {
+      alert('Le nom du site principal est requis');
       return;
     }
 
@@ -194,8 +200,9 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ currentPath, onNavigate }) =>
         );
         setClients(updatedClients);
       } else {
-        // Create sites for new client
-        const savedSites = tempSites.map(siteName => {
+        // Create sites starting with the principal site
+        const allSites = [principalSiteName, ...tempSites].filter(site => site.trim());
+        const savedSites = allSites.map(siteName => {
           const site: Omit<Site, 'id'> = {
             name: siteName,
             clientId: savedClient.id
@@ -330,9 +337,12 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ currentPath, onNavigate }) =>
   };
 
   return (
-    <Layout title="Gestion des Clients">
-      <Navigation currentPath={currentPath} onNavigate={onNavigate} />
-
+    <Layout currentPath={currentPath} onNavigate={onNavigate}>
+      <Box className="page-header">
+        <Typography variant="h6" component="h1" className="page-title">
+          CLIENTS ET SITES
+        </Typography>
+      </Box>
       <Container className="clients-page-container">
         <Paper elevation={2} className="clients-paper">
           <Box className="clients-header">
@@ -497,6 +507,25 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ currentPath, onNavigate }) =>
               </Typography>
               <Divider className="sites-divider" />
 
+              {/* Principal site input */}
+              <Box mt={2} mb={2}>
+                <TextField
+                  margin="dense"
+                  label="Nom du site principal"
+                  type="text"
+                  fullWidth
+                  variant="outlined"
+                  value={principalSiteName}
+                  onChange={handlePrincipalSiteNameChange}
+                  helperText="Ce site sera automatiquement créé pour le client"
+                />
+              </Box>
+
+              {/* Additional sites list */}
+              <Typography variant="subtitle2" gutterBottom>
+                Sites additionnels
+              </Typography>
+
               <Box mt={2} className="sites-list">
                 {tempSites.length > 0 ? (
                   <List dense>
@@ -509,7 +538,6 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ currentPath, onNavigate }) =>
                             size="small"
                             color="error"
                             onClick={() => handleRemoveTempSite(index)}
-                            disabled={tempSites.length === 1} // Can't remove the last site
                           >
                             <DeleteIcon fontSize="small" />
                           </IconButton>
@@ -519,7 +547,7 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ currentPath, onNavigate }) =>
                   </List>
                 ) : (
                   <Typography variant="body2" color="textSecondary" className="no-sites">
-                    Ajoutez au moins un site
+                    Aucun site additionnel
                   </Typography>
                 )}
               </Box>
@@ -554,7 +582,7 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ currentPath, onNavigate }) =>
             onClick={handleSaveClient}
             color="primary"
             variant="contained"
-            disabled={!currentClient.name || (!isEditingClient && tempSites.length === 0)}
+            disabled={!currentClient.name || (!isEditingClient && !principalSiteName.trim())}
           >
             Enregistrer
           </Button>
