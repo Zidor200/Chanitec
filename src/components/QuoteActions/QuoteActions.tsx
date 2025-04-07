@@ -3,10 +3,11 @@ import { Box, Button, Paper, Snackbar, Alert } from '@mui/material';
 import {
   SaveOutlined,
   PrintOutlined,
-  HistoryOutlined,
+  GetApp as DownloadIcon,
   Update as UpdateIcon
 } from '@mui/icons-material';
 import { format } from 'date-fns';
+import { usePDF } from 'react-to-pdf';
 import './QuoteActions.scss';
 
 interface QuoteActionsProps {
@@ -33,6 +34,18 @@ const QuoteActions: React.FC<QuoteActionsProps> = ({
   const [snackbarOpen, setSnackbarOpen] = React.useState(false);
   const [snackbarMessage, setSnackbarMessage] = React.useState('');
   const [snackbarSeverity, setSnackbarSeverity] = React.useState<'success' | 'error'>('success');
+
+  // Setup PDF generation
+  const { toPDF, targetRef } = usePDF({
+    filename: generatePdfFilename(),
+    page: { format: 'A4' },
+    method: 'open',
+    canvas: {
+      // Add PDF-specific styles
+      mimeType: 'image/png',
+      qualityRatio: 1
+    }
+  });
 
   // Handle save action
   const handleSave = async () => {
@@ -79,12 +92,24 @@ const QuoteActions: React.FC<QuoteActionsProps> = ({
   };
 
   // Generate PDF filename
-  const generatePdfFilename = () => {
+  function generatePdfFilename() {
     const formattedDate = date ? format(new Date(date), 'dd-MM-yyyy') : format(new Date(), 'dd-MM-yyyy');
-    const cleanClientName = (clientName || 'Client').replace(/[^a-zA-Z0-9]/g, '_');
-    const cleanSiteName = (siteName || 'Site').replace(/[^a-zA-Z0-9]/g, '_');
+    const cleanClientName = (clientName || 'Client').replace(/[^a-zA-Z0-9]/g, '-');
+    const cleanSiteName = (siteName || 'Site').replace(/[^a-zA-Z0-9]/g, '-');
 
-    return `${cleanClientName}_${cleanSiteName}_${formattedDate}.pdf`;
+    return `${cleanClientName}-${cleanSiteName}-${formattedDate}.pdf`;
+  };
+
+  // Handle PDF download
+  const handleDownloadPDF = () => {
+    if (contentRef.current) {
+      // Use the ref from props instead of the one from usePDF
+      targetRef.current = contentRef.current;
+      toPDF();
+      setSnackbarMessage('PDF téléchargé avec succès!');
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+    }
   };
 
   // Handle print action using browser print functionality
@@ -137,13 +162,13 @@ const QuoteActions: React.FC<QuoteActionsProps> = ({
         </Button>
 
         <Button
-          variant="outlined"
-          color="primary"
-          className="action-button history-button"
-          startIcon={<HistoryOutlined />}
-          onClick={onViewHistory}
+          variant="contained"
+          color="info"
+          className="action-button download-button"
+          startIcon={<DownloadIcon />}
+          onClick={handleDownloadPDF}
         >
-          Historique
+          Télécharger PDF
         </Button>
       </Box>
 

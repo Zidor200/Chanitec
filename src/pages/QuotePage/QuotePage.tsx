@@ -60,17 +60,6 @@ const QuotePage: React.FC<QuotePageProps> = ({ currentPath, onNavigate }) => {
     <Layout>
       <Navigation currentPath={currentPath} onNavigate={onNavigate} />
 
-      <QuoteActions
-        clientName={currentQuote.clientName}
-        siteName={currentQuote.siteName}
-        date={currentQuote.date}
-        isExistingQuote={isExistingQuote}
-        onSave={saveQuote}
-        onUpdate={updateQuote}
-        onViewHistory={handleViewHistory}
-        contentRef={contentRef}
-      />
-
       <Container ref={contentRef} className="quote-content">
         <QuoteHeader
           quoteId={currentQuote.id}
@@ -118,6 +107,17 @@ const QuotePage: React.FC<QuotePageProps> = ({ currentPath, onNavigate }) => {
           totalTTC={currentQuote.totalTTC}
         />
       </Container>
+
+      <QuoteActions
+        clientName={currentQuote.clientName}
+        siteName={currentQuote.siteName}
+        date={currentQuote.date}
+        isExistingQuote={isExistingQuote}
+        onSave={saveQuote}
+        onUpdate={updateQuote}
+        onViewHistory={handleViewHistory}
+        contentRef={contentRef}
+      />
     </Layout>
   );
 };
