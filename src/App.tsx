@@ -7,6 +7,7 @@ import QuotePage from './pages/QuotePage/QuotePage';
 import HistoryPage from './pages/HistoryPage/HistoryPage';
 import ClientsPage from './pages/ClientsPage/ClientsPage';
 import ItemsPage from './pages/ItemsPage/ItemsPage';
+import PriceOfferPage from './pages/PriceOfferPage/PriceOfferPage';
 import { storageService } from './services/storage-service';
 import './App.scss';
 
@@ -54,6 +55,7 @@ function App() {
     message: '',
     severity: 'info' as 'info' | 'success' | 'warning' | 'error'
   });
+  const [priceOfferQuoteId, setPriceOfferQuoteId] = useState<string | undefined>();
 
   // Initialize app data
   useEffect(() => {
@@ -76,7 +78,10 @@ function App() {
   }, []);
 
   // Handle navigation
-  const handleNavigate = (path: string) => {
+  const handleNavigate = (path: string, quoteId?: string) => {
+    if (path === '/price-offer' && quoteId) {
+      setPriceOfferQuoteId(quoteId);
+    }
     setCurrentPath(path);
   };
 
@@ -114,6 +119,14 @@ function App() {
           <ItemsPage
             currentPath={currentPath}
             onNavigate={handleNavigate}
+          />
+        );
+      case '/price-offer':
+        return (
+          <PriceOfferPage
+            currentPath={currentPath}
+            onNavigate={handleNavigate}
+            quoteId={priceOfferQuoteId}
           />
         );
       default:

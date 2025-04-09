@@ -26,10 +26,12 @@ import { storageService } from '../../services/storage-service';
 import { Quote, Client, Site } from '../../models/Quote';
 import { extractBaseId, extractVersion } from '../../utils/id-generator';
 import './HistoryPage.scss';
+import { ReceiptLongOutlined } from '@mui/icons-material';
+import { priceOfferService } from '../../services/price-offer-service';
 
 interface HistoryPageProps {
   currentPath: string;
-  onNavigate: (path: string) => void;
+  onNavigate: (path: string, quoteId?: string) => void;
 }
 
 const HistoryPage: React.FC<HistoryPageProps> = ({ currentPath, onNavigate }) => {
@@ -353,6 +355,14 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ currentPath, onNavigate }) =>
     setFilterId(baseId);
   };
 
+  const handleViewPriceOffer = (quote: Quote) => {
+    // Create price offer if it doesn't exist
+    if (!priceOfferService.getByQuoteId(quote.id)) {
+      priceOfferService.createFromQuote(quote);
+    }
+    onNavigate('/price-offer', quote.id);
+  };
+
   return (
     <Layout currentPath={currentPath} onNavigate={onNavigate}>
       <Box className="page-header">
@@ -581,6 +591,15 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ currentPath, onNavigate }) =>
                         Consulter
                       </Button>
 
+                      <Button
+                        size="small"
+                        startIcon={<ReceiptLongOutlined />}
+                        onClick={() => handleViewPriceOffer(quote)}
+                        color="primary"
+                      >
+                        Voir l'offre de prix
+                      </Button>
+
                       <Box sx={{ flexGrow: 1 }} />
 
                       <IconButton
@@ -705,6 +724,15 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ currentPath, onNavigate }) =>
                       onClick={() => handleLoadQuote(quote.id)}
                     >
                       Consulter
+                    </Button>
+
+                    <Button
+                      size="small"
+                      startIcon={<ReceiptLongOutlined />}
+                      onClick={() => handleViewPriceOffer(quote)}
+                      color="primary"
+                    >
+                      Voir l'offre de prix
                     </Button>
 
                     <Box sx={{ flexGrow: 1 }} />
