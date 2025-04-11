@@ -8,7 +8,7 @@ import TotalSection from '../../components/TotalSection/TotalSection';
 import QuoteActions from '../../components/QuoteActions/QuoteActions';
 import { useQuote } from '../../contexts/QuoteContext';
 import './QuotePage.scss';
-
+import logo from '../../logo.png';
 interface QuotePageProps {
   currentPath: string;
   onNavigate: (path: string) => void;
@@ -61,10 +61,19 @@ const QuotePage: React.FC<QuotePageProps> = ({ currentPath, onNavigate }) => {
 
   return (
     <Layout currentPath={currentPath} onNavigate={onNavigate}>
-      <Box className="page-header">
-        <Typography variant="h6" component="h1" className="page-title">
-          CALCUL DE PRIX OFFRE CLIMATISATION
-        </Typography>
+      <Box sx={{ display: 'flex', position: 'relative', width: '100%' , backgroundColor: 'white'}} className="page-header">
+        <Box sx={{ position: 'absolute', left: 0 }}>
+          <img
+            src={logo}
+            alt="Logo"
+            style={{ height: '60px' }}
+          />
+        </Box>
+        <Box sx={{  }}>
+          <Typography variant="h6" component="h1" className="page-title">
+            CALCUL DE PRIX OFFRE CLIMATISATION
+          </Typography>
+        </Box>
       </Box>
       <Container ref={contentRef} className="quote-content">
         <QuoteHeader

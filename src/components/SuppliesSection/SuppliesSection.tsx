@@ -24,6 +24,7 @@ import {
 } from '@mui/icons-material';
 import { SupplyItem } from '../../models/Quote';
 import { storageService } from '../../services/storage-service';
+import CustomNumberInput from '../CustomNumberInput/CustomNumberInput';
 import './SuppliesSection.scss';
 
 interface SuppliesSectionProps {
@@ -133,7 +134,7 @@ const SuppliesSection: React.FC<SuppliesSectionProps> = ({
         FOURNITURES
       </Typography>
 
-      <TextField sx={{ height: "3rem" , marginBottom: "2rem"}}
+      <TextField
         fullWidth
         label="Description des fournitures"
         value={description}
@@ -146,39 +147,25 @@ const SuppliesSection: React.FC<SuppliesSectionProps> = ({
       />
 
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }} className="rates-container">
-        <Box sx={{ flex: '1 1 220px' , width: "20%" }}>
-          <TextField
-            fullWidth
-            label="Taux de change"
-            type="number"
+        <Box className="rates-container-item" sx={{ flex: '1 1 50px' }}>
+          <CustomNumberInput
             value={exchangeRate}
-            onChange={(e) => onUpdateExchangeRate(parseFloat(e.target.value))}
-            variant="outlined"
-            margin="dense"
-            InputProps={{
-              inputProps: {
-                min: 0,
-                step: 0.01
-              }
-            }}
+            onChange={onUpdateExchangeRate}
+            label="Taux de change"
+            min={0}
+            step={0.01}
+            fullWidth
           />
         </Box>
-        <Box sx={{ flex: '1 1 220px' , width: "20%" }}>
-          <TextField
-            fullWidth
-            label="Taux de marge"
-            type="number"
+        <Box className="rates-container-item" sx={{ flex: '1 1 50px' }}>
+          <CustomNumberInput
             value={marginRate}
-            onChange={(e) => onUpdateMarginRate(parseFloat(e.target.value))}
-            variant="outlined"
-            margin="dense"
-            InputProps={{
-              inputProps: {
-                min: 0,
-                max: 1,
-                step: 0.01
-              }
-            }}
+            onChange={onUpdateMarginRate}
+            label="Taux de marge"
+            min={0}
+            max={1}
+            step={0.01}
+            fullWidth
           />
         </Box>
       </Box>

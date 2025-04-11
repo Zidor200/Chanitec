@@ -111,18 +111,6 @@ body {
     position: relative;
   }
 
-  // Add title at the top
-  .quote-content::before {
-    content: "CALCUL DE PRIX OFFRE CLIMATISATION";
-    display: block;
-    text-align: center;
-    font-size: 18pt;
-    font-weight: bold;
-    margin: 10mm 0 15mm 0;
-    color: #000;
-    position: relative;
-    z-index: 100;
-  }
 
   // Add faded logo background
   .quote-content::after {

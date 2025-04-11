@@ -40,11 +40,6 @@ const Layout: React.FC<LayoutProps> = ({
       <AppBar position="static" color="primary" className="app-bar">
         <Toolbar>
           <Box className="toolbar-content">
-            {currentPath === '/' && (
-              <Box className="logo-container">
-                <img src={logo} alt="Logo" className="header-logo" />
-              </Box>
-            )}
             <Box className="nav-links">
               {navItems.map((item) => (
                 <Button

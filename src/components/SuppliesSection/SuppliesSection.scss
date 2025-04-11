@@ -10,18 +10,19 @@
   .section-title {
     font-weight: 700;
     color: #1976d2;
+    margin-bottom: 1rem;
     padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e0e0e0;
 
     @media print {
       margin: 0;
       padding: 0;
       border-bottom: none;
-      height: 0;
     }
   }
 
   .description-field {
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
 
     @media print {
       margin: 0;
@@ -29,10 +30,14 @@
   }
 
   .rates-container {
-    margin-bottom: 1rem;
-    width: 50%;
+    margin-bottom: 1.5rem;
+
     @media print {
       margin: 0;
+    }
+
+    .rates-container-item {
+      width: 40px !important;
     }
   }
 

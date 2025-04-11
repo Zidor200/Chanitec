@@ -38,10 +38,12 @@ const QuoteActions: React.FC<QuoteActionsProps> = ({
   // Setup PDF generation
   const { toPDF, targetRef } = usePDF({
     filename: generatePdfFilename(),
-    page: { format: 'A4' },
+    page: {
+      format: 'A4',
+      margin: 0
+    },
     method: 'open',
     canvas: {
-      // Add PDF-specific styles
       mimeType: 'image/png',
       qualityRatio: 1
     }
@@ -103,9 +105,26 @@ const QuoteActions: React.FC<QuoteActionsProps> = ({
   // Handle PDF download
   const handleDownloadPDF = () => {
     if (contentRef.current) {
+      // Add pdf-print-mode class to apply print styling
+      contentRef.current.classList.add('pdf-print-mode');
+
+      // Force a reflow to ensure styles are applied
+      const reflow = contentRef.current.offsetHeight;
+      void reflow;
+
       // Use the ref from props instead of the one from usePDF
       targetRef.current = contentRef.current;
-      toPDF();
+
+      // Generate PDF after a small delay to ensure styles are applied
+      setTimeout(() => {
+        toPDF();
+
+        // Remove the class after PDF generation
+        setTimeout(() => {
+          contentRef.current?.classList.remove('pdf-print-mode');
+        }, 1000);
+      }, 100);
+
       setSnackbarMessage('PDF téléchargé avec succès!');
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
