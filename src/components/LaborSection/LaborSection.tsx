@@ -19,6 +19,7 @@ import {
   Delete as DeleteIcon
 } from '@mui/icons-material';
 import { LaborItem } from '../../models/Quote';
+import CustomNumberInput from '../CustomNumberInput/CustomNumberInput';
 import './LaborSection.scss';
 
 interface LaborSectionProps {
@@ -92,40 +93,24 @@ const LaborSection: React.FC<LaborSectionProps> = ({
         rows={2}
       />
 
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }} className="rates-container">
-        <Box sx={{ flex: '1 1 220px' }}>
-          <TextField
-            fullWidth
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems:  'right' , gap: 5 }} className="rates-container">
+        <Box className="rates-container-item" sx={{ flex: '1 1 50px', width: '50%'}}>
+          <CustomNumberInput
             label="Taux de change"
-            type="number"
             value={exchangeRate}
-            onChange={(e) => onUpdateExchangeRate(parseFloat(e.target.value))}
-            variant="outlined"
-            margin="dense"
-            InputProps={{
-              inputProps: {
-                min: 0,
-                step: 0.01
-              }
-            }}
+            onChange={onUpdateExchangeRate}
+            min={0}
+            step={0.01}
           />
         </Box>
-        <Box sx={{ flex: '1 1 220px' }}>
-          <TextField
-            fullWidth
+        <Box className="rates-container-item" sx={{ flex: '1 1 50px' , width: '50%' }}>
+          <CustomNumberInput
             label="Taux de marge"
-            type="number"
             value={marginRate}
-            onChange={(e) => onUpdateMarginRate(parseFloat(e.target.value))}
-            variant="outlined"
-            margin="dense"
-            InputProps={{
-              inputProps: {
-                min: 0,
-                max: 1,
-                step: 0.01
-              }
-            }}
+            onChange={onUpdateMarginRate}
+            min={0}
+            max={1}
+            step={0.01}
           />
         </Box>
       </Box>
@@ -137,38 +122,24 @@ const LaborSection: React.FC<LaborSectionProps> = ({
 
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
           <Box sx={{ flex: '1 1 220px' }}>
-            <TextField
-              fullWidth
+            <CustomNumberInput
               label="Nb technicien"
-              type="number"
               value={nbTechnicians}
-              onChange={(e) => setNbTechnicians(parseInt(e.target.value, 10))}
-              variant="outlined"
-              margin="dense"
-              InputProps={{
-                inputProps: {
-                  min: 1,
-                  step: 1
-                }
-              }}
+              onChange={(value) => setNbTechnicians(value)}
+              min={1}
+              step={1}
+              fullWidth
             />
           </Box>
 
           <Box sx={{ flex: '1 1 220px' }}>
-            <TextField
-              fullWidth
+            <CustomNumberInput
               label="Nb heures"
-              type="number"
               value={nbHours}
-              onChange={(e) => setNbHours(parseInt(e.target.value, 10))}
-              variant="outlined"
-              margin="dense"
-              InputProps={{
-                inputProps: {
-                  min: 1,
-                  step: 1
-                }
-              }}
+              onChange={(value) => setNbHours(value)}
+              min={1}
+              step={1}
+              fullWidth
             />
           </Box>
 
@@ -191,20 +162,13 @@ const LaborSection: React.FC<LaborSectionProps> = ({
           </Box>
 
           <Box sx={{ flex: '1 1 220px' }}>
-            <TextField
-              fullWidth
+            <CustomNumberInput
               label="PR €"
-              type="number"
               value={priceEuro}
-              onChange={(e) => setPriceEuro(parseFloat(e.target.value))}
-              variant="outlined"
-              margin="dense"
-              InputProps={{
-                inputProps: {
-                  min: 0,
-                  step: 0.01
-                }
-              }}
+              onChange={(value) => setPriceEuro(value)}
+              min={0}
+              step={0.01}
+              fullWidth
             />
           </Box>
         </Box>

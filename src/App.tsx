@@ -45,6 +45,34 @@ const theme = createTheme({
         },
       },
     },
+    MuiInputBase: {
+      styleOverrides: {
+        input: {
+          '&[type="number"]': {
+            '-moz-appearance': 'textfield',
+            padding: '8px 12px',
+            paddingRight: '20px',
+          },
+          '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': {
+            height: '100%',
+            width: '20px',
+            opacity: 1,
+            margin: 0,
+            padding: 0,
+            cursor: 'pointer',
+            position: 'absolute',
+            right: 0,
+            background: 'transparent',
+            '&:hover': {
+              background: 'rgba(0, 0, 0, 0.05)',
+            },
+            '&:active': {
+              background: 'rgba(0, 0, 0, 0.1)',
+            },
+          },
+        },
+      },
+    },
   },
 });
 

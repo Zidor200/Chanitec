@@ -133,20 +133,20 @@ const SuppliesSection: React.FC<SuppliesSectionProps> = ({
         FOURNITURES
       </Typography>
 
-      <TextField
+      <TextField sx={{ height: "3rem" , marginBottom: "2rem"}}
         fullWidth
         label="Description des fournitures"
         value={description}
         onChange={(e) => onUpdateDescription(e.target.value)}
         variant="outlined"
-        margin="normal"
+        margin="none"
         className="description-field"
         multiline
         rows={2}
       />
 
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }} className="rates-container">
-        <Box sx={{ flex: '1 1 220px' }}>
+        <Box sx={{ flex: '1 1 220px' , width: "20%" }}>
           <TextField
             fullWidth
             label="Taux de change"
@@ -163,7 +163,7 @@ const SuppliesSection: React.FC<SuppliesSectionProps> = ({
             }}
           />
         </Box>
-        <Box sx={{ flex: '1 1 220px' }}>
+        <Box sx={{ flex: '1 1 220px' , width: "20%" }}>
           <TextField
             fullWidth
             label="Taux de marge"

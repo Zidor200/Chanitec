@@ -1,6 +1,11 @@
 ---
 description: 
 globs: 
+alwaysApply: false
+---
+---
+description: 
+globs: 
 alwaysApply: true
 ---
 1. Code Quality & Optimization
@@ -61,6 +66,8 @@ Apply specific formulas, tax calculations, or logic as defined by the project sc
 
 When modifying existing code, ensure that changes integrate seamlessly with the original structure.
 9. always spereate commands when using powershell commands . 
+
+10. when pushing this project to github make sure it's compatible with vercel 
 
 
 
