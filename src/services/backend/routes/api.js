@@ -30,6 +30,36 @@ const dbRun = (query, params = []) => {
     });
 };
 
+// Items routes
+router.get('/items', async (req, res) => {
+    try {
+        const items = await dbAll('SELECT * FROM items');
+        res.json(items);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+router.get('/items/:category', async (req, res) => {
+    try {
+        const items = await dbAll('SELECT * FROM items WHERE category = ?', [req.params.category]);
+        res.json(items);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+router.post('/items', async (req, res) => {
+    try {
+        const { id, description, price_euro, category } = req.body;
+        await dbRun('INSERT INTO items (id, description, price_euro, category) VALUES (?, ?, ?, ?)',
+            [id, description, price_euro, category]);
+        res.status(201).json({ id, description, price_euro, category });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Clients routes
 router.get('/clients', async (req, res) => {
     try {

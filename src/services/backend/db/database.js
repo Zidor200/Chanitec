@@ -17,6 +17,16 @@ const db = new sqlite3.Database(dbPath, (err) => {
 // Function to create all necessary tables
 function createTables() {
     db.serialize(() => {
+        // Items table (for supply items catalog)
+        db.run(`CREATE TABLE IF NOT EXISTS items (
+            id TEXT PRIMARY KEY,
+            description TEXT NOT NULL,
+            price_euro REAL NOT NULL,
+            category TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )`);
+
         // Clients table
         db.run(`CREATE TABLE IF NOT EXISTS clients (
             id TEXT PRIMARY KEY,
@@ -116,6 +126,7 @@ function createTables() {
         db.run('CREATE INDEX IF NOT EXISTS idx_labor_items_quote_id ON labor_items(quote_id)');
         db.run('CREATE INDEX IF NOT EXISTS idx_sites_client_id ON sites(client_id)');
         db.run('CREATE INDEX IF NOT EXISTS idx_price_offers_quote_id ON price_offers(quote_id)');
+        db.run('CREATE INDEX IF NOT EXISTS idx_items_category ON items(category)');
     });
 }
 

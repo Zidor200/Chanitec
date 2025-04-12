@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const path = require('path');
 const apiRoutes = require('./routes/api');
 
 const app = express();
@@ -16,12 +17,20 @@ app.use(cors({
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+// Serve static files from the current directory
+app.use(express.static(__dirname));
+
 // Routes
 app.use('/api', apiRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
     res.json({ status: 'ok' });
+});
+
+// Serve test page
+app.get('/test', (req, res) => {
+    res.sendFile(path.join(__dirname, 'test.html'));
 });
 
 // Error handling middleware

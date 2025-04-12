@@ -61,7 +61,7 @@ const QuotePage: React.FC<QuotePageProps> = ({ currentPath, onNavigate }) => {
 
   return (
     <Layout currentPath={currentPath} onNavigate={onNavigate}>
-      <Box sx={{ display: 'flex', position: 'relative', width: '100%' , backgroundColor: 'white'}} className="page-header">
+      <Box sx={{ display: 'flex', position: 'relative', width: '100%' , backgroundColor: 'white' , color: 'black'}} className="page-header">
         <Box sx={{ position: 'absolute', left: 0 }}>
           <img
             src={logo}
