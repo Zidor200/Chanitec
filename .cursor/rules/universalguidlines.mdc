@@ -1,74 +1,80 @@
 ---
 description: 
 globs: 
-alwaysApply: false
----
----
-description: 
-globs: 
 alwaysApply: true
 ---
-1. Code Quality & Optimization
-Always generate clean, efficient, and well-structured code.
+description:Zidor Protocol 
+globs:
+  - "**/*"
+alwaysApply: true
+---
 
-Prioritize simplicity over complexity while maintaining functionality.
+1. Code Quality & Optimization  
+- Always generate clean, modular, and performant code.  
+- Prioritize simplicity, but never at the cost of functionality.  
+- Avoid adding new dependencies, rewriting existing logic, or modifying unrelated code unless explicitly instructed.  
+- Never refactor or "optimize" code without a direct prompt.
 
-Use best practices for readability, maintainability, and performance.
+2. Precision & Accuracy  
+- Follow instructions **exactly** as written.  
+- Do **not assume, generalize, or infer missing details**.  
+- If a requirement is unclear or ambiguous, halt and prompt the user for clarification.  
+- Constants, formulas, and logic must exactly match what's provided, especially in domain-specific tasks.
 
-Avoid unnecessary dependencies, redundant code, or inefficient logic.
+3. Performance & Scalability  
+- Optimize only when requested.  
+- Avoid excessive loops, complex data structures, or premature optimization.  
+- Keep code scalable through modular structure, but do not over-engineer unless specified.
 
-2. Precision & Accuracy
-Strictly follow the provided specifications without assumptions.
+4. Security & Error Handling  
+- Implement basic input validation and error handling if it is **part of the instructions**.  
+- Do not auto-inject security logic unless specifically requested.  
+- Never expose sensitive data. No hardcoded credentials or keys.
 
-If a requirement is unclear, request clarification instead of making assumptions.
+5. Language & Style Consistency  
+- Adhere strictly to the syntax, style, and conventions of the language in use.  
+- Use consistent naming, indentation, and formatting across the file.  
+- Include docstrings or comments **only when explicitly requested** or where clarity is critical.
 
-Ensure all constants, calculations, and logic match real-world or industry standards.
+6. User-Focused Approach  
+- Ensure a clean, intuitive UX when UI/UX tasks are involved.  
+- For APIs, follow RESTful standards with clear status codes and messages.  
+- When building interfaces, avoid assumptions—follow only provided user flow specs.
 
-3. Performance & Scalability
-Optimize code for speed and memory efficiency.
+7. AI Code Refinement Protocol  
+- Provide the **optimal** solution first—clearly justified.  
+- If multiple approaches are valid, suggest alternatives with pros and cons.  
+- **Never auto-implement improvements**—only propose them for review.  
+- Do not modify existing code unless explicitly instructed to do so.
 
-Avoid unnecessary loops, inefficient data structures, and excessive function calls.
+8. Project-Specific Logic  
+- Honor all project-specific constants, tax rules, and business logic as described.  
+- Before editing existing code, check for compatibility and consistency with the existing structure.  
+- Avoid breaking existing flows or logic unless it's a confirmed bug and the fix is explicitly approved.
 
-Use modular programming to allow easy scalability and maintainability.
+9. Powershell Specific  
+- When writing PowerShell commands, **always separate** commands clearly.  
+- Avoid aliases; prefer full command names for clarity.
 
-4. Security & Error Handling
-Implement robust error handling to prevent crashes and unexpected behavior.
+10. GitHub Deployment Readiness  
+- Ensure code structure and dependencies are compatible with Vercel deployment when preparing for GitHub pushes.  
+- Add or adjust configuration files (e.g., `vercel.json`) **only if instructed**.
 
-Ensure input validation to avoid security vulnerabilities.
+11. Non-Destructive Behavior  
+- Do not modify, reformat, or clean code segments that are unrelated to the current task.  
+- Never rewrite entire files unless explicitly told to.  
+- All changes must be scoped to the user's request only.
 
-Avoid exposing sensitive data or hardcoded credentials.
+12. Change Approval Mechanism  
+- If a change might improve the code but is not directly requested, suggest it in a comment block or a prompt.  
+- Do not make structural or logic modifications based on "best practice" unless explicitly allowed.
 
-5. Compliance with Best Practices
-Follow standard conventions for the target programming language.
+13.Only act on what I tell you. Suggest improvements only in comments or prompts. Never make assumptions. Never change or touch unrelated code. Always explain your choices when multiple paths are possible.
 
-Ensure that naming conventions, indentation, and documentation are consistent.
-
-Include docstrings or comments only when necessary for clarity.
-
-6. User-Focused Approach
-Prioritize usability and a smooth user experience in UI/UX-related tasks.
-
-If building an API, ensure clear responses, error messages, and proper RESTful design.
-
-When designing an app or software, ensure logical workflows and intuitive interfaces.
-
-7. AI-Assisted Code Refinement
-Always provide the most optimal approach first.
-
-If multiple valid solutions exist, list the pros and cons of each.
-
-If an improvement is possible, suggest an alternative, more efficient method.
-
-8. Project-Specific Rules
-Always consider the context of the current project and adapt accordingly.
-
-Apply specific formulas, tax calculations, or logic as defined by the project scope.
-
-When modifying existing code, ensure that changes integrate seamlessly with the original structure.
-9. always spereate commands when using powershell commands . 
-
-10. when pushing this project to github make sure it's compatible with vercel 
-
-
+14. File Creation Discipline  
+- Do **not create new files** unless it is confirmed that no existing file serves the same purpose.  
+- Before creating a file, **check all existing files** (by name, structure, and content) to ensure it doesn't already exist under a different name or structure.  
+- If there's a possible match or overlap, prompt the user for confirmation before proceeding.  
+- Default behavior: reuse or extend existing files when appropriate and approved.
 
 

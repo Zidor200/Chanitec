@@ -30,8 +30,9 @@ import {
 import * as XLSX from 'xlsx';
 import Layout from '../../components/Layout/Layout';
 import { SupplyItem } from '../../models/Quote';
-import { storageService } from '../../services/storage-service';
+import { apiService } from '../../services/api-service';
 import './ItemsPage.scss';
+import { v4 as uuidv4 } from 'uuid';
 
 interface ItemsPageProps {
   currentPath: string;
@@ -66,6 +67,9 @@ const ItemsPage: React.FC<ItemsPageProps> = ({ currentPath, onNavigate }) => {
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info'>('success');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // State for loading
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
   // Load items on component mount
   useEffect(() => {
     loadItems();
@@ -76,15 +80,20 @@ const ItemsPage: React.FC<ItemsPageProps> = ({ currentPath, onNavigate }) => {
     filterItems();
   }, [searchTerm, items]);
 
-  // Load all items from storage
-  const loadItems = () => {
-    const loadedItems = storageService.getSupplies();
-    // Sort items alphabetically by description
-    const sortedItems = [...loadedItems].sort((a, b) =>
-      a.description.localeCompare(b.description)
-    );
-    setItems(sortedItems);
-    setFilteredItems(sortedItems);
+  // Load all items from API
+  const loadItems = async () => {
+    try {
+      const loadedItems = await apiService.getSupplies();
+      // Sort items alphabetically by description
+      const sortedItems = [...loadedItems].sort((a, b) =>
+        a.description.localeCompare(b.description)
+      );
+      setItems(sortedItems);
+      setFilteredItems(sortedItems);
+    } catch (error) {
+      console.error('Error loading items:', error);
+      showSnackbar('Erreur lors du chargement des articles', 'error');
+    }
   };
 
   // Filter items based on search term
@@ -139,46 +148,78 @@ const ItemsPage: React.FC<ItemsPageProps> = ({ currentPath, onNavigate }) => {
     });
   };
 
+  // Refresh function to reload all items
+  const refreshItems = async () => {
+    try {
+      const loadedItems = await apiService.getSupplies();
+      // Sort items alphabetically by description
+      const sortedItems = [...loadedItems].sort((a, b) =>
+        a.description.localeCompare(b.description)
+      );
+      setItems(sortedItems);
+      setFilteredItems(sortedItems);
+    } catch (error) {
+      console.error('Error refreshing items:', error);
+      showSnackbar('Erreur lors du rafraîchissement des articles', 'error');
+    }
+  };
+
   // Save item (create or update)
-  const handleSaveItem = () => {
+  const handleSaveItem = async () => {
     if (!currentItem.description) {
       alert('Description is required');
       return;
     }
 
     try {
-      const savedItem = storageService.saveSupply(currentItem as Omit<SupplyItem, 'id'> & { id?: string });
-
-      if (isEditing) {
-        // Update item in the list
-        const updatedItems = items.map(item =>
-          item.id === savedItem.id ? savedItem : item
-        );
-        setItems(updatedItems);
+      if (isEditing && currentItem.id) {
+        // Update existing item
+        await apiService.saveSupply({
+          id: currentItem.id,
+          description: currentItem.description,
+          priceEuro: Number(currentItem.priceEuro) || 0,
+          quantity: currentItem.quantity || 1
+        });
       } else {
-        // Add new item to the list
-        setItems([...items, savedItem]);
+        // Create new item
+        await apiService.saveSupply({
+          description: currentItem.description,
+          priceEuro: Number(currentItem.priceEuro) || 0,
+          quantity: currentItem.quantity || 1
+        });
       }
 
       handleCloseDialog();
+      await refreshItems();
+      showSnackbar('Article enregistré avec succès', 'success');
     } catch (error) {
       console.error('Error saving item:', error);
-      alert('Failed to save item');
+      showSnackbar('Erreur lors de l\'enregistrement de l\'article', 'error');
     }
   };
 
   // Delete an item
-  const handleDeleteItem = (id: string) => {
+  const handleDeleteItem = async (id: string) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cet article?')) {
       try {
-        const success = storageService.deleteSupply(id);
-        if (success) {
-          const updatedItems = items.filter(item => item.id !== id);
-          setItems(updatedItems);
-        }
-      } catch (error) {
+        setDeletingId(id);
+        await apiService.deleteSupply(id);
+        // Remove the item from local state immediately
+        setItems(prevItems => prevItems.filter(item => item.id !== id));
+        setFilteredItems(prevFiltered => prevFiltered.filter(item => item.id !== id));
+        // Then refresh from server to ensure sync
+        await refreshItems();
+        showSnackbar('Article supprimé avec succès', 'success');
+      } catch (error: any) {
         console.error('Error deleting item:', error);
-        alert('Failed to delete item');
+        showSnackbar(
+          error.response?.data?.error || 'Erreur lors de la suppression de l\'article',
+          'error'
+        );
+        // Refresh items in case of error to ensure UI is in sync
+        await refreshItems();
+      } finally {
+        setDeletingId(null);
       }
     }
   };
@@ -191,12 +232,12 @@ const ItemsPage: React.FC<ItemsPageProps> = ({ currentPath, onNavigate }) => {
   };
 
   // Handle file selection and import
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       try {
         const data = event.target?.result;
         const workbook = XLSX.read(data, { type: 'binary' });
@@ -214,7 +255,6 @@ const ItemsPage: React.FC<ItemsPageProps> = ({ currentPath, onNavigate }) => {
         const invalidRows: number[] = [];
 
         jsonData.forEach((row: ExcelRowData, index: number) => {
-          // Check for required fields - using the exact column names from the Excel file
           if (row.Description && (row.Prix !== undefined && !isNaN(parseFloat(String(row.Prix))))) {
             validItems.push({
               description: String(row.Description),
@@ -222,14 +262,14 @@ const ItemsPage: React.FC<ItemsPageProps> = ({ currentPath, onNavigate }) => {
               quantity: 1
             });
           } else {
-            invalidRows.push(index + 2); // +2 because Excel is 1-indexed and we skip the header row
+            invalidRows.push(index + 2);
           }
         });
 
         // Save valid items
         if (validItems.length > 0) {
-          const savedItems = validItems.map(item => storageService.saveSupply(item));
-          setItems(prevItems => [...prevItems, ...savedItems]);
+          await Promise.all(validItems.map(item => apiService.saveSupply(item)));
+          await refreshItems();
 
           if (invalidRows.length > 0) {
             showSnackbar(`Importé ${validItems.length} articles. Lignes invalides: ${invalidRows.join(', ')}`, 'info');
@@ -248,10 +288,6 @@ const ItemsPage: React.FC<ItemsPageProps> = ({ currentPath, onNavigate }) => {
       if (e.target) {
         e.target.value = '';
       }
-    };
-
-    reader.onerror = () => {
-      showSnackbar('Erreur lors de la lecture du fichier', 'error');
     };
 
     reader.readAsBinaryString(file);
@@ -341,7 +377,9 @@ const ItemsPage: React.FC<ItemsPageProps> = ({ currentPath, onNavigate }) => {
                   filteredItems.map((item) => (
                     <TableRow key={item.id}>
                       <TableCell>{item.description}</TableCell>
-                      <TableCell align="right">{item.priceEuro.toFixed(2)}</TableCell>
+                      <TableCell align="right">
+                        {(item.priceEuro ?? 0).toFixed(2)}
+                      </TableCell>
                       <TableCell align="center">
                         <IconButton
                           size="small"
@@ -354,6 +392,7 @@ const ItemsPage: React.FC<ItemsPageProps> = ({ currentPath, onNavigate }) => {
                           size="small"
                           color="error"
                           onClick={() => handleDeleteItem(item.id)}
+                          disabled={deletingId === item.id}
                         >
                           <DeleteIcon fontSize="small" />
                         </IconButton>

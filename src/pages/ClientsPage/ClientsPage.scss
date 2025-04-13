@@ -157,3 +157,96 @@
     display: none;
   }
 }
+
+.page-header {
+  background-color: #1976d2;
+  padding: 1rem;
+  margin-bottom: 2rem;
+
+  .header-title {
+    color: white;
+    text-align: center;
+    font-weight: 500;
+  }
+}
+
+.main-card {
+  margin: 0 2rem;
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+
+    .search-and-add {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+
+      .search-field {
+        padding: 0.5rem 1rem;
+        min-width: 300px;
+      }
+    }
+  }
+
+  .client-item {
+    margin-bottom: 1rem;
+    overflow: hidden;
+
+    .client-header {
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      .client-info {
+        display: flex;
+        align-items: baseline;
+        gap: 1rem;
+      }
+
+      .client-actions {
+        display: flex;
+        gap: 0.5rem;
+      }
+    }
+
+    .sites-section {
+      padding: 0 1rem 1rem;
+
+      .sites-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+      }
+
+      .sites-list {
+        .site-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 0.5rem;
+          border-radius: 4px;
+
+          &:hover {
+            background-color: rgba(0, 0, 0, 0.04);
+          }
+
+          .site-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+          }
+
+          .site-actions {
+            display: flex;
+            gap: 0.25rem;
+          }
+        }
+      }
+    }
+  }
+}

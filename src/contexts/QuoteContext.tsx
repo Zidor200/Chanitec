@@ -4,7 +4,7 @@ import {
   Quote,
   SupplyItem
 } from '../models/Quote';
-import { storageService } from '../services/storage-service';
+import { apiService } from '../services/api-service';
 import {
   calculateLaborItemTotal,
   calculateSupplyItemTotal,
@@ -369,14 +369,14 @@ export const QuoteProvider: React.FC<QuoteProviderProps> = ({ children }) => {
       siteName: '',
       object: '',
       date: new Date().toISOString().split('T')[0],
-      supplyItems: [],
-      laborItems: [],
       supplyDescription: DEFAULT_DESCRIPTION,
       laborDescription: DEFAULT_DESCRIPTION,
       supplyExchangeRate: DEFAULT_EXCHANGE_RATE,
       supplyMarginRate: DEFAULT_MARGIN_RATE,
       laborExchangeRate: DEFAULT_LABOR_EXCHANGE_RATE,
       laborMarginRate: DEFAULT_LABOR_MARGIN_RATE,
+      supplyItems: [],
+      laborItems: [],
       totalSuppliesHT: 0,
       totalLaborHT: 0,
       totalHT: 0,
@@ -391,20 +391,14 @@ export const QuoteProvider: React.FC<QuoteProviderProps> = ({ children }) => {
   };
 
   // Load a quote by ID
-  const loadQuote = (id: string) => {
-    dispatch({ type: 'SET_LOADING', payload: true });
-
+  const loadQuote = async (id: string) => {
     try {
-      const quote = storageService.getQuoteById(id);
-
-      if (quote) {
-        dispatch({ type: 'SET_QUOTE', payload: quote });
-        dispatch({ type: 'SET_EXISTING_QUOTE', payload: true });
-      } else {
-        dispatch({ type: 'SET_ERROR', payload: 'Quote not found' });
-      }
+      dispatch({ type: 'SET_LOADING', payload: true });
+      const quote = await apiService.getQuoteById(id);
+      dispatch({ type: 'SET_QUOTE', payload: quote });
+      dispatch({ type: 'SET_EXISTING_QUOTE', payload: true });
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: 'Error loading quote' });
+      dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to load quote' });
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
@@ -414,15 +408,14 @@ export const QuoteProvider: React.FC<QuoteProviderProps> = ({ children }) => {
   const saveQuote = async (): Promise<boolean> => {
     if (!state.currentQuote) return false;
 
-    dispatch({ type: 'SET_LOADING', payload: true });
-
     try {
-      const savedQuote = storageService.saveQuote(state.currentQuote);
+      dispatch({ type: 'SET_LOADING', payload: true });
+      const savedQuote = await apiService.saveQuote(state.currentQuote);
       dispatch({ type: 'SET_QUOTE', payload: savedQuote });
       dispatch({ type: 'SET_EXISTING_QUOTE', payload: true });
       return true;
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: 'Error saving quote' });
+      dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to save quote' });
       return false;
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
@@ -433,32 +426,13 @@ export const QuoteProvider: React.FC<QuoteProviderProps> = ({ children }) => {
   const updateQuote = async (): Promise<boolean> => {
     if (!state.currentQuote) return false;
 
-    dispatch({ type: 'SET_LOADING', payload: true });
-
     try {
-      const currentQuoteId = state.currentQuote.id;
-      const baseId = extractBaseId(currentQuoteId);
-      const currentVersion = extractVersion(currentQuoteId) ?? 0;
-
-      if (!baseId) {
-        dispatch({ type: 'SET_ERROR', payload: 'Invalid quote ID format' });
-        return false;
-      }
-
-      // Create a new version of the quote with incremented version number
-      const newVersionQuote: Quote = {
-        ...state.currentQuote,
-        id: generateQuoteId(baseId, currentVersion + 1),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      const savedQuote = storageService.saveQuote(newVersionQuote);
-      dispatch({ type: 'SET_QUOTE', payload: savedQuote });
-      dispatch({ type: 'SET_EXISTING_QUOTE', payload: true });
+      dispatch({ type: 'SET_LOADING', payload: true });
+      const updatedQuote = await apiService.saveQuote(state.currentQuote);
+      dispatch({ type: 'SET_QUOTE', payload: updatedQuote });
       return true;
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: 'Error updating quote' });
+      dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to update quote' });
       return false;
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });

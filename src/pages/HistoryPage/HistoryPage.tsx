@@ -22,7 +22,7 @@ import ClearIcon from '@mui/icons-material/Clear';
 import InfoIcon from '@mui/icons-material/Info';
 import Layout from '../../components/Layout/Layout';
 import { useQuote } from '../../contexts/QuoteContext';
-import { storageService } from '../../services/storage-service';
+import { apiService } from '../../services/api-service';
 import { Quote, Client, Site } from '../../models/Quote';
 import { extractBaseId, extractVersion } from '../../utils/id-generator';
 import './HistoryPage.scss';
@@ -45,10 +45,12 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ currentPath, onNavigate }) =>
   const [showAllVersions, setShowAllVersions] = useState<boolean>(false);
 
   // Filter states
-  const [filterId, setFilterId] = useState('');
-  const [filterClient, setFilterClient] = useState('');
-  const [filterSite, setFilterSite] = useState('');
-  const [filterDate, setFilterDate] = useState('all');
+  const [filters, setFilters] = useState({
+    id: '',
+    client: '',
+    site: '',
+    period: 'all',
+  });
 
   const { loadQuote } = useQuote();
 
@@ -60,52 +62,64 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ currentPath, onNavigate }) =>
   // Update filtered quotes when filters or quotes change
   useEffect(() => {
     applyFilters();
-  }, [filterId, filterClient, filterSite, filterDate, quotes]);
+  }, [filters, quotes, showAllVersions]);
 
-  // Load all necessary data from storage
-  const loadData = () => {
-    const allQuotes = storageService.getQuotes();
-    const allClients = storageService.getClients();
+  // Load all necessary data from API
+  const loadData = async () => {
+    try {
+      const [allQuotes, allClients] = await Promise.all([
+        apiService.getQuotes(),
+        apiService.getClients()
+      ]);
 
-    // Group quotes by base ID to identify versions
-    const versionGroups: { [baseId: string]: Quote[] } = {};
+      // Group quotes by base ID to identify versions
+      const versionGroups: { [baseId: string]: Quote[] } = {};
 
-    allQuotes.forEach(quote => {
-      const baseId = extractBaseId(quote.id);
-      if (baseId) {
-        if (!versionGroups[baseId]) {
-          versionGroups[baseId] = [];
+      allQuotes.forEach(quote => {
+        const baseId = extractBaseId(quote.id);
+        if (baseId) {
+          if (!versionGroups[baseId]) {
+            versionGroups[baseId] = [];
+          }
+          versionGroups[baseId].push(quote);
         }
-        versionGroups[baseId].push(quote);
-      }
-    });
-
-    // Sort each group by version
-    Object.keys(versionGroups).forEach(baseId => {
-      versionGroups[baseId].sort((a, b) => {
-        const versionA = extractVersion(a.id) ?? 0;
-        const versionB = extractVersion(b.id) ?? 0;
-        return versionB - versionA; // newest first
       });
-    });
 
-    setQuoteVersions(versionGroups);
-    setQuotes(allQuotes);
-    setClients(allClients);
-    setFilteredQuotes(allQuotes);
+      // Sort each group by version
+      Object.keys(versionGroups).forEach(baseId => {
+        versionGroups[baseId].sort((a, b) => {
+          const versionA = extractVersion(a.id) ?? 0;
+          const versionB = extractVersion(b.id) ?? 0;
+          return versionB - versionA; // newest first
+        });
+      });
+
+      setQuoteVersions(versionGroups);
+      setQuotes(allQuotes);
+      setClients(allClients);
+      setFilteredQuotes(allQuotes);
+    } catch (error) {
+      console.error('Error loading data:', error);
+      alert('Erreur lors du chargement des données');
+    }
   };
 
   // Update site options when client changes
-  const updateSiteOptions = () => {
-    if (filterClient) {
-      const sitesForClient = storageService.getSitesByClientId(filterClient);
-      setSites(sitesForClient);
+  const updateSiteOptions = async () => {
+    if (filters.client) {
+      try {
+        const sitesForClient = await apiService.getSitesByClientId(filters.client);
+        setSites(sitesForClient);
+      } catch (error) {
+        console.error('Error loading sites:', error);
+        alert('Erreur lors du chargement des sites');
+      }
     } else {
       setSites([]);
     }
 
     // Reset site filter when client changes
-    setFilterSite('');
+    setFilters(prev => ({ ...prev, site: '' }));
   };
 
   // Apply all filters to the quotes
@@ -113,44 +127,44 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ currentPath, onNavigate }) =>
     let result = [...quotes];
 
     // Filter by ID - either exact ID match or baseId match
-    if (filterId) {
+    if (filters.id) {
       // Check if the filter is a base ID (8 digits) or a full quote ID
-      const isBaseIdFilter = /^\d{8}$/.test(filterId);
+      const isBaseIdFilter = /^\d{8}$/.test(filters.id);
 
       if (isBaseIdFilter) {
         // Filter by base ID - show all quotes with this base ID
         result = result.filter(quote => {
           const baseId = extractBaseId(quote.id);
-          return baseId === filterId;
+          return baseId === filters.id;
         });
       } else {
         // Regular ID filter - use contains for flexibility
         result = result.filter(quote =>
-          quote.id.toLowerCase().includes(filterId.toLowerCase())
+          quote.id.toLowerCase().includes(filters.id.toLowerCase())
         );
       }
     }
 
     // Filter by client
-    if (filterClient) {
+    if (filters.client) {
       result = result.filter(quote =>
-        quote.clientName === clients.find(c => c.id === filterClient)?.name
+        quote.clientName === clients.find(c => c.id === filters.client)?.name
       );
     }
 
     // Filter by site
-    if (filterSite) {
+    if (filters.site) {
       result = result.filter(quote =>
-        quote.siteName === sites.find(s => s.id === filterSite)?.name
+        quote.siteName === sites.find(s => s.id === filters.site)?.name
       );
     }
 
     // Filter by date
-    if (filterDate !== 'all') {
+    if (filters.period !== 'all') {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      switch (filterDate) {
+      switch (filters.period) {
         case 'today':
           result = result.filter(quote => {
             const quoteDate = new Date(quote.date);
@@ -190,7 +204,7 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ currentPath, onNavigate }) =>
     result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     // If not showing all versions and not filtering by base ID, filter to show only the latest version of each quote
-    if (!showAllVersions && !(/^\d{8}$/.test(filterId))) {
+    if (!showAllVersions && !(/^\d{8}$/.test(filters.id))) {
       // Group by base ID
       const groupedByBaseId: { [baseId: string]: Quote[] } = {};
       result.forEach(quote => {
@@ -251,24 +265,52 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ currentPath, onNavigate }) =>
 
   // Clear all filters
   const clearFilters = () => {
-    setFilterId('');
-    setFilterClient('');
-    setFilterSite('');
-    setFilterDate('all');
+    setFilters({
+      id: '',
+      client: '',
+      site: '',
+      period: 'all',
+    });
+    setShowAllVersions(false);
   };
 
-  // Load a quote and navigate to quote page
-  const handleLoadQuote = (quoteId: string) => {
-    loadQuote(quoteId);
-    onNavigate('/');
+  // Load a quote
+  const handleLoadQuote = async (quoteId: string) => {
+    try {
+      const quote = await apiService.getQuoteById(quoteId);
+      loadQuote(quote);
+      onNavigate('/quote', quoteId);
+    } catch (error) {
+      console.error('Error loading quote:', error);
+      alert('Erreur lors du chargement du devis');
+    }
   };
 
   // Delete a quote
-  const handleDeleteQuote = (quoteId: string) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce devis ?')) {
-      const success = storageService.deleteQuote(quoteId);
-      if (success) {
-        setQuotes(quotes.filter(q => q.id !== quoteId));
+  const handleDeleteQuote = async (quoteId: string) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce devis?')) {
+      try {
+        await apiService.deleteQuote(quoteId);
+        const updatedQuotes = quotes.filter(quote => quote.id !== quoteId);
+        setQuotes(updatedQuotes);
+
+        // Also remove from version groups if needed
+        const baseId = extractBaseId(quoteId);
+        if (baseId && quoteVersions[baseId]) {
+          const updatedVersions = quoteVersions[baseId].filter(q => q.id !== quoteId);
+          if (updatedVersions.length === 0) {
+            const { [baseId]: _, ...remainingGroups } = quoteVersions;
+            setQuoteVersions(remainingGroups);
+          } else {
+            setQuoteVersions({
+              ...quoteVersions,
+              [baseId]: updatedVersions
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error deleting quote:', error);
+        alert('Erreur lors de la suppression du devis');
       }
     }
   };
@@ -343,16 +385,19 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ currentPath, onNavigate }) =>
     if (!baseId) return;
 
     // Clear other filters
-    setFilterId('');
-    setFilterClient('');
-    setFilterSite('');
-    setFilterDate('all');
+    setFilters(prev => ({
+      ...prev,
+      id: '',
+      client: '',
+      site: '',
+      period: 'all',
+    }));
 
     // Show all versions
     setShowAllVersions(true);
 
     // Set the filter to only show quotes with this base ID
-    setFilterId(baseId);
+    setFilters(prev => ({ ...prev, id: baseId }));
   };
 
   const handleViewPriceOffer = (quote: Quote) => {
@@ -365,12 +410,12 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ currentPath, onNavigate }) =>
 
   return (
     <Layout currentPath={currentPath} onNavigate={onNavigate}>
-      <Box className="page-header">
-        <Typography variant="h6" component="h1" className="page-title">
-          HISTORIQUE
-        </Typography>
-      </Box>
-      <Container className="history-container">
+      <Container maxWidth="lg" className="history-page">
+        <Box className="page-header">
+          <Typography variant="h5" className="header-title">
+            HISTORIQUE
+          </Typography>
+        </Box>
         <Typography variant="h4" gutterBottom>
           Historique des Devis
         </Typography>
@@ -386,14 +431,14 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ currentPath, onNavigate }) =>
                 fullWidth
                 label="ID"
                 variant="outlined"
-                value={filterId}
-                onChange={(e) => setFilterId(e.target.value)}
+                value={filters.id}
+                onChange={(e) => setFilters(prev => ({ ...prev, id: e.target.value }))}
                 size="small"
               />
-              {/^\d{8}$/.test(filterId) && (
+              {/^\d{8}$/.test(filters.id) && (
                 <IconButton
                   size="small"
-                  onClick={() => setFilterId('')}
+                  onClick={() => setFilters(prev => ({ ...prev, id: '' }))}
                   sx={{ ml: 1 }}
                 >
                   <ClearIcon fontSize="small" />
@@ -405,12 +450,9 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ currentPath, onNavigate }) =>
               <FormControl fullWidth size="small">
                 <InputLabel>Client</InputLabel>
                 <Select
-                  value={filterClient}
+                  value={filters.client}
                   label="Client"
-                  onChange={(e) => {
-                    setFilterClient(e.target.value as string);
-                    updateSiteOptions();
-                  }}
+                  onChange={(e) => setFilters(prev => ({ ...prev, client: e.target.value as string }))}
                 >
                   <MenuItem value="">Tous les clients</MenuItem>
                   {clients.map(client => (
@@ -426,10 +468,10 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ currentPath, onNavigate }) =>
               <FormControl fullWidth size="small">
                 <InputLabel>Site</InputLabel>
                 <Select
-                  value={filterSite}
+                  value={filters.site}
                   label="Site"
-                  onChange={(e) => setFilterSite(e.target.value as string)}
-                  disabled={!filterClient}
+                  onChange={(e) => setFilters(prev => ({ ...prev, site: e.target.value as string }))}
+                  disabled={!filters.client}
                 >
                   <MenuItem value="">Tous les sites</MenuItem>
                   {sites.map(site => (
@@ -445,9 +487,9 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ currentPath, onNavigate }) =>
               <FormControl fullWidth size="small">
                 <InputLabel>Période</InputLabel>
                 <Select
-                  value={filterDate}
+                  value={filters.period}
                   label="Période"
-                  onChange={(e) => setFilterDate(e.target.value as string)}
+                  onChange={(e) => setFilters(prev => ({ ...prev, period: e.target.value as string }))}
                 >
                   <MenuItem value="all">Toutes les dates</MenuItem>
                   <MenuItem value="today">Aujourd'hui</MenuItem>
@@ -470,11 +512,11 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ currentPath, onNavigate }) =>
             </Box>
           </Box>
 
-          {/^\d{8}$/.test(filterId) && (
+          {/^\d{8}$/.test(filters.id) && (
             <Box sx={{ mt: 2, p: 1, bgcolor: '#e3f2fd', borderRadius: 1 }}>
               <Typography variant="body2">
                 <InfoIcon fontSize="small" sx={{ mr: 1, verticalAlign: 'middle', color: '#1976d2' }} />
-                Affichage de toutes les versions du devis avec l'ID de base: <strong>{filterId}</strong>
+                Affichage de toutes les versions du devis avec l'ID de base: <strong>{filters.id}</strong>
               </Typography>
             </Box>
           )}
@@ -489,19 +531,19 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ currentPath, onNavigate }) =>
         <Box sx={{ mt: 3 }}>
           {filteredQuotes.length === 0 ? (
             <Typography variant="body1">Aucun devis trouvé</Typography>
-          ) : /^\d{8}$/.test(filterId) ? (
+          ) : /^\d{8}$/.test(filters.id) ? (
             // When filtering by base ID, display quotes grouped by that base ID
             <>
               <Box className="versions-group-header">
                 <InfoIcon sx={{ mr: 1, color: '#1976d2' }} />
                 <Typography variant="subtitle1">
-                  Versions du devis avec base ID: <span className="group-id">{filterId}</span>
+                  Versions du devis avec base ID: <span className="group-id">{filters.id}</span>
                 </Typography>
                 <Box className="group-actions">
                   <Button
                     size="small"
                     variant="outlined"
-                    onClick={() => setFilterId('')}
+                    onClick={() => setFilters(prev => ({ ...prev, id: '' }))}
                   >
                     Retour à tous les devis
                   </Button>
@@ -515,7 +557,7 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ currentPath, onNavigate }) =>
                   quoteVersions[baseId][0].id === quote.id;
                 const versionCount = baseId ? getVersionCount(quote.id) : 1;
                 const isExpanded = baseId ? expandedGroups.includes(baseId) : false;
-                const isHighlighted = /^\d{8}$/.test(filterId) && baseId === filterId;
+                const isHighlighted = /^\d{8}$/.test(filters.id) && baseId === filters.id;
 
                 return (
                   <Card
@@ -624,7 +666,7 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ currentPath, onNavigate }) =>
               const versionCount = baseId ? getVersionCount(quote.id) : 1;
               const isExpanded = baseId ? expandedGroups.includes(baseId) : false;
               const version = extractVersion(quote.id) ?? 0;
-              const isHighlighted = /^\d{8}$/.test(filterId) && baseId === filterId;
+              const isHighlighted = /^\d{8}$/.test(filters.id) && baseId === filters.id;
 
               return (
                 <Card

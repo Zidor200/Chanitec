@@ -25,18 +25,24 @@ import {
   ListItem,
   ListItemText,
   ListItemSecondaryAction,
-  Chip
+  Chip,
+  Card,
+  CardContent,
+  InputBase,
+  Collapse,
 } from '@mui/material';
 import {
   Add as AddIcon,
   Delete as DeleteIcon,
   Edit as EditIcon,
   ExpandMore as ExpandMoreIcon,
-  Place as PlaceIcon
+  Place as PlaceIcon,
+  KeyboardArrowDown as KeyboardArrowDownIcon,
+  KeyboardArrowUp as KeyboardArrowUpIcon,
 } from '@mui/icons-material';
 import Layout from '../../components/Layout/Layout';
 import { Client, Site } from '../../models/Quote';
-import { storageService } from '../../services/storage-service';
+import { apiService } from '../../services/api-service';
 import { generateClientId } from '../../utils/id-generator';
 import './ClientsPage.scss';
 
@@ -72,6 +78,9 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ currentPath, onNavigate }) =>
     clientId: ''
   });
 
+  // State for expanded client
+  const [expandedClient, setExpandedClient] = useState<string | null>(null);
+
   // Load clients on component mount
   useEffect(() => {
     loadClients();
@@ -82,21 +91,26 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ currentPath, onNavigate }) =>
     filterClients();
   }, [searchTerm, clients]);
 
-  // Load all clients from storage
-  const loadClients = () => {
-    const loadedClients = storageService.getClients();
+  // Load all clients from API
+  const loadClients = async () => {
+    try {
+      const loadedClients = await apiService.getClients();
 
-    // For each client, load its sites
-    const clientsWithSites = loadedClients.map(client => {
-      const sites = storageService.getSitesByClientId(client.id);
-      return {
-        ...client,
-        sites
-      };
-    });
+      // For each client, load its sites
+      const clientsWithSites = await Promise.all(loadedClients.map(async client => {
+        const sites = await apiService.getSitesByClientId(client.id);
+        return {
+          ...client,
+          sites
+        };
+      }));
 
-    setClients(clientsWithSites);
-    setFilteredClients(clientsWithSites);
+      setClients(clientsWithSites);
+      setFilteredClients(clientsWithSites);
+    } catch (error) {
+      console.error('Error loading clients:', error);
+      alert('Erreur lors du chargement des clients');
+    }
   };
 
   // Filter clients based on search term
@@ -174,7 +188,7 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ currentPath, onNavigate }) =>
   };
 
   // Save client (create or update)
-  const handleSaveClient = () => {
+  const handleSaveClient = async () => {
     if (!currentClient.name) {
       alert('Le nom du client est requis');
       return;
@@ -191,7 +205,7 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ currentPath, onNavigate }) =>
         currentClient.id = generateClientId(clients);
       }
 
-      const savedClient = storageService.saveClient(currentClient as Omit<Client, 'id'> & { id?: string });
+      const savedClient = await apiService.saveClient(currentClient as Omit<Client, 'id'> & { id?: string });
 
       if (isEditingClient) {
         // Update client in the list
@@ -202,13 +216,13 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ currentPath, onNavigate }) =>
       } else {
         // Create sites starting with the principal site
         const allSites = [principalSiteName, ...tempSites].filter(site => site.trim());
-        const savedSites = allSites.map(siteName => {
+        const savedSites = await Promise.all(allSites.map(async siteName => {
           const site: Omit<Site, 'id'> = {
             name: siteName,
             clientId: savedClient.id
           };
-          return storageService.saveSite(site);
-        });
+          return await apiService.saveSite(site);
+        }));
 
         // Add new client to the list with sites
         setClients([...clients, { ...savedClient, sites: savedSites }]);
@@ -222,17 +236,25 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ currentPath, onNavigate }) =>
   };
 
   // Delete a client
-  const handleDeleteClient = (id: string) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce client? Tous les sites associés seront également supprimés.')) {
+  const handleDeleteClient = async (id: string) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce client?\n\nATTENTION: Cette action supprimera également:\n- Tous les sites associés à ce client\n- Tous les devis liés aux sites de ce client\n\nCette action est irréversible.')) {
       try {
-        const success = storageService.deleteClient(id);
-        if (success) {
-          const updatedClients = clients.filter(client => client.id !== id);
-          setClients(updatedClients);
-        }
+        // Start optimistic update
+        setClients(prevClients => prevClients.filter(client => client.id !== id));
+        setFilteredClients(prevFiltered => prevFiltered.filter(client => client.id !== id));
+
+        await apiService.deleteClient(id);
+
+        // Show success message
+        alert('Client supprimé avec succès');
       } catch (error) {
         console.error('Error deleting client:', error);
-        alert('Échec de la suppression du client');
+
+        // Revert optimistic update on error
+        await loadClients(); // Reload all clients to ensure data consistency
+
+        // Show error message
+        alert('Échec de la suppression du client. Veuillez réessayer.');
       }
     }
   };
@@ -271,31 +293,38 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ currentPath, onNavigate }) =>
   };
 
   // Save site (create or update)
-  const handleSaveSite = () => {
+  const handleSaveSite = async () => {
     if (!currentSite.name) {
       alert('Le nom du site est requis');
       return;
     }
 
     try {
-      const savedSite = storageService.saveSite(currentSite as Omit<Site, 'id'> & { id?: string });
+      const savedSite = await apiService.saveSite(currentSite as Omit<Site, 'id'> & { id?: string });
 
-      // Update the clients list to include the new/updated site
-      const updatedClients = clients.map(client => {
-        if (client.id === savedSite.clientId) {
-          const updatedSites = isEditingSite
-            ? client.sites.map(site => site.id === savedSite.id ? savedSite : site)
-            : [...client.sites, savedSite];
+      if (isEditingSite) {
+        // Update site in the list
+        const updatedClients = clients.map(client => {
+          if (client.id === currentSite.clientId) {
+            const updatedSites = client.sites.map(site =>
+              site.id === savedSite.id ? savedSite : site
+            );
+            return { ...client, sites: updatedSites };
+          }
+          return client;
+        });
+        setClients(updatedClients);
+      } else {
+        // Add new site to the list
+        const updatedClients = clients.map(client => {
+          if (client.id === currentSite.clientId) {
+            return { ...client, sites: [...client.sites, savedSite] };
+          }
+          return client;
+        });
+        setClients(updatedClients);
+      }
 
-          return {
-            ...client,
-            sites: updatedSites
-          };
-        }
-        return client;
-      });
-
-      setClients(updatedClients);
       handleCloseSiteDialog();
     } catch (error) {
       console.error('Error saving site:', error);
@@ -304,21 +333,12 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ currentPath, onNavigate }) =>
   };
 
   // Delete a site
-  const handleDeleteSite = (siteId: string, clientId: string) => {
-    // Find the client
-    const client = clients.find(c => c.id === clientId);
-
-    // Check if this is the last site - don't allow deletion if it's the only site
-    if (client && client.sites.length <= 1) {
-      alert('Impossible de supprimer le dernier site. Chaque client doit avoir au moins un site.');
-      return;
-    }
-
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce site?')) {
+  const handleDeleteSite = async (siteId: string, clientId: string) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce site?\n\nATTENTION: Cette action supprimera également tous les devis associés à ce site.\n\nCette action est irréversible.')) {
       try {
-        const success = storageService.deleteSite(siteId);
-        if (success) {
-          const updatedClients = clients.map(client => {
+        // Start optimistic update
+        setClients(prevClients =>
+          prevClients.map(client => {
             if (client.id === clientId) {
               return {
                 ...client,
@@ -326,38 +346,64 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ currentPath, onNavigate }) =>
               };
             }
             return client;
-          });
-          setClients(updatedClients);
-        }
+          })
+        );
+        setFilteredClients(prevFiltered =>
+          prevFiltered.map(client => {
+            if (client.id === clientId) {
+              return {
+                ...client,
+                sites: client.sites.filter(site => site.id !== siteId)
+              };
+            }
+            return client;
+          })
+        );
+
+        await apiService.deleteSite(siteId);
+
+        // Show success message
+        alert('Site supprimé avec succès');
       } catch (error) {
         console.error('Error deleting site:', error);
-        alert('Échec de la suppression du site');
+
+        // Revert optimistic update on error
+        await loadClients(); // Reload all clients to ensure data consistency
+
+        // Show error message
+        alert('Échec de la suppression du site. Veuillez réessayer.');
       }
     }
   };
 
+  // Toggle client expansion
+  const handleToggleClientExpand = (clientId: string) => {
+    setExpandedClient(expandedClient === clientId ? null : clientId);
+  };
+
   return (
     <Layout currentPath={currentPath} onNavigate={onNavigate}>
+      {/* Blue header */}
       <Box className="page-header">
-        <Typography variant="h6" component="h1" className="page-title">
+        <Typography variant="h5" className="header-title">
           CLIENTS ET SITES
         </Typography>
       </Box>
-      <Container className="clients-page-container">
-        <Paper elevation={2} className="clients-paper">
-          <Box className="clients-header">
-            <Typography variant="h6" className="section-title">
-              CLIENTS ET SITES
-            </Typography>
+
+      {/* Main content */}
+      <Card className="main-card">
+        <CardContent>
+          <Box className="card-header">
+            <Typography variant="h6">CLIENTS ET SITES</Typography>
             <Box className="search-and-add">
-              <TextField
-                label="Rechercher un client"
-                variant="outlined"
-                size="small"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="search-field"
-              />
+              <Paper className="search-field">
+                <InputBase
+                  placeholder="Rechercher un client"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  fullWidth
+                />
+              </Paper>
               <Button
                 variant="contained"
                 color="primary"
@@ -369,113 +415,87 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ currentPath, onNavigate }) =>
             </Box>
           </Box>
 
-          <Box className="clients-list">
-            {filteredClients.length === 0 ? (
-              <Typography variant="body1" align="center" className="no-clients">
-                Aucun client trouvé
-              </Typography>
-            ) : (
-              filteredClients.map((client) => (
-                <Accordion key={client.id} className="client-accordion">
-                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                    <Box className="client-summary">
-                      <Typography variant="subtitle1" className="client-name">
-                        {client.name} <span className="client-id">#{client.id}</span>
-                      </Typography>
-                      <Box className="client-actions">
-                        <IconButton
-                          size="small"
-                          color="primary"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditClient(client);
-                          }}
-                        >
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteClient(client.id);
-                          }}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Box>
-                    </Box>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    <Box className="sites-container">
-                      <Box className="sites-header">
-                        <Typography variant="subtitle2">
-                          Sites ({client.sites.length})
-                        </Typography>
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          startIcon={<AddIcon />}
-                          onClick={() => handleAddSite(client.id)}
-                        >
-                          Ajouter un site
-                        </Button>
-                      </Box>
+          {/* Clients list */}
+          {filteredClients.map((client) => (
+            <Paper key={client.id} className="client-item">
+              <Box className="client-header">
+                <Box className="client-info">
+                  <Typography variant="subtitle1">{client.name}</Typography>
+                  <Typography variant="caption" color="textSecondary">
+                    #{client.id}
+                  </Typography>
+                </Box>
+                <Box className="client-actions">
+                  <IconButton size="small" onClick={() => handleEditClient(client)}>
+                    <EditIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    color="error"
+                    onClick={() => handleDeleteClient(client.id)}
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    onClick={() => handleToggleClientExpand(client.id)}
+                  >
+                    {expandedClient === client.id ? (
+                      <KeyboardArrowUpIcon />
+                    ) : (
+                      <KeyboardArrowDownIcon />
+                    )}
+                  </IconButton>
+                </Box>
+              </Box>
 
-                      <Divider className="sites-divider" />
+              <Collapse in={expandedClient === client.id}>
+                <Box className="sites-section">
+                  <Box className="sites-header">
+                    <Typography variant="subtitle2">
+                      Sites ({client.sites?.length || 0})
+                    </Typography>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<AddIcon />}
+                      onClick={() => handleAddSite(client.id)}
+                    >
+                      Ajouter un site
+                    </Button>
+                  </Box>
 
-                      {client.sites.length === 0 ? (
-                        <Typography variant="body2" className="no-sites">
-                          Aucun site pour ce client
-                        </Typography>
-                      ) : (
-                        <TableContainer>
-                          <Table size="small">
-                            <TableHead>
-                              <TableRow>
-                                <TableCell>Nom du site</TableCell>
-                                <TableCell align="center">Actions</TableCell>
-                              </TableRow>
-                            </TableHead>
-                            <TableBody>
-                              {client.sites.map((site) => (
-                                <TableRow key={site.id}>
-                                  <TableCell>
-                                    <Box className="site-name">
-                                      <PlaceIcon fontSize="small" className="site-icon" />
-                                      {site.name}
-                                    </Box>
-                                  </TableCell>
-                                  <TableCell align="center">
-                                    <IconButton
-                                      size="small"
-                                      color="primary"
-                                      onClick={() => handleEditSite(site)}
-                                    >
-                                      <EditIcon fontSize="small" />
-                                    </IconButton>
-                                    <IconButton
-                                      size="small"
-                                      color="error"
-                                      onClick={() => handleDeleteSite(site.id, client.id)}
-                                    >
-                                      <DeleteIcon fontSize="small" />
-                                    </IconButton>
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </TableContainer>
-                      )}
-                    </Box>
-                  </AccordionDetails>
-                </Accordion>
-              ))
-            )}
-          </Box>
-        </Paper>
-      </Container>
+                  <Box className="sites-list">
+                    {client.sites?.map((site) => (
+                      <Box key={site.id} className="site-item">
+                        <Box className="site-info">
+                          <PlaceIcon fontSize="small" color="primary" />
+                          <Typography>{site.name}</Typography>
+                        </Box>
+                        <Box className="site-actions">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleEditSite(site)}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => handleDeleteSite(site.id, site.clientId)}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
+              </Collapse>
+            </Paper>
+          ))}
+        </CardContent>
+      </Card>
 
       {/* Dialog for adding/editing clients */}
       <Dialog

@@ -157,11 +157,116 @@
   }
 }
 
-// Responsive adjustments
+.page-header {
+  background-color: #1976d2;
+  padding: 1rem;
+  margin-bottom: 2rem;
+
+  .header-title {
+    color: white;
+    text-align: center;
+    font-weight: 500;
+  }
+}
+
+.history-content {
+  padding: 0 2rem;
+
+  .page-title {
+    margin-bottom: 2rem;
+    font-weight: 400;
+  }
+
+  .filters-section {
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+
+    .filters-container {
+      display: flex;
+      gap: 1rem;
+      margin: 1.5rem 0;
+      flex-wrap: wrap;
+
+      .filter-field {
+        min-width: 200px;
+        flex: 1;
+      }
+    }
+
+    .filters-actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 1rem;
+    }
+  }
+
+  .quote-item {
+    margin-bottom: 1rem;
+    padding: 1rem;
+
+    .quote-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+
+      .quote-id {
+        .version-number {
+          color: #ff9800;
+          font-weight: 500;
+        }
+
+        .version-info {
+          display: flex;
+          gap: 1rem;
+          align-items: center;
+          margin-top: 0.5rem;
+        }
+      }
+
+      .quote-date {
+        color: rgba(0, 0, 0, 0.6);
+      }
+    }
+
+    .quote-details {
+      .detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+
+        &:last-child {
+          border-bottom: none;
+        }
+      }
+    }
+
+    .quote-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+  }
+}
+
 @media (max-width: 600px) {
   .history-container {
     .filters-section {
       padding: 1rem;
+    }
+  }
+
+  .history-content {
+    padding: 0 1rem;
+
+    .filters-container {
+      flex-direction: column;
+
+      .filter-field {
+        width: 100%;
+      }
     }
   }
 }

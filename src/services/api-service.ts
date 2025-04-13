@@ -1,112 +1,132 @@
 import { Client, Quote, Site, SupplyItem, LaborItem } from '../models/Quote';
 import { PriceOffer } from '../models/PriceOffer';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = 'http://localhost:3001/api';
 
-// Helper function to handle API responses
-const handleResponse = async (response: Response) => {
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Something went wrong');
-    }
-    return response.json();
-};
-
-// API Service class
 class ApiService {
-    // Clients
-    async getClients(): Promise<Client[]> {
-        const response = await fetch(`${API_BASE_URL}/clients`);
-        return handleResponse(response);
-    }
-
-    async createClient(client: Omit<Client, 'id'>): Promise<Client> {
-        const response = await fetch(`${API_BASE_URL}/clients`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(client)
+    // Helper method for making API calls
+    private async fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers,
+            },
         });
-        return handleResponse(response);
-    }
 
-    // Sites
-    async getSites(): Promise<Site[]> {
-        const response = await fetch(`${API_BASE_URL}/sites`);
-        return handleResponse(response);
-    }
+        if (!response.ok) {
+            throw new Error(`API call failed: ${response.statusText}`);
+        }
 
-    async createSite(site: Omit<Site, 'id'>): Promise<Site> {
-        const response = await fetch(`${API_BASE_URL}/sites`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(site)
-        });
-        return handleResponse(response);
+        return response.json();
     }
 
     // Quotes
     async getQuotes(): Promise<Quote[]> {
-        const response = await fetch(`${API_BASE_URL}/quotes`);
-        return handleResponse(response);
+        return this.fetchApi<Quote[]>('/quotes');
     }
 
-    async getQuote(id: string): Promise<Quote> {
-        const response = await fetch(`${API_BASE_URL}/quotes/${id}`);
-        return handleResponse(response);
+    async getQuoteById(id: string): Promise<Quote> {
+        return this.fetchApi<Quote>(`/quotes/${id}`);
     }
 
-    async createQuote(quote: Omit<Quote, 'id' | 'createdAt' | 'updatedAt'>): Promise<Quote> {
-        const response = await fetch(`${API_BASE_URL}/quotes`, {
+    async saveQuote(quote: Quote): Promise<Quote> {
+        return this.fetchApi<Quote>('/quotes', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(quote)
+            body: JSON.stringify(quote),
         });
-        return handleResponse(response);
+    }
+
+    async deleteQuote(id: string): Promise<void> {
+        await this.fetchApi(`/quotes/${id}`, {
+            method: 'DELETE',
+        });
+    }
+
+    // Clients
+    async getClients(): Promise<Client[]> {
+        return this.fetchApi<Client[]>('/clients');
+    }
+
+    async getClientById(id: string): Promise<Client> {
+        return this.fetchApi<Client>(`/clients/${id}`);
+    }
+
+    async saveClient(client: Omit<Client, 'id'> & { id?: string }): Promise<Client> {
+        return this.fetchApi<Client>('/clients', {
+            method: 'POST',
+            body: JSON.stringify(client),
+        });
+    }
+
+    async deleteClient(id: string): Promise<void> {
+        await this.fetchApi(`/clients/${id}`, {
+            method: 'DELETE',
+        });
+    }
+
+    // Sites
+    async getSites(): Promise<Site[]> {
+        return this.fetchApi<Site[]>('/sites');
+    }
+
+    async getSitesByClientId(clientId: string): Promise<Site[]> {
+        return this.fetchApi<Site[]>(`/sites?clientId=${clientId}`);
+    }
+
+    async saveSite(site: Omit<Site, 'id'> & { id?: string }): Promise<Site> {
+        return this.fetchApi<Site>('/sites', {
+            method: 'POST',
+            body: JSON.stringify(site),
+        });
+    }
+
+    async deleteSite(id: string): Promise<void> {
+        await this.fetchApi(`/sites/${id}`, {
+            method: 'DELETE',
+        });
     }
 
     // Supply Items
-    async getSupplyItems(quoteId: string): Promise<SupplyItem[]> {
-        const response = await fetch(`${API_BASE_URL}/supply-items/${quoteId}`);
-        return handleResponse(response);
+    async getSupplies(): Promise<SupplyItem[]> {
+        return this.fetchApi<SupplyItem[]>('/items');
     }
 
-    async createSupplyItem(item: Omit<SupplyItem, 'id'>): Promise<SupplyItem> {
-        const response = await fetch(`${API_BASE_URL}/supply-items`, {
+    async saveSupply(supply: Omit<SupplyItem, 'id'> & { id?: string }): Promise<SupplyItem> {
+        return this.fetchApi<SupplyItem>('/items', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(item)
+            body: JSON.stringify(supply),
         });
-        return handleResponse(response);
+    }
+
+    async deleteSupply(id: string): Promise<void> {
+        await this.fetchApi(`/items/${id}`, {
+            method: 'DELETE',
+        });
     }
 
     // Labor Items
     async getLaborItems(quoteId: string): Promise<LaborItem[]> {
-        const response = await fetch(`${API_BASE_URL}/labor-items/${quoteId}`);
-        return handleResponse(response);
+        return this.fetchApi<LaborItem[]>(`/labor-items/${quoteId}`);
     }
 
     async createLaborItem(item: Omit<LaborItem, 'id'>): Promise<LaborItem> {
-        const response = await fetch(`${API_BASE_URL}/labor-items`, {
+        return this.fetchApi<LaborItem>('/labor-items', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(item)
         });
-        return handleResponse(response);
     }
 
     // Price Offers
     async getPriceOffers(): Promise<PriceOffer[]> {
-        const response = await fetch(`${API_BASE_URL}/price-offers`);
-        return handleResponse(response);
+        return this.fetchApi<PriceOffer[]>('/price-offers');
     }
 
     async createPriceOffer(offer: Omit<PriceOffer, 'createdAt' | 'updatedAt'>): Promise<PriceOffer> {
-        const response = await fetch(`${API_BASE_URL}/price-offers`, {
+        return this.fetchApi<PriceOffer>('/price-offers', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(offer)
         });
-        return handleResponse(response);
     }
 }
 

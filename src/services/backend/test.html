@@ -67,9 +67,20 @@
 
     <div class="section">
         <h2>Clients</h2>
-        <button onclick="getClients()">Get Clients</button>
-        <button onclick="createClient()">Create Test Client</button>
+        <input type="text" id="clientName" placeholder="Client Name">
+        <button onclick="getClients()">Get All Clients</button>
+        <button onclick="createClient()">Create Client</button>
+        <button onclick="getClientSites()">Get Client Sites</button>
         <div class="result" id="clientsResult"></div>
+    </div>
+
+    <div class="section">
+        <h2>Sites</h2>
+        <input type="text" id="siteName" placeholder="Site Name">
+        <input type="text" id="clientId" placeholder="Client ID">
+        <button onclick="getSites()">Get All Sites</button>
+        <button onclick="createSite()">Create Site</button>
+        <div class="result" id="sitesResult"></div>
     </div>
 
     <div class="section">
@@ -171,6 +182,7 @@
 
         async function createClient() {
             try {
+                const name = document.getElementById('clientName').value || 'Test Client';
                 const response = await fetch(`${API_BASE_URL}/clients`, {
                     method: 'POST',
                     headers: {
@@ -178,13 +190,62 @@
                     },
                     body: JSON.stringify({
                         id: `test-client-${Date.now()}`,
-                        name: 'Test Client'
+                        name: name
                     })
                 });
                 const data = await response.json();
                 document.getElementById('clientsResult').innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
             } catch (error) {
                 document.getElementById('clientsResult').innerHTML = `<pre>Error: ${error.message}</pre>`;
+            }
+        }
+
+        async function getClientSites() {
+            try {
+                const clientId = document.getElementById('clientId').value;
+                if (!clientId) {
+                    throw new Error('Please enter a Client ID');
+                }
+                const response = await fetch(`${API_BASE_URL}/sites?clientId=${clientId}`);
+                const data = await response.json();
+                document.getElementById('clientsResult').innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                document.getElementById('clientsResult').innerHTML = `<pre>Error: ${error.message}</pre>`;
+            }
+        }
+
+        async function getSites() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/sites`);
+                const data = await response.json();
+                document.getElementById('sitesResult').innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                document.getElementById('sitesResult').innerHTML = `<pre>Error: ${error.message}</pre>`;
+            }
+        }
+
+        async function createSite() {
+            try {
+                const name = document.getElementById('siteName').value || 'Test Site';
+                const clientId = document.getElementById('clientId').value;
+                if (!clientId) {
+                    throw new Error('Please enter a Client ID');
+                }
+                const response = await fetch(`${API_BASE_URL}/sites`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id: `test-site-${Date.now()}`,
+                        name: name,
+                        client_id: clientId
+                    })
+                });
+                const data = await response.json();
+                document.getElementById('sitesResult').innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                document.getElementById('sitesResult').innerHTML = `<pre>Error: ${error.message}</pre>`;
             }
         }
 
