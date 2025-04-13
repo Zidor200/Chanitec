@@ -25,7 +25,8 @@ const QuotePage: React.FC<QuotePageProps> = ({ currentPath, onNavigate }) => {
     removeSupplyItem,
     addLaborItem,
     removeLaborItem,
-    recalculateTotals
+    recalculateTotals,
+    clearQuote
   } = useQuote();
 
   const { currentQuote, isLoading, isExistingQuote } = state;
@@ -43,10 +44,16 @@ const QuotePage: React.FC<QuotePageProps> = ({ currentPath, onNavigate }) => {
     onNavigate('/history');
   };
 
+  // Handle home button click
+  const handleHomeClick = () => {
+    clearQuote();
+    createNewQuote();
+  };
+
   // If no quote is loaded or is still loading, show loading
   if (!currentQuote || isLoading) {
     return (
-      <Layout currentPath={currentPath} onNavigate={onNavigate}>
+      <Layout currentPath={currentPath} onNavigate={onNavigate} onHomeClick={handleHomeClick}>
         <Box className="page-header">
           <Typography variant="h6" component="h1" className="page-title">
             CALCUL DE PRIX OFFRE CLIMATISATION
@@ -60,7 +67,7 @@ const QuotePage: React.FC<QuotePageProps> = ({ currentPath, onNavigate }) => {
   }
 
   return (
-    <Layout currentPath={currentPath} onNavigate={onNavigate}>
+    <Layout currentPath={currentPath} onNavigate={onNavigate} onHomeClick={handleHomeClick}>
       <Box sx={{ display: 'flex', position: 'relative', width: '100%' , backgroundColor: 'white' , color: 'black'}} className="page-header">
         <Box sx={{ position: 'absolute', left: 0 }}>
           <img

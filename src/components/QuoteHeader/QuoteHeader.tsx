@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Paper, TextField, Typography, MenuItem, Tooltip } from '@mui/material';
 import { Client, Site } from '../../models/Quote';
-import { storageService } from '../../services/storage-service';
+import { apiService } from '../../services/api-service';
 import { extractVersion } from '../../utils/id-generator';
 import './QuoteHeader.scss';
 
@@ -30,6 +30,7 @@ const QuoteHeader: React.FC<QuoteHeaderProps> = ({
 }) => {
   const [clients, setClients] = useState<Client[]>([]);
   const [sites, setSites] = useState<Site[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Format quoteId to display version information
   const formatQuoteId = (id: string) => {
@@ -55,21 +56,32 @@ const QuoteHeader: React.FC<QuoteHeaderProps> = ({
 
   // Load clients on component mount
   useEffect(() => {
-    const loadedClients = storageService.getClients();
-    setClients(loadedClients);
+    const loadClients = async () => {
+      try {
+        setIsLoading(true);
+        const loadedClients = await apiService.getClients();
+        setClients(loadedClients);
 
-    // If a client is selected, load its sites
-    if (clientName) {
-      const selectedClient = loadedClients.find(c => c.name === clientName);
-      if (selectedClient) {
-        const clientSites = storageService.getSitesByClientId(selectedClient.id);
-        setSites(clientSites);
+        // If a client is selected, load its sites
+        if (clientName) {
+          const selectedClient = loadedClients.find(c => c.name === clientName);
+          if (selectedClient) {
+            const clientSites = await apiService.getSitesByClientId(selectedClient.id);
+            setSites(clientSites);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading clients:', error);
+      } finally {
+        setIsLoading(false);
       }
-    }
+    };
+
+    loadClients();
   }, [clientName]);
 
   // Handle client selection change
-  const handleClientChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleClientChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
     onClientChange(value);
 
@@ -79,8 +91,15 @@ const QuoteHeader: React.FC<QuoteHeaderProps> = ({
     // Load sites for selected client
     const selectedClient = clients.find(c => c.name === value);
     if (selectedClient) {
-      const clientSites = storageService.getSitesByClientId(selectedClient.id);
-      setSites(clientSites);
+      try {
+        setIsLoading(true);
+        const clientSites = await apiService.getSitesByClientId(selectedClient.id);
+        setSites(clientSites);
+      } catch (error) {
+        console.error('Error loading sites:', error);
+      } finally {
+        setIsLoading(false);
+      }
     } else {
       setSites([]);
     }
@@ -115,7 +134,7 @@ const QuoteHeader: React.FC<QuoteHeaderProps> = ({
             className="header-field"
           >
             <MenuItem value="">Sélectionnez un client</MenuItem>
-            {clients.map((client) => (
+            {(clients ?? []).map((client) => (
               <MenuItem key={client.id} value={client.name}>
                 {client.name}
               </MenuItem>
@@ -136,7 +155,7 @@ const QuoteHeader: React.FC<QuoteHeaderProps> = ({
             disabled={!clientName}
           >
             <MenuItem value="">Sélectionnez un site</MenuItem>
-            {sites.map((site) => (
+            {(sites ?? []).map((site) => (
               <MenuItem key={site.id} value={site.name}>
                 {site.name}
               </MenuItem>

@@ -18,6 +18,11 @@ class ApiService {
             throw new Error(`API call failed: ${response.statusText}`);
         }
 
+        // Handle 204 No Content responses
+        if (response.status === 204) {
+            return undefined as T;
+        }
+
         return response.json();
     }
 
@@ -92,15 +97,19 @@ class ApiService {
         return this.fetchApi<SupplyItem[]>('/items');
     }
 
+    async getSupplyItems(quoteId: string): Promise<SupplyItem[]> {
+        return this.fetchApi<SupplyItem[]>(`/supply-items/${quoteId}`);
+    }
+
     async saveSupply(supply: Omit<SupplyItem, 'id'> & { id?: string }): Promise<SupplyItem> {
-        return this.fetchApi<SupplyItem>('/items', {
+        return this.fetchApi<SupplyItem>('/supply-items', {
             method: 'POST',
             body: JSON.stringify(supply),
         });
     }
 
     async deleteSupply(id: string): Promise<void> {
-        await this.fetchApi(`/items/${id}`, {
+        await this.fetchApi(`/supply-items/${id}`, {
             method: 'DELETE',
         });
     }

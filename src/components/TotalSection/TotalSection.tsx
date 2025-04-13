@@ -25,15 +25,15 @@ const TotalSection: React.FC<TotalSectionProps> = ({
           <TableBody>
             <TableRow>
               <TableCell className="total-label">TOTAL OFFRE USD HT:</TableCell>
-              <TableCell align="right" className="total-value">{totalHT.toFixed(2)}</TableCell>
+              <TableCell align="right" className="total-value">{(totalHT ?? 0).toFixed(2)}</TableCell>
             </TableRow>
             <TableRow>
               <TableCell className="total-label">TVA:</TableCell>
-              <TableCell align="right" className="total-value">{tva.toFixed(2)}</TableCell>
+              <TableCell align="right" className="total-value">{(tva ?? 0).toFixed(2)}</TableCell>
             </TableRow>
             <TableRow className="grand-total-row">
               <TableCell className="total-label grand-total">TOTAL OFFRE USD TTC:</TableCell>
-              <TableCell align="right" className="total-value grand-total">{totalTTC.toFixed(2)}</TableCell>
+              <TableCell align="right" className="total-value grand-total">{(totalTTC ?? 0).toFixed(2)}</TableCell>
             </TableRow>
           </TableBody>
         </Table>

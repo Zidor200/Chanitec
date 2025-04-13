@@ -33,6 +33,7 @@ import { SupplyItem } from '../../models/Quote';
 import { apiService } from '../../services/api-service';
 import './ItemsPage.scss';
 import { v4 as uuidv4 } from 'uuid';
+import CustomNumberInput from '../../components/CustomNumberInput/CustomNumberInput';
 
 interface ItemsPageProps {
   currentPath: string;
@@ -268,7 +269,7 @@ const ItemsPage: React.FC<ItemsPageProps> = ({ currentPath, onNavigate }) => {
 
         // Save valid items
         if (validItems.length > 0) {
-          await Promise.all(validItems.map(item => apiService.saveSupply(item)));
+          await Promise.all((validItems ?? []).map(item => apiService.saveSupply(item)));
           await refreshItems();
 
           if (invalidRows.length > 0) {
@@ -428,21 +429,14 @@ const ItemsPage: React.FC<ItemsPageProps> = ({ currentPath, onNavigate }) => {
             value={currentItem.description}
             onChange={handleInputChange}
           />
-          <TextField
-            margin="dense"
-            name="priceEuro"
+          <CustomNumberInput
             label="Prix (€)"
-            type="number"
+            value={currentItem.priceEuro || 0}
+            onChange={(value) => handleInputChange({ target: { name: 'priceEuro', value: value.toString() } } as React.ChangeEvent<HTMLInputElement>)}
+            min={0}
+            step={0.01}
             fullWidth
-            variant="outlined"
-            value={currentItem.priceEuro}
-            onChange={handleInputChange}
-            InputProps={{
-              inputProps: {
-                min: 0,
-                step: 0.01
-              }
-            }}
+            margin="dense"
           />
         </DialogContent>
         <DialogActions>

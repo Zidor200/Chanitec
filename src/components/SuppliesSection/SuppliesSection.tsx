@@ -23,12 +23,13 @@ import {
   Search as SearchIcon
 } from '@mui/icons-material';
 import { SupplyItem } from '../../models/Quote';
-import { storageService } from '../../services/storage-service';
+import { apiService } from '../../services/api-service';
+import { calculateSupplyItemTotal } from '../../utils/calculations';
 import CustomNumberInput from '../CustomNumberInput/CustomNumberInput';
 import './SuppliesSection.scss';
 
 interface SuppliesSectionProps {
-  items: SupplyItem[];
+  items?: SupplyItem[];
   description: string;
   exchangeRate: number;
   marginRate: number;
@@ -41,7 +42,7 @@ interface SuppliesSectionProps {
 }
 
 const SuppliesSection: React.FC<SuppliesSectionProps> = ({
-  items,
+  items = [],
   description,
   exchangeRate,
   marginRate,
@@ -60,12 +61,24 @@ const SuppliesSection: React.FC<SuppliesSectionProps> = ({
   const [quantity, setQuantity] = useState(1);
   const [customPriceDialogOpen, setCustomPriceDialogOpen] = useState(false);
   const [customPrice, setCustomPrice] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Load catalog items on component mount
   useEffect(() => {
-    const loadedItems = storageService.getSupplies();
-    setCatalogItems(loadedItems);
-    setFilteredItems(loadedItems);
+    const loadCatalogItems = async () => {
+      try {
+        setIsLoading(true);
+        const loadedItems = await apiService.getSupplies();
+        setCatalogItems(loadedItems);
+        setFilteredItems(loadedItems);
+      } catch (error) {
+        console.error('Error loading catalog items:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadCatalogItems();
   }, []);
 
   // Filter items based on search term
@@ -79,6 +92,22 @@ const SuppliesSection: React.FC<SuppliesSectionProps> = ({
       setFilteredItems(filtered);
     }
   }, [searchTerm, catalogItems]);
+
+  // Calculate dollar prices for all items when rates change
+  useEffect(() => {
+    const itemsWithDollarPrices = items.map(item =>
+      calculateSupplyItemTotal(item, exchangeRate, marginRate)
+    );
+    // Update items with calculated dollar prices
+    itemsWithDollarPrices.forEach(item => {
+      const existingItem = items.find(i => i.id === item.id);
+      if (existingItem) {
+        existingItem.priceDollar = item.priceDollar;
+        existingItem.unitPriceDollar = item.unitPriceDollar;
+        existingItem.totalPriceDollar = item.totalPriceDollar;
+      }
+    });
+  }, [items, exchangeRate, marginRate]);
 
   // Handle opening the search dialog
   const handleOpenSearchDialog = () => {
@@ -98,32 +127,44 @@ const SuppliesSection: React.FC<SuppliesSectionProps> = ({
     setSelectedItem(item);
   };
 
-  // Handle adding the selected item
-  const handleAddItem = () => {
-    if (selectedItem) {
-      if (selectedItem.priceEuro === 0) {
-        setCustomPrice(0);
-        setCustomPriceDialogOpen(true);
-      } else {
-        onAddItem({
-          description: selectedItem.description,
-          quantity: quantity,
-          priceEuro: selectedItem.priceEuro,
-        });
-        handleCloseSearchDialog();
-      }
+  // Handle closing the custom price dialog
+  const handleCloseCustomPriceDialog = () => {
+    setCustomPriceDialogOpen(false);
+    setCustomPrice(0);
+  };
+
+  // Handle adding an item with custom price
+  const handleAddItemWithCustomPrice = () => {
+    if (selectedItem && customPrice > 0) {
+      const itemWithCustomPrice = {
+        ...selectedItem,
+        priceEuro: customPrice
+      };
+      const calculatedItem = calculateSupplyItemTotal(itemWithCustomPrice, exchangeRate, marginRate);
+      onAddItem({
+        description: calculatedItem.description,
+        quantity: quantity,
+        priceEuro: calculatedItem.priceEuro,
+        priceDollar: calculatedItem.priceDollar,
+        unitPriceDollar: calculatedItem.unitPriceDollar,
+        totalPriceDollar: calculatedItem.totalPriceDollar
+      });
+      handleCloseCustomPriceDialog();
     }
   };
 
-  // Handle adding item with custom price
-  const handleAddItemWithCustomPrice = () => {
-    if (selectedItem && customPrice > 0) {
+  // Handle adding a regular item
+  const handleAddItem = () => {
+    if (selectedItem) {
+      const calculatedItem = calculateSupplyItemTotal(selectedItem, exchangeRate, marginRate);
       onAddItem({
-        description: selectedItem.description,
+        description: calculatedItem.description,
         quantity: quantity,
-        priceEuro: customPrice,
+        priceEuro: calculatedItem.priceEuro,
+        priceDollar: calculatedItem.priceDollar,
+        unitPriceDollar: calculatedItem.unitPriceDollar,
+        totalPriceDollar: calculatedItem.totalPriceDollar
       });
-      setCustomPriceDialogOpen(false);
       handleCloseSearchDialog();
     }
   };
@@ -207,10 +248,10 @@ const SuppliesSection: React.FC<SuppliesSectionProps> = ({
                 <TableRow key={item.id}>
                   <TableCell>{item.description}</TableCell>
                   <TableCell align="right">{item.quantity}</TableCell>
-                  <TableCell align="right">{item.priceEuro.toFixed(2)}</TableCell>
-                  <TableCell align="right">{item.priceDollar?.toFixed(2)}</TableCell>
-                  <TableCell align="right">{item.unitPriceDollar?.toFixed(2)}</TableCell>
-                  <TableCell align="right">{item.totalPriceDollar?.toFixed(2)}</TableCell>
+                  <TableCell align="right">{(item.priceEuro ?? 0).toFixed(2)}</TableCell>
+                  <TableCell align="right">{(item.priceDollar ?? 0).toFixed(2)}</TableCell>
+                  <TableCell align="right">{(item.unitPriceDollar ?? 0).toFixed(2)}</TableCell>
+                  <TableCell align="right">{(item.totalPriceDollar ?? 0).toFixed(2)}</TableCell>
                   <TableCell align="center">
                     <IconButton
                       size="small"
@@ -232,7 +273,7 @@ const SuppliesSection: React.FC<SuppliesSectionProps> = ({
           TOTAL FOURNITURE $ HT:
         </Typography>
         <Typography variant="subtitle1" className="total-value">
-          {totalHT.toFixed(2)}
+          {(totalHT ?? 0).toFixed(2)}
         </Typography>
       </Box>
 
@@ -283,7 +324,7 @@ const SuppliesSection: React.FC<SuppliesSectionProps> = ({
                       onClick={() => handleSelectItem(item)}
                     >
                       <TableCell>{item.description}</TableCell>
-                      <TableCell align="right">{item.priceEuro.toFixed(2)}</TableCell>
+                      <TableCell align="right">{(item.priceEuro ?? 0).toFixed(2)}</TableCell>
                       <TableCell align="center">
                         <Button
                           size="small"
@@ -306,19 +347,14 @@ const SuppliesSection: React.FC<SuppliesSectionProps> = ({
               <Typography variant="subtitle1">
                 Article sélectionné: {selectedItem.description}
               </Typography>
-              <TextField
+              <CustomNumberInput
                 label="Quantité"
-                type="number"
                 value={quantity}
-                onChange={(e) => setQuantity(parseInt(e.target.value, 10))}
-                variant="outlined"
+                onChange={setQuantity}
+                min={1}
+                step={1}
+                fullWidth
                 margin="normal"
-                InputProps={{
-                  inputProps: {
-                    min: 1,
-                    step: 1
-                  }
-                }}
               />
             </Box>
           )}
@@ -351,21 +387,14 @@ const SuppliesSection: React.FC<SuppliesSectionProps> = ({
             L'article "{selectedItem?.description}" a un prix de 0.00€.
             Veuillez entrer un prix personnalisé pour cet article.
           </Typography>
-          <TextField
-            fullWidth
+          <CustomNumberInput
             label="Prix (€)"
-            type="number"
             value={customPrice}
-            onChange={(e) => setCustomPrice(parseFloat(e.target.value))}
-            variant="outlined"
+            onChange={setCustomPrice}
+            min={0.01}
+            step={0.01}
+            fullWidth
             margin="normal"
-            autoFocus
-            InputProps={{
-              inputProps: {
-                min: 0.01,
-                step: 0.01
-              }
-            }}
           />
         </DialogContent>
         <DialogActions>

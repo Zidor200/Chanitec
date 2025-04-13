@@ -277,8 +277,7 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ currentPath, onNavigate }) =>
   // Load a quote
   const handleLoadQuote = async (quoteId: string) => {
     try {
-      const quote = await apiService.getQuoteById(quoteId);
-      loadQuote(quote);
+      await loadQuote(quoteId);
       onNavigate('/quote', quoteId);
     } catch (error) {
       console.error('Error loading quote:', error);
@@ -412,117 +411,91 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ currentPath, onNavigate }) =>
     <Layout currentPath={currentPath} onNavigate={onNavigate}>
       <Container maxWidth="lg" className="history-page">
         <Box className="page-header">
-          <Typography variant="h5" className="header-title">
+          <Typography variant="h6" className="header-title">
             HISTORIQUE
           </Typography>
         </Box>
-        <Typography variant="h4" gutterBottom>
-          Historique des Devis
-        </Typography>
 
         <Paper elevation={3} className="filters-section">
           <Typography variant="h6" gutterBottom>
             Filtres
           </Typography>
 
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-            <Box sx={{ flex: '1 1 220px', display: 'flex', alignItems: 'center' }}>
-              <TextField
-                fullWidth
-                label="ID"
-                variant="outlined"
-                value={filters.id}
-                onChange={(e) => setFilters(prev => ({ ...prev, id: e.target.value }))}
-                size="small"
-              />
-              {/^\d{8}$/.test(filters.id) && (
-                <IconButton
-                  size="small"
-                  onClick={() => setFilters(prev => ({ ...prev, id: '' }))}
-                  sx={{ ml: 1 }}
-                >
-                  <ClearIcon fontSize="small" />
-                </IconButton>
-              )}
-            </Box>
+          <Box className="filters-grid">
+            <TextField
+              fullWidth
+              label="ID"
+              variant="outlined"
+              value={filters.id}
+              onChange={(e) => setFilters(prev => ({ ...prev, id: e.target.value }))}
+              size="small"
+            />
 
-            <Box sx={{ flex: '1 1 220px' }}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Client</InputLabel>
-                <Select
-                  value={filters.client}
-                  label="Client"
-                  onChange={(e) => setFilters(prev => ({ ...prev, client: e.target.value as string }))}
-                >
-                  <MenuItem value="">Tous les clients</MenuItem>
-                  {clients.map(client => (
-                    <MenuItem key={client.id} value={client.id}>
-                      {client.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
-
-            <Box sx={{ flex: '1 1 220px' }}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Site</InputLabel>
-                <Select
-                  value={filters.site}
-                  label="Site"
-                  onChange={(e) => setFilters(prev => ({ ...prev, site: e.target.value as string }))}
-                  disabled={!filters.client}
-                >
-                  <MenuItem value="">Tous les sites</MenuItem>
-                  {sites.map(site => (
-                    <MenuItem key={site.id} value={site.id}>
-                      {site.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
-
-            <Box sx={{ flex: '1 1 220px' }}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Période</InputLabel>
-                <Select
-                  value={filters.period}
-                  label="Période"
-                  onChange={(e) => setFilters(prev => ({ ...prev, period: e.target.value as string }))}
-                >
-                  <MenuItem value="all">Toutes les dates</MenuItem>
-                  <MenuItem value="today">Aujourd'hui</MenuItem>
-                  <MenuItem value="week">Cette semaine</MenuItem>
-                  <MenuItem value="month">Ce mois</MenuItem>
-                  <MenuItem value="year">Cette année</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-
-            <Box sx={{ flex: '1 1 220px', display: 'flex', alignItems: 'center' }}>
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={toggleShowAllVersions}
-                sx={{ mr: 1 }}
+            <FormControl fullWidth size="small">
+              <InputLabel>Client</InputLabel>
+              <Select
+                value={filters.client}
+                label="Client"
+                onChange={(e) => {
+                  setFilters(prev => ({ ...prev, client: e.target.value as string }));
+                  updateSiteOptions();
+                }}
               >
-                {showAllVersions ? 'Masquer les versions' : 'Afficher toutes les versions'}
-              </Button>
-            </Box>
+                <MenuItem value="">Tous les clients</MenuItem>
+                {clients.map(client => (
+                  <MenuItem key={client.id} value={client.id}>
+                    {client.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth size="small">
+              <InputLabel>Site</InputLabel>
+              <Select
+                value={filters.site}
+                label="Site"
+                onChange={(e) => setFilters(prev => ({ ...prev, site: e.target.value as string }))}
+                disabled={!filters.client}
+              >
+                <MenuItem value="">Tous les sites</MenuItem>
+                {sites.map(site => (
+                  <MenuItem key={site.id} value={site.id}>
+                    {site.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth size="small">
+              <InputLabel>Période</InputLabel>
+              <Select
+                value={filters.period}
+                label="Période"
+                onChange={(e) => setFilters(prev => ({ ...prev, period: e.target.value as string }))}
+              >
+                <MenuItem value="all">Toutes les dates</MenuItem>
+                <MenuItem value="today">Aujourd'hui</MenuItem>
+                <MenuItem value="week">Cette semaine</MenuItem>
+                <MenuItem value="month">Ce mois</MenuItem>
+                <MenuItem value="year">Cette année</MenuItem>
+              </Select>
+            </FormControl>
           </Box>
 
-          {/^\d{8}$/.test(filters.id) && (
-            <Box sx={{ mt: 2, p: 1, bgcolor: '#e3f2fd', borderRadius: 1 }}>
-              <Typography variant="body2">
-                <InfoIcon fontSize="small" sx={{ mr: 1, verticalAlign: 'middle', color: '#1976d2' }} />
-                Affichage de toutes les versions du devis avec l'ID de base: <strong>{filters.id}</strong>
-              </Typography>
-            </Box>
-          )}
-
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-            <Button variant="outlined" onClick={clearFilters}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={toggleShowAllVersions}
+            >
+              {showAllVersions ? 'Masquer les versions' : 'Afficher toutes les versions'}
+            </Button>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={clearFilters}
+            >
               Effacer les filtres
             </Button>
           </Box>
@@ -661,133 +634,95 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ currentPath, onNavigate }) =>
             // Regular rendering of quotes when not filtering by base ID
             filteredQuotes.map((quote) => {
               const baseId = extractBaseId(quote.id);
+              const version = extractVersion(quote.id) ?? 0;
               const isLatestVersion = baseId && quoteVersions[baseId] &&
                 quoteVersions[baseId][0].id === quote.id;
-              const versionCount = baseId ? getVersionCount(quote.id) : 1;
               const isExpanded = baseId ? expandedGroups.includes(baseId) : false;
-              const version = extractVersion(quote.id) ?? 0;
-              const isHighlighted = /^\d{8}$/.test(filters.id) && baseId === filters.id;
 
               return (
-                <Card
-                  key={quote.id}
-                  className={`quote-card ${version === 0 ? 'version-original' : ''}
-                    ${version > 0 && !isLatestVersion ? 'version-update' : ''}
-                    ${!isLatestVersion && isExpanded ? 'version-expanded' : ''}`}
-                  sx={{
-                    mb: 2,
-                    bgcolor: !isLatestVersion ? '#fff8e1' : 'white',
-                  }}
-                >
-                  <CardContent>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Typography variant="h6" component="div">
-                          {formatQuoteId(quote.id)}
-                        </Typography>
-
-                        {getVersionLabel(quote.id)}
-
-                        <Box className="version-actions">
-                          {hasOtherVersions(quote.id) && (
-                            <Button
-                              size="small"
-                              onClick={() => baseId && showRelatedVersions(quote.id)}
-                              className="view-all-versions"
-                              color="primary"
-                            >
-                              {`Voir toutes les versions (${versionCount})`}
-                            </Button>
-                          )}
-
-                          {hasOtherVersions(quote.id) && isLatestVersion && (
-                            <Button
-                              size="small"
-                              variant="text"
-                              onClick={() => baseId && toggleGroupExpand(baseId)}
-                              className="toggle-expand"
-                              color="secondary"
-                            >
-                              {isExpanded ? 'Replier' : 'Déplier'}
-                            </Button>
-                          )}
-                        </Box>
-                      </Box>
-                      <Typography variant="caption" color="text.secondary">
-                        {formatDate(quote.createdAt)}
+                <Card key={quote.id} className="quote-card">
+                  <Box className="card-header">
+                    <Box className="quote-id">
+                      <Typography component="span" className="id-number">
+                        F-{quote.id}
                       </Typography>
+                      {quote.id.endsWith('001') ? (
+                        <Typography component="span" className="version-label original">
+                          Version 1
+                        </Typography>
+                      ) : (
+                        <Typography component="span" className="version-label update">
+                          Version {parseInt(quote.id.slice(-3))}
+                        </Typography>
+                      )}
+                      {hasOtherVersions(quote.id) && (
+                        <Button
+                          size="small"
+                          color="primary"
+                          onClick={() => baseId && showRelatedVersions(quote.id)}
+                        >
+                          Voir toutes les versions ({getVersionCount(quote.id)})
+                        </Button>
+                      )}
+                      {hasOtherVersions(quote.id) && isLatestVersion && (
+                        <Button
+                          size="small"
+                          color="secondary"
+                          onClick={() => baseId && toggleGroupExpand(baseId)}
+                        >
+                          {isExpanded ? 'Replier' : 'Déplier'}
+                        </Button>
+                      )}
                     </Box>
+                    <Typography variant="caption" color="text.secondary">
+                      {formatDate(quote.createdAt)}
+                    </Typography>
+                  </Box>
 
-                    <Divider sx={{ mb: 2 }} />
+                  <Divider />
 
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 1 }}>
-                      <Box sx={{ flex: '1 1 200px' }}>
-                        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                          Client
-                        </Typography>
-                        <Typography variant="body1">
-                          {quote.clientName || "Non spécifié"}
-                        </Typography>
+                  <Box className="card-content">
+                    <Box className="info-grid">
+                      <Box className="info-item">
+                        <Typography className="label">Client</Typography>
+                        <Typography className="value">{quote.clientName || "Non spécifié"}</Typography>
                       </Box>
 
-                      <Box sx={{ flex: '1 1 200px' }}>
-                        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                          Site
-                        </Typography>
-                        <Typography variant="body1">
-                          {quote.siteName || "Non spécifié"}
-                        </Typography>
+                      <Box className="info-item">
+                        <Typography className="label">Site</Typography>
+                        <Typography className="value">{quote.siteName || "Non spécifié"}</Typography>
                       </Box>
 
-                      <Box sx={{ flex: '1 1 200px' }}>
-                        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                          Date
-                        </Typography>
-                        <Typography variant="body1">
-                          {formatDate(quote.date)}
-                        </Typography>
+                      <Box className="info-item">
+                        <Typography className="label">Date</Typography>
+                        <Typography className="value">{formatDate(quote.date)}</Typography>
                       </Box>
 
-                      <Box sx={{ flex: '1 1 200px' }}>
-                        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                          Total TTC
-                        </Typography>
-                        <Typography variant="body1" fontWeight="bold">
+                      <Box className="info-item">
+                        <Typography className="label">Total TTC</Typography>
+                        <Typography className="value total">
                           {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'USD' }).format(quote.totalTTC)}
                         </Typography>
                       </Box>
                     </Box>
-                  </CardContent>
+                  </Box>
 
-                  <CardActions disableSpacing>
-                    <Button
-                      size="small"
-                      startIcon={<VisibilityIcon />}
-                      onClick={() => handleLoadQuote(quote.id)}
-                    >
-                      Consulter
-                    </Button>
-
-                    <Button
-                      size="small"
-                      startIcon={<ReceiptLongOutlined />}
-                      onClick={() => handleViewPriceOffer(quote)}
-                      color="primary"
-                    >
-                      Voir l'offre de prix
-                    </Button>
-
-                    <Box sx={{ flexGrow: 1 }} />
-
+                  <Box className="card-actions">
                     <IconButton
-                      aria-label="supprimer"
+                      className="action-button view"
+                      onClick={() => handleLoadQuote(quote.id)}
+                      size="small"
+                    >
+                      <VisibilityIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      className="action-button delete"
                       onClick={() => handleDeleteQuote(quote.id)}
                       size="small"
-                      color="error"
                     >
-                      <DeleteIcon />
+                      <DeleteIcon fontSize="small" />
                     </IconButton>
-                  </CardActions>
+                  </Box>
                 </Card>
               );
             })

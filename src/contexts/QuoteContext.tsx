@@ -19,7 +19,7 @@ const DEFAULT_EXCHANGE_RATE = 1.15;
 const DEFAULT_MARGIN_RATE = 0.75;
 const DEFAULT_LABOR_EXCHANGE_RATE = 1.2;
 const DEFAULT_LABOR_MARGIN_RATE = 0.8;
-const DEFAULT_DESCRIPTION = "en Arrêt de la machine, découpage de l'ancienne isolation, fourniture, et pose de la nouvelle isolation, séchage et remise en service";
+const DEFAULT_DESCRIPTION = "";
 
 // State interface
 interface QuoteState {
@@ -153,7 +153,7 @@ const quoteReducer = (state: QuoteState, action: QuoteAction): QuoteState => {
     case 'UPDATE_SUPPLY_ITEM': {
       if (!state.currentQuote) return state;
 
-      const updatedItems = state.currentQuote.supplyItems.map(item =>
+      const updatedItems = (state.currentQuote.supplyItems ?? []).map(item =>
         item.id === action.payload.id
           ? calculateSupplyItemTotal(
               action.payload,
@@ -237,7 +237,7 @@ const quoteReducer = (state: QuoteState, action: QuoteAction): QuoteState => {
     case 'UPDATE_LABOR_ITEM': {
       if (!state.currentQuote) return state;
 
-      const updatedItems = state.currentQuote.laborItems.map(item =>
+      const updatedItems = (state.currentQuote.laborItems ?? []).map(item =>
         item.id === action.payload.id
           ? calculateLaborItemTotal(
               action.payload,
@@ -289,8 +289,7 @@ const quoteReducer = (state: QuoteState, action: QuoteAction): QuoteState => {
     case 'RECALCULATE_TOTALS': {
       if (!state.currentQuote) return state;
 
-      // Recalculate supply items
-      const recalculatedSupplyItems = state.currentQuote.supplyItems.map(item =>
+      const recalculatedSupplyItems = (state.currentQuote.supplyItems ?? []).map(item =>
         calculateSupplyItemTotal(
           item,
           state.currentQuote!.supplyExchangeRate,
@@ -298,8 +297,7 @@ const quoteReducer = (state: QuoteState, action: QuoteAction): QuoteState => {
         )
       );
 
-      // Recalculate labor items
-      const recalculatedLaborItems = state.currentQuote.laborItems.map(item =>
+      const recalculatedLaborItems = (state.currentQuote.laborItems ?? []).map(item =>
         calculateLaborItemTotal(
           item,
           state.currentQuote!.laborExchangeRate,
@@ -347,6 +345,7 @@ interface QuoteContextProps {
   updateLaborItem: (item: LaborItem) => void;
   removeLaborItem: (id: string) => void;
   recalculateTotals: () => void;
+  clearQuote: () => void;
 }
 
 // Create context
@@ -394,8 +393,22 @@ export const QuoteProvider: React.FC<QuoteProviderProps> = ({ children }) => {
   const loadQuote = async (id: string) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
-      const quote = await apiService.getQuoteById(id);
-      dispatch({ type: 'SET_QUOTE', payload: quote });
+
+      // Load quote and its items in parallel
+      const [quote, supplyItems, laborItems] = await Promise.all([
+        apiService.getQuoteById(id),
+        apiService.getSupplyItems(id),
+        apiService.getLaborItems(id)
+      ]);
+
+      // Combine the quote with its items
+      const quoteWithItems = {
+        ...quote,
+        supplyItems,
+        laborItems
+      };
+
+      dispatch({ type: 'SET_QUOTE', payload: quoteWithItems });
       dispatch({ type: 'SET_EXISTING_QUOTE', payload: true });
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to load quote' });
@@ -428,7 +441,29 @@ export const QuoteProvider: React.FC<QuoteProviderProps> = ({ children }) => {
 
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
-      const updatedQuote = await apiService.saveQuote(state.currentQuote);
+
+      // Extract the base ID and current version
+      const baseId = extractBaseId(state.currentQuote.id);
+      const currentVersion = extractVersion(state.currentQuote.id);
+
+      if (!baseId || currentVersion === null) {
+        throw new Error('Invalid quote ID format');
+      }
+
+      // Create a new quote with incremented version
+      const newVersion = currentVersion + 1;
+      const newQuoteId = generateQuoteId(baseId, newVersion);
+
+      // Create the new quote with the updated ID
+      const newQuote = {
+        ...state.currentQuote,
+        id: newQuoteId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      // Save the new version
+      const updatedQuote = await apiService.saveQuote(newQuote);
       dispatch({ type: 'SET_QUOTE', payload: updatedQuote });
       return true;
     } catch (error) {
@@ -492,6 +527,10 @@ export const QuoteProvider: React.FC<QuoteProviderProps> = ({ children }) => {
     dispatch({ type: 'RECALCULATE_TOTALS' });
   };
 
+  const clearQuote = () => {
+    dispatch({ type: 'CLEAR_QUOTE' });
+  };
+
   const value = {
     state,
     createNewQuote,
@@ -506,6 +545,7 @@ export const QuoteProvider: React.FC<QuoteProviderProps> = ({ children }) => {
     updateLaborItem,
     removeLaborItem,
     recalculateTotals,
+    clearQuote
   };
 
   return (

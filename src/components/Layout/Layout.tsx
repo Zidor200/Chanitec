@@ -13,12 +13,14 @@ interface LayoutProps {
   children: ReactNode;
   currentPath: string;
   onNavigate?: (path: string) => void;
+  onHomeClick?: () => void;
 }
 
 const Layout: React.FC<LayoutProps> = ({
   children,
   currentPath = '/',
-  onNavigate
+  onNavigate,
+  onHomeClick
 }) => {
   // Navigation items
   const navItems = [
@@ -29,6 +31,9 @@ const Layout: React.FC<LayoutProps> = ({
   ];
 
   const handleNavigate = (path: string) => {
+    if (path === '/' && onHomeClick) {
+      onHomeClick();
+    }
     if (onNavigate) {
       onNavigate(path);
     }
@@ -41,7 +46,7 @@ const Layout: React.FC<LayoutProps> = ({
         <Toolbar>
           <Box className="toolbar-content">
             <Box className="nav-links">
-              {navItems.map((item) => (
+              {(navItems ?? []).map((item) => (
                 <Button
                   key={item.path}
                   color="inherit"

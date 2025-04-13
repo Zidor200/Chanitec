@@ -42,7 +42,8 @@ function createTables() {
             client_id TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
+            FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE,
+            UNIQUE(name)
         )`);
 
         // Quotes table

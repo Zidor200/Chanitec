@@ -73,7 +73,7 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ currentPath, onNavigate }) =>
   // State for dialog - site
   const [siteDialogOpen, setSiteDialogOpen] = useState(false);
   const [isEditingSite, setIsEditingSite] = useState(false);
-  const [currentSite, setCurrentSite] = useState<Partial<Site>>({
+  const [currentSite, setCurrentSite] = useState<Omit<Site, 'id'> & { id?: string }>({
     name: '',
     clientId: ''
   });
@@ -97,12 +97,14 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ currentPath, onNavigate }) =>
       const loadedClients = await apiService.getClients();
 
       // For each client, load its sites
-      const clientsWithSites = await Promise.all(loadedClients.map(async client => {
-        const sites = await apiService.getSitesByClientId(client.id);
-        return {
-          ...client,
-          sites
-        };
+      const clientsWithSites = await Promise.all((loadedClients ?? []).map(async client => {
+        try {
+          const sites = await apiService.getSitesByClientId(client.id);
+          return { ...client, sites: sites ?? [] };
+        } catch (error) {
+          console.error(`Error loading sites for client ${client.id}:`, error);
+          return { ...client, sites: [] };
+        }
       }));
 
       setClients(clientsWithSites);
@@ -216,7 +218,7 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ currentPath, onNavigate }) =>
       } else {
         // Create sites starting with the principal site
         const allSites = [principalSiteName, ...tempSites].filter(site => site.trim());
-        const savedSites = await Promise.all(allSites.map(async siteName => {
+        const savedSites = await Promise.all((allSites ?? []).map(async siteName => {
           const site: Omit<Site, 'id'> = {
             name: siteName,
             clientId: savedClient.id
@@ -265,7 +267,7 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ currentPath, onNavigate }) =>
   const handleAddSite = (clientId: string) => {
     setCurrentSite({
       name: '',
-      clientId
+      clientId: clientId
     });
     setIsEditingSite(false);
     setSiteDialogOpen(true);
@@ -273,7 +275,11 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ currentPath, onNavigate }) =>
 
   // Open dialog to edit existing site
   const handleEditSite = (site: Site) => {
-    setCurrentSite(site);
+    setCurrentSite({
+      id: site.id,
+      name: site.name,
+      clientId: site.clientId
+    });
     setIsEditingSite(true);
     setSiteDialogOpen(true);
   };
@@ -292,43 +298,93 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ currentPath, onNavigate }) =>
     });
   };
 
-  // Save site (create or update)
+  // Add this function to check if site name is unique
+  const isSiteNameUnique = async (name: string, excludeSiteId?: string) => {
+    try {
+      const allSites = await apiService.getSites();
+      return !allSites.some(site =>
+        site.name.toLowerCase() === name.toLowerCase() &&
+        site.id !== excludeSiteId
+      );
+    } catch (error) {
+      console.error('Error checking site name uniqueness:', error);
+      return false;
+    }
+  };
+
+  // Update the site save handler
   const handleSaveSite = async () => {
     if (!currentSite.name) {
       alert('Le nom du site est requis');
       return;
     }
 
-    try {
-      const savedSite = await apiService.saveSite(currentSite as Omit<Site, 'id'> & { id?: string });
+    if (!currentSite.clientId) {
+      alert('Le client est requis');
+      return;
+    }
 
-      if (isEditingSite) {
-        // Update site in the list
-        const updatedClients = clients.map(client => {
-          if (client.id === currentSite.clientId) {
-            const updatedSites = client.sites.map(site =>
-              site.id === savedSite.id ? savedSite : site
-            );
-            return { ...client, sites: updatedSites };
-          }
-          return client;
-        });
-        setClients(updatedClients);
+    try {
+      // Check if site name is unique
+      const isUnique = await isSiteNameUnique(
+        currentSite.name,
+        isEditingSite ? currentSite.id : undefined
+      );
+
+      if (!isUnique) {
+        alert('Un site avec ce nom existe déjà. Chaque site doit avoir un nom unique.');
+        return;
+      }
+
+      if (isEditingSite && currentSite.id) {
+        // Update existing site
+        const siteToUpdate = {
+          id: currentSite.id,
+          name: currentSite.name,
+          clientId: currentSite.clientId
+        };
+        const updatedSite = await apiService.saveSite(siteToUpdate);
+
+        // Update sites in client list
+        setClients(prevClients =>
+          prevClients.map(client => {
+            if (client.id === currentSite.clientId) {
+              return {
+                ...client,
+                sites: client.sites.map(site =>
+                  site.id === updatedSite.id ? updatedSite : site
+                )
+              };
+            }
+            return client;
+          })
+        );
       } else {
-        // Add new site to the list
-        const updatedClients = clients.map(client => {
-          if (client.id === currentSite.clientId) {
-            return { ...client, sites: [...client.sites, savedSite] };
-          }
-          return client;
-        });
-        setClients(updatedClients);
+        // Create new site
+        const siteToCreate = {
+          name: currentSite.name,
+          clientId: currentSite.clientId
+        };
+        const newSite = await apiService.saveSite(siteToCreate);
+
+        // Add site to client's sites list
+        setClients(prevClients =>
+          prevClients.map(client => {
+            if (client.id === currentSite.clientId) {
+              return {
+                ...client,
+                sites: [...client.sites, newSite]
+              };
+            }
+            return client;
+          })
+        );
       }
 
       handleCloseSiteDialog();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving site:', error);
-      alert('Échec de l\'enregistrement du site');
+      alert(error.response?.data?.error || 'Échec de l\'enregistrement du site');
     }
   };
 
@@ -383,262 +439,192 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ currentPath, onNavigate }) =>
 
   return (
     <Layout currentPath={currentPath} onNavigate={onNavigate}>
-      {/* Blue header */}
-      <Box className="page-header">
-        <Typography variant="h5" className="header-title">
-          CLIENTS ET SITES
-        </Typography>
-      </Box>
+      <Container maxWidth="lg" className="clients-page">
+        <Box className="page-header">
+          <Typography variant="h6" className="header-title">
+            CLIENTS ET SITES
+          </Typography>
+        </Box>
 
-      {/* Main content */}
-      <Card className="main-card">
-        <CardContent>
-          <Box className="card-header">
-            <Typography variant="h6">CLIENTS ET SITES</Typography>
-            <Box className="search-and-add">
-              <Paper className="search-field">
-                <InputBase
-                  placeholder="Rechercher un client"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  fullWidth
-                />
-              </Paper>
-              <Button
-                variant="contained"
-                color="primary"
-                startIcon={<AddIcon />}
-                onClick={handleAddClient}
-              >
-                Nouveau Client
-              </Button>
+        <Box className="content-header">
+          <TextField
+            className="search-box"
+            placeholder="Rechercher un client"
+            variant="outlined"
+            size="small"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={handleAddClient}
+            className="add-button"
+          >
+            Nouveau Client
+          </Button>
+        </Box>
+
+        {filteredClients.map((client) => (
+          <Paper key={client.id} className="client-card">
+            <Box className="client-header">
+              <Box className="client-name">
+                <IconButton
+                  size="small"
+                  onClick={() => handleToggleClientExpand(client.id)}
+                >
+                  {expandedClient === client.id ? (
+                    <KeyboardArrowUpIcon />
+                  ) : (
+                    <KeyboardArrowDownIcon />
+                  )}
+                </IconButton>
+                {client.name}
+                <Typography component="span" className="client-id">
+                  #{client.id}
+                </Typography>
+              </Box>
+              <Box className="actions">
+                <IconButton
+                  className="action-button edit"
+                  onClick={() => handleEditClient(client)}
+                  size="small"
+                >
+                  <EditIcon fontSize="small" />
+                </IconButton>
+                <IconButton
+                  className="action-button delete"
+                  onClick={() => handleDeleteClient(client.id)}
+                  size="small"
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </Box>
             </Box>
-          </Box>
 
-          {/* Clients list */}
-          {filteredClients.map((client) => (
-            <Paper key={client.id} className="client-item">
-              <Box className="client-header">
-                <Box className="client-info">
-                  <Typography variant="subtitle1">{client.name}</Typography>
-                  <Typography variant="caption" color="textSecondary">
-                    #{client.id}
+            <Collapse in={expandedClient === client.id}>
+              <Box className="sites-section">
+                <Box className="sites-header">
+                  <Typography className="sites-title">
+                    Sites ({client.sites?.length || 0})
                   </Typography>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<AddIcon />}
+                    onClick={() => handleAddSite(client.id)}
+                  >
+                    Ajouter un site
+                  </Button>
                 </Box>
-                <Box className="client-actions">
-                  <IconButton size="small" onClick={() => handleEditClient(client)}>
-                    <EditIcon fontSize="small" />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    color="error"
-                    onClick={() => handleDeleteClient(client.id)}
-                  >
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    onClick={() => handleToggleClientExpand(client.id)}
-                  >
-                    {expandedClient === client.id ? (
-                      <KeyboardArrowUpIcon />
-                    ) : (
-                      <KeyboardArrowDownIcon />
-                    )}
-                  </IconButton>
+
+                <Box className="sites-list">
+                  {client.sites?.map((site) => (
+                    <Box key={site.id} className="site-item">
+                      <Box className="site-name">
+                        <PlaceIcon className="location-icon" />
+                        {site.name}
+                      </Box>
+                      <Box className="site-actions">
+                        <IconButton
+                          className="action-button edit"
+                          onClick={() => handleEditSite(site)}
+                          size="small"
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          className="action-button delete"
+                          onClick={() => handleDeleteSite(site.id, site.clientId)}
+                          size="small"
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    </Box>
+                  ))}
                 </Box>
               </Box>
+            </Collapse>
+          </Paper>
+        ))}
 
-              <Collapse in={expandedClient === client.id}>
-                <Box className="sites-section">
-                  <Box className="sites-header">
-                    <Typography variant="subtitle2">
-                      Sites ({client.sites?.length || 0})
-                    </Typography>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      startIcon={<AddIcon />}
-                      onClick={() => handleAddSite(client.id)}
-                    >
-                      Ajouter un site
-                    </Button>
-                  </Box>
-
-                  <Box className="sites-list">
-                    {client.sites?.map((site) => (
-                      <Box key={site.id} className="site-item">
-                        <Box className="site-info">
-                          <PlaceIcon fontSize="small" color="primary" />
-                          <Typography>{site.name}</Typography>
-                        </Box>
-                        <Box className="site-actions">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleEditSite(site)}
-                          >
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => handleDeleteSite(site.id, site.clientId)}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </Box>
-                      </Box>
-                    ))}
-                  </Box>
-                </Box>
-              </Collapse>
-            </Paper>
-          ))}
-        </CardContent>
-      </Card>
-
-      {/* Dialog for adding/editing clients */}
-      <Dialog
-        open={clientDialogOpen}
-        onClose={handleCloseClientDialog}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>
-          {isEditingClient ? 'Modifier le client' : 'Ajouter un nouveau client'}
-        </DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            name="name"
-            label="Nom du client"
-            type="text"
-            fullWidth
-            variant="outlined"
-            value={currentClient.name}
-            onChange={handleClientInputChange}
-          />
-
-          {!isEditingClient && (
-            <Box className="sites-input-section" mt={3}>
-              <Typography variant="subtitle2" gutterBottom>
-                Sites du client
-              </Typography>
-              <Divider className="sites-divider" />
-
-              {/* Principal site input */}
-              <Box mt={2} mb={2}>
+        {/* Client Dialog */}
+        <Dialog
+          open={clientDialogOpen}
+          onClose={handleCloseClientDialog}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>
+            {isEditingClient ? 'Modifier le client' : 'Nouveau client'}
+          </DialogTitle>
+          <DialogContent>
+            <TextField
+              autoFocus
+              margin="dense"
+              name="name"
+              label="Nom du client"
+              type="text"
+              fullWidth
+              value={currentClient.name}
+              onChange={handleClientInputChange}
+              variant="outlined"
+            />
+            {!isEditingClient && (
+              <>
                 <TextField
                   margin="dense"
                   label="Nom du site principal"
                   type="text"
                   fullWidth
-                  variant="outlined"
                   value={principalSiteName}
                   onChange={handlePrincipalSiteNameChange}
-                  helperText="Ce site sera automatiquement créé pour le client"
+                  variant="outlined"
                 />
-              </Box>
+              </>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseClientDialog}>Annuler</Button>
+            <Button onClick={handleSaveClient} color="primary" variant="contained">
+              {isEditingClient ? 'Modifier' : 'Créer'}
+            </Button>
+          </DialogActions>
+        </Dialog>
 
-              {/* Additional sites list */}
-              <Typography variant="subtitle2" gutterBottom>
-                Sites additionnels
-              </Typography>
-
-              <Box mt={2} className="sites-list">
-                {tempSites.length > 0 ? (
-                  <List dense>
-                    {tempSites.map((site, index) => (
-                      <ListItem key={index}>
-                        <ListItemText primary={site} />
-                        <ListItemSecondaryAction>
-                          <IconButton
-                            edge="end"
-                            size="small"
-                            color="error"
-                            onClick={() => handleRemoveTempSite(index)}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </ListItemSecondaryAction>
-                      </ListItem>
-                    ))}
-                  </List>
-                ) : (
-                  <Typography variant="body2" color="textSecondary" className="no-sites">
-                    Aucun site additionnel
-                  </Typography>
-                )}
-              </Box>
-
-              <Box mt={2} className="add-site-form">
-                <Box display="flex" gap={1}>
-                  <TextField
-                    label="Nom du site"
-                    variant="outlined"
-                    size="small"
-                    fullWidth
-                    value={newSiteName}
-                    onChange={handleNewSiteNameChange}
-                  />
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    size="small"
-                    onClick={handleAddTempSite}
-                    disabled={!newSiteName.trim()}
-                  >
-                    <AddIcon fontSize="small" />
-                  </Button>
-                </Box>
-              </Box>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseClientDialog}>Annuler</Button>
-          <Button
-            onClick={handleSaveClient}
-            color="primary"
-            variant="contained"
-            disabled={!currentClient.name || (!isEditingClient && !principalSiteName.trim())}
-          >
-            Enregistrer
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Dialog for adding/editing sites */}
-      <Dialog
-        open={siteDialogOpen}
-        onClose={handleCloseSiteDialog}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>
-          {isEditingSite ? 'Modifier le site' : 'Ajouter un nouveau site'}
-        </DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            name="name"
-            label="Nom du site"
-            type="text"
-            fullWidth
-            variant="outlined"
-            value={currentSite.name}
-            onChange={handleSiteInputChange}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseSiteDialog}>Annuler</Button>
-          <Button onClick={handleSaveSite} color="primary" variant="contained">
-            Enregistrer
-          </Button>
-        </DialogActions>
-      </Dialog>
+        {/* Site Dialog */}
+        <Dialog
+          open={siteDialogOpen}
+          onClose={handleCloseSiteDialog}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>
+            {isEditingSite ? 'Modifier le site' : 'Nouveau site'}
+          </DialogTitle>
+          <DialogContent>
+            <TextField
+              autoFocus
+              margin="dense"
+              name="name"
+              label="Nom du site"
+              type="text"
+              fullWidth
+              value={currentSite.name}
+              onChange={handleSiteInputChange}
+              variant="outlined"
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseSiteDialog}>Annuler</Button>
+            <Button onClick={handleSaveSite} color="primary" variant="contained">
+              {isEditingSite ? 'Modifier' : 'Créer'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Container>
     </Layout>
   );
 };

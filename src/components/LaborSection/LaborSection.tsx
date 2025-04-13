@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -19,11 +19,12 @@ import {
   Delete as DeleteIcon
 } from '@mui/icons-material';
 import { LaborItem } from '../../models/Quote';
+import { calculateLaborItemTotal } from '../../utils/calculations';
 import CustomNumberInput from '../CustomNumberInput/CustomNumberInput';
 import './LaborSection.scss';
 
 interface LaborSectionProps {
-  items: LaborItem[];
+  items?: LaborItem[];
   description: string;
   exchangeRate: number;
   marginRate: number;
@@ -36,7 +37,7 @@ interface LaborSectionProps {
 }
 
 const LaborSection: React.FC<LaborSectionProps> = ({
-  items,
+  items = [],
   description,
   exchangeRate,
   marginRate,
@@ -58,14 +59,34 @@ const LaborSection: React.FC<LaborSectionProps> = ({
     { value: 1.6, label: '1.6 (Weekend)' }
   ];
 
+  // Calculate dollar prices for all items when rates change
+  useEffect(() => {
+    const itemsWithDollarPrices = items.map(item =>
+      calculateLaborItemTotal(item, exchangeRate, marginRate)
+    );
+    // Update items with calculated dollar prices
+    itemsWithDollarPrices.forEach(item => {
+      const existingItem = items.find(i => i.id === item.id);
+      if (existingItem) {
+        existingItem.priceDollar = item.priceDollar;
+        existingItem.unitPriceDollar = item.unitPriceDollar;
+        existingItem.totalPriceDollar = item.totalPriceDollar;
+      }
+    });
+  }, [items, exchangeRate, marginRate]);
+
   // Handle adding a new labor item
   const handleAddLaborItem = () => {
-    onAddItem({
+    const newItem: Omit<LaborItem, 'id'> = {
       description,
       nbTechnicians,
       nbHours,
       weekendMultiplier,
       priceEuro
+    };
+    const calculatedItem = calculateLaborItemTotal(newItem as LaborItem, exchangeRate, marginRate);
+    onAddItem({
+      ...calculatedItem
     });
 
     // Reset form fields
@@ -153,7 +174,7 @@ const LaborSection: React.FC<LaborSectionProps> = ({
               variant="outlined"
               margin="dense"
             >
-              {weekendOptions.map((option) => (
+              {(weekendOptions ?? []).map((option) => (
                 <MenuItem key={option.value} value={option.value}>
                   {option.label}
                 </MenuItem>
@@ -208,15 +229,15 @@ const LaborSection: React.FC<LaborSectionProps> = ({
                 </TableCell>
               </TableRow>
             ) : (
-              items.map((item) => (
+              (items ?? []).map((item) => (
                 <TableRow key={item.id}>
                   <TableCell>{item.nbTechnicians}</TableCell>
                   <TableCell>{item.nbHours}</TableCell>
                   <TableCell>{item.weekendMultiplier}</TableCell>
-                  <TableCell align="right">{item.priceEuro.toFixed(2)}</TableCell>
-                  <TableCell align="right">{item.priceDollar?.toFixed(2)}</TableCell>
-                  <TableCell align="right">{item.unitPriceDollar?.toFixed(2)}</TableCell>
-                  <TableCell align="right">{item.totalPriceDollar?.toFixed(2)}</TableCell>
+                  <TableCell align="right">{(item.priceEuro ?? 0).toFixed(2)}</TableCell>
+                  <TableCell align="right">{(item.priceDollar ?? 0).toFixed(2)}</TableCell>
+                  <TableCell align="right">{(item.unitPriceDollar ?? 0).toFixed(2)}</TableCell>
+                  <TableCell align="right">{(item.totalPriceDollar ?? 0).toFixed(2)}</TableCell>
                   <TableCell align="center">
                     <IconButton
                       size="small"
@@ -238,7 +259,7 @@ const LaborSection: React.FC<LaborSectionProps> = ({
           TOTAL MAIN D'OEUVRE $ HT:
         </Typography>
         <Typography variant="subtitle1" className="total-value">
-          {totalHT.toFixed(2)}
+          {(totalHT ?? 0).toFixed(2)}
         </Typography>
       </Box>
     </Paper>

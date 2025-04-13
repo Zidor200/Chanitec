@@ -125,16 +125,16 @@ const PriceOfferPage: React.FC<PriceOfferPageProps> = ({ currentPath, onNavigate
                   <td>Equipement</td>
                   <td>{priceOffer.supplyDescription}</td>
                   <td>1,00</td>
-                  <td>{priceOffer.supplyTotalHT.toFixed(2)}</td>
-                  <td>{priceOffer.supplyTotalHT.toFixed(2)}</td>
+                  <td>{(priceOffer.supplyTotalHT ?? 0).toFixed(2)}</td>
+                  <td>{(priceOffer.supplyTotalHT ?? 0).toFixed(2)}</td>
                 </tr>
                 <tr>
                   <td>2</td>
                   <td>Prestation</td>
                   <td>{priceOffer.laborDescription}</td>
                   <td>1,00</td>
-                  <td>{priceOffer.laborTotalHT.toFixed(2)}</td>
-                  <td>{priceOffer.laborTotalHT.toFixed(2)}</td>
+                  <td>{(priceOffer.laborTotalHT ?? 0).toFixed(2)}</td>
+                  <td>{(priceOffer.laborTotalHT ?? 0).toFixed(2)}</td>
                 </tr>
               </tbody>
             </table>
@@ -150,13 +150,13 @@ const PriceOfferPage: React.FC<PriceOfferPageProps> = ({ currentPath, onNavigate
                 </td>
                 <td className="total-row">
                 <Typography variant="body1">
-                    {priceOffer.totalHT.toFixed(2)}
+                    {(priceOffer.totalHT ?? 0).toFixed(2)}
                   </Typography>
                   <Typography variant="body1">
-                    {priceOffer.tva.toFixed(2)}
+                    {(priceOffer.tva ?? 0).toFixed(2)}
                   </Typography>
                   <Typography variant="body1" fontWeight="bold">
-                    {priceOffer.totalTTC.toFixed(2)}
+                    {(priceOffer.totalTTC ?? 0).toFixed(2)}
                   </Typography>
                 </td>
            </tr>
