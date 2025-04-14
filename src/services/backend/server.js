@@ -10,7 +10,8 @@ const port = process.env.PORT || 3001;
 // CORS configuration
 const allowedOrigins = [
     process.env.FRONTEND_URL || 'http://localhost:3000',
-    'https://your-app-name.vercel.app' // Replace with your Vercel domain once deployed
+    'http://localhost:3000', // Local development
+    'chanitec.vercel.app' // Replace this with your actual Vercel URL
 ];
 
 // Middleware
