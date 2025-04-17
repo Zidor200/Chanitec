@@ -394,21 +394,10 @@ export const QuoteProvider: React.FC<QuoteProviderProps> = ({ children }) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
 
-      // Load quote and its items in parallel
-      const [quote, supplyItems, laborItems] = await Promise.all([
-        apiService.getQuoteById(id),
-        apiService.getSupplyItems(id),
-        apiService.getLaborItems(id)
-      ]);
+      // Get the complete quote with all items from the backend
+      const quote = await apiService.getQuoteById(id);
 
-      // Combine the quote with its items
-      const quoteWithItems = {
-        ...quote,
-        supplyItems,
-        laborItems
-      };
-
-      dispatch({ type: 'SET_QUOTE', payload: quoteWithItems });
+      dispatch({ type: 'SET_QUOTE', payload: quote });
       dispatch({ type: 'SET_EXISTING_QUOTE', payload: true });
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to load quote' });
@@ -423,11 +412,21 @@ export const QuoteProvider: React.FC<QuoteProviderProps> = ({ children }) => {
 
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
+
+      // Format the quote ID if it's a new quote
+      if (!state.isExistingQuote) {
+        const newQuoteId = `F-${state.currentQuote.id}-000`;
+        state.currentQuote.id = newQuoteId;
+      }
+
+      // Save the quote first
       const savedQuote = await apiService.saveQuote(state.currentQuote);
+
       dispatch({ type: 'SET_QUOTE', payload: savedQuote });
       dispatch({ type: 'SET_EXISTING_QUOTE', payload: true });
       return true;
     } catch (error) {
+      console.error('Error saving quote:', error);
       dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to save quote' });
       return false;
     } finally {

@@ -71,12 +71,8 @@ class ApiService {
     }
 
     // Sites
-    async getSites(): Promise<Site[]> {
-        return this.fetchApi<Site[]>('/sites');
-    }
-
     async getSitesByClientId(clientId: string): Promise<Site[]> {
-        return this.fetchApi<Site[]>(`/sites?clientId=${clientId}`);
+        return this.fetchApi<Site[]>(`/sites/by-client?clientId=${clientId}`);
     }
 
     async saveSite(site: Omit<Site, 'id'> & { id?: string }): Promise<Site> {
@@ -101,10 +97,16 @@ class ApiService {
         return this.fetchApi<SupplyItem[]>(`/supply-items/${quoteId}`);
     }
 
-    async saveSupply(supply: Omit<SupplyItem, 'id'> & { id?: string }): Promise<SupplyItem> {
-        return this.fetchApi<SupplyItem>('/supply-items', {
+    async saveSupply(supply: Omit<SupplyItem, 'id'> & { id?: string }, quoteId: string): Promise<SupplyItem> {
+        return this.fetchApi<SupplyItem>(`/supply-items/${quoteId}`, {
             method: 'POST',
             body: JSON.stringify(supply),
+        });
+    }
+
+    async clearItems(): Promise<{ message: string; deletedCount: number }> {
+        return this.fetchApi('/items/clear', {
+            method: 'DELETE'
         });
     }
 
@@ -119,10 +121,26 @@ class ApiService {
         return this.fetchApi<LaborItem[]>(`/labor-items/${quoteId}`);
     }
 
-    async createLaborItem(item: Omit<LaborItem, 'id'>): Promise<LaborItem> {
-        return this.fetchApi<LaborItem>('/labor-items', {
+    async createLaborItem(item: Omit<LaborItem, 'id'>, quoteId: string): Promise<LaborItem> {
+        // Transform the item properties to match backend expectations and ensure correct data types
+        const transformedItem = {
+            quote_id: quoteId,                                    // varchar(36)
+            description: String(item.description),                // text
+            nb_technicians: parseInt(String(item.nbTechnicians)), // int
+            nb_hours: parseFloat(Number(item.nbHours).toFixed(2)),            // decimal(10,2)
+            weekend_multiplier: parseFloat(Number(item.weekendMultiplier).toFixed(2)), // decimal(10,2)
+            price_euro: parseFloat(Number(item.priceEuro).toFixed(2)),        // decimal(10,2)
+            price_dollar: parseFloat(Number(item.priceDollar || 0).toFixed(2)),    // decimal(10,2)
+            unit_price_dollar: parseFloat(Number(item.unitPriceDollar || 0).toFixed(2)), // decimal(10,2)
+            total_price_dollar: parseFloat(Number(item.totalPriceDollar || 0).toFixed(2)) // decimal(10,2)
+        };
+
+        // Log the transformed item for debugging
+        console.log('Sending labor item data:', transformedItem);
+
+        return this.fetchApi<LaborItem>(`/labor-items/${quoteId}`, {
             method: 'POST',
-            body: JSON.stringify(item)
+            body: JSON.stringify(transformedItem)
         });
     }
 

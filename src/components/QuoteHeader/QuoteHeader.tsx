@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Paper, TextField, Typography, MenuItem, Tooltip } from '@mui/material';
+import { Box, Paper, TextField, Typography, MenuItem, Tooltip, CircularProgress } from '@mui/material';
 import { Client, Site } from '../../models/Quote';
 import { apiService } from '../../services/api-service';
 import { extractVersion } from '../../utils/id-generator';
@@ -31,6 +31,9 @@ const QuoteHeader: React.FC<QuoteHeaderProps> = ({
   const [clients, setClients] = useState<Client[]>([]);
   const [sites, setSites] = useState<Site[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSitesLoading, setIsSitesLoading] = useState(false);
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const [siteError, setSiteError] = useState<string | null>(null);
 
   // Format quoteId to display version information
   const formatQuoteId = (id: string) => {
@@ -60,16 +63,8 @@ const QuoteHeader: React.FC<QuoteHeaderProps> = ({
       try {
         setIsLoading(true);
         const loadedClients = await apiService.getClients();
+        console.log('Loaded clients:', loadedClients);
         setClients(loadedClients);
-
-        // If a client is selected, load its sites
-        if (clientName) {
-          const selectedClient = loadedClients.find(c => c.name === clientName);
-          if (selectedClient) {
-            const clientSites = await apiService.getSitesByClientId(selectedClient.id);
-            setSites(clientSites);
-          }
-        }
       } catch (error) {
         console.error('Error loading clients:', error);
       } finally {
@@ -78,30 +73,87 @@ const QuoteHeader: React.FC<QuoteHeaderProps> = ({
     };
 
     loadClients();
-  }, [clientName]);
+  }, []);
 
-  // Handle client selection change
-  const handleClientChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-    onClientChange(value);
-
-    // Clear site when client changes
-    onSiteChange('');
-
-    // Load sites for selected client
-    const selectedClient = clients.find(c => c.name === value);
-    if (selectedClient) {
-      try {
-        setIsLoading(true);
-        const clientSites = await apiService.getSitesByClientId(selectedClient.id);
-        setSites(clientSites);
-      } catch (error) {
-        console.error('Error loading sites:', error);
-      } finally {
-        setIsLoading(false);
+  // Load sites whenever clientName changes - separate from the client loading effect
+  useEffect(() => {
+    const loadSitesForClient = async () => {
+      if (!clientName) {
+        console.log('No client selected, clearing sites');
+        setSites([]);
+        setSelectedClientId(null);
+        setSiteError(null);
+        return;
       }
-    } else {
-      setSites([]);
+
+      try {
+        setSiteError(null);
+        setIsSitesLoading(true);
+
+        // Find the selected client from the clients array
+        const selectedClient = clients.find(c => c.name === clientName);
+        console.log('Selected client:', selectedClient);
+
+        if (!selectedClient) {
+          console.log('No matching client found, clearing sites');
+          setSites([]);
+          setSelectedClientId(null);
+          return;
+        }
+
+        setSelectedClientId(selectedClient.id);
+
+        // Fetch sites using API - similar to ClientsPage but for one client only
+        console.log('Fetching sites for client ID:', selectedClient.id);
+
+        // Build the API URL for direct fetch (matching ClientsPage pattern)
+        const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+        const sitesUrl = `${API_BASE_URL}/sites/by-client?clientId=${selectedClient.id}`;
+        console.log('Sending request to:', sitesUrl);
+
+        const sitesResponse = await fetch(sitesUrl);
+
+        if (!sitesResponse.ok) {
+          console.error('Error response from API:', sitesResponse.status, sitesResponse.statusText);
+          throw new Error(`Failed to fetch sites: ${sitesResponse.statusText}`);
+        }
+
+        const clientSites = await sitesResponse.json();
+        console.log(`Sites for client ${selectedClient.id}:`, clientSites);
+
+        if (Array.isArray(clientSites) && clientSites.length === 0) {
+          console.log('No sites found for this client');
+        }
+
+        setSites(clientSites);
+
+      } catch (error) {
+        console.error('Error loading sites for client:', error);
+        setSiteError('Failed to load sites for this client');
+        setSites([]);
+      } finally {
+        setIsSitesLoading(false);
+      }
+    };
+
+    loadSitesForClient();
+  }, [clientName, clients]);
+
+  // Handle client selection change - with safeguards for debugging
+  const handleClientChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      const value = event.target.value;
+      console.log('Client selection changed to:', value);
+
+      // Directly update the client name via parent component
+      onClientChange(value);
+
+      // Clear site when client changes
+      onSiteChange('');
+
+      console.log('Client selection handler completed successfully');
+    } catch (error) {
+      console.error('Error in client selection handler:', error);
     }
   };
 
@@ -122,6 +174,7 @@ const QuoteHeader: React.FC<QuoteHeaderProps> = ({
       </Box>
 
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }} className="info-grid">
+        {/* Client selection dropdown - simplified for reliability */}
         <Box sx={{ flex: '1 1 220px' }}>
           <TextField
             select
@@ -134,33 +187,55 @@ const QuoteHeader: React.FC<QuoteHeaderProps> = ({
             className="header-field"
           >
             <MenuItem value="">Sélectionnez un client</MenuItem>
-            {(clients ?? []).map((client) => (
+            {clients.map((client) => (
               <MenuItem key={client.id} value={client.name}>
                 {client.name}
               </MenuItem>
             ))}
           </TextField>
+          {isLoading && <Typography variant="caption" color="text.secondary">Chargement des clients...</Typography>}
         </Box>
 
-        <Box sx={{ flex: '1 1 220px' }}>
+        <Box sx={{ flex: '1 1 220px', position: 'relative' }}>
           <TextField
             select
             fullWidth
             label="SITE"
             value={siteName}
-            onChange={(e) => onSiteChange(e.target.value)}
+            onChange={(e) => {
+              console.log('Site changed to:', e.target.value);
+              onSiteChange(e.target.value);
+            }}
             variant="outlined"
             margin="normal"
             className="header-field"
-            disabled={!clientName}
+            disabled={!clientName || isSitesLoading}
+            error={!!siteError}
+            helperText={siteError}
           >
             <MenuItem value="">Sélectionnez un site</MenuItem>
-            {(sites ?? []).map((site) => (
+            {sites.map((site) => (
               <MenuItem key={site.id} value={site.name}>
                 {site.name}
               </MenuItem>
             ))}
           </TextField>
+          {isSitesLoading && (
+            <CircularProgress
+              size={24}
+              style={{
+                position: 'absolute',
+                right: 12,
+                top: '50%',
+                marginTop: -12
+              }}
+            />
+          )}
+          {sites.length === 0 && clientName && !isSitesLoading && (
+            <Typography variant="caption" color="text.secondary">
+              Aucun site disponible pour ce client
+            </Typography>
+          )}
         </Box>
 
         <Box sx={{ flex: '1 1 220px' }}>

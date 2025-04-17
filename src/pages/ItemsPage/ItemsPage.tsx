@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, FC } from 'react';
 import {
   Box,
   Button,
@@ -30,24 +30,81 @@ import {
 import * as XLSX from 'xlsx';
 import Layout from '../../components/Layout/Layout';
 import { SupplyItem } from '../../models/Quote';
-import { apiService } from '../../services/api-service';
+import { itemsApi } from '../../services/api';
 import './ItemsPage.scss';
 import { v4 as uuidv4 } from 'uuid';
 import CustomNumberInput from '../../components/CustomNumberInput/CustomNumberInput';
+
+const API_BASE_URL = 'http://localhost:3001/api';
 
 interface ItemsPageProps {
   currentPath: string;
   onNavigate: (path: string) => void;
 }
 
-// Define an interface for the Excel row data
-interface ExcelRowData {
+interface ExcelItem {
   Description: string;
-  Prix: string | number;
-  [key: string]: any;
+  price: number;
 }
 
-const ItemsPage: React.FC<ItemsPageProps> = ({ currentPath, onNavigate }) => {
+interface ProcessedItem {
+  valid: boolean;
+  rowIndex: number;
+  item?: {
+    description: string;
+    priceEuro: number;
+  };
+  error?: string;
+  rawData?: any;
+}
+
+interface ImportResultItem {
+  rowIndex: number;
+  item?: any;
+  error?: string;
+  rawData?: any;
+}
+
+interface ImportSummary {
+  total: number;
+  valid: number;
+  invalid: number;
+  imported: number;
+  errors: number;
+}
+
+interface ImportResults {
+  totalProcessed: number;
+  successful: ImportResultItem[];
+  failed: ImportResultItem[];
+  summary: ImportSummary;
+}
+
+interface ProcessedExcelItem {
+  description: string;
+  priceEuro: number;
+  rowIndex: number;
+  isValid: boolean;
+  validationError?: string;
+  originalRow: {
+    description: any;
+    price: any;
+  };
+}
+
+// Add type for worksheet with index signature
+interface ExtendedWorksheet {
+  [key: string]: any;
+  '!ref'?: string;
+}
+
+// Add type for cell address
+interface CellAddress {
+  r: number;
+  c: number;
+}
+
+const ItemsPage: FC<ItemsPageProps> = ({ currentPath, onNavigate }) => {
   // State for items data
   const [items, setItems] = useState<SupplyItem[]>([]);
   const [filteredItems, setFilteredItems] = useState<SupplyItem[]>([]);
@@ -58,20 +115,22 @@ const ItemsPage: React.FC<ItemsPageProps> = ({ currentPath, onNavigate }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentItem, setCurrentItem] = useState<Partial<SupplyItem>>({
     description: '',
-    priceEuro: 0,
-    quantity: 1
+    priceEuro: 0
   });
 
-  // State for file import
+  // State for loading and feedback
+  const [loading, setLoading] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info'>('success');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
+
+  // State for file import
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // State for loading
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  // Load items on component mount
+  // Load items when component mounts
   useEffect(() => {
     loadItems();
   }, []);
@@ -84,54 +143,57 @@ const ItemsPage: React.FC<ItemsPageProps> = ({ currentPath, onNavigate }) => {
   // Load all items from API
   const loadItems = async () => {
     try {
-      const loadedItems = await apiService.getSupplies();
-      // Sort items alphabetically by description
-      const sortedItems = [...loadedItems].sort((a, b) =>
-        a.description.localeCompare(b.description)
-      );
-      setItems(sortedItems);
-      setFilteredItems(sortedItems);
+      setLoading(true);
+      const data = await itemsApi.getAllItems();
+
+      // Transform the data to match our frontend structure
+      const transformedItems = data.map((item: any) => ({
+        id: item.id,
+        description: item.description,
+        priceEuro: item.price
+      }));
+
+      setItems(transformedItems);
+      setFilteredItems(transformedItems);
     } catch (error) {
       console.error('Error loading items:', error);
       showSnackbar('Erreur lors du chargement des articles', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
   // Filter items based on search term
   const filterItems = () => {
     if (!searchTerm.trim()) {
-      // Return all items, sorted alphabetically
-      const sortedItems = [...items].sort((a, b) =>
-        a.description.localeCompare(b.description)
-      );
-      setFilteredItems(sortedItems);
+      setFilteredItems(items);
     } else {
       const filtered = items.filter(item =>
         item.description.toLowerCase().includes(searchTerm.toLowerCase())
       );
-      // Sort filtered results alphabetically
-      const sortedFiltered = [...filtered].sort((a, b) =>
-        a.description.localeCompare(b.description)
-      );
-      setFilteredItems(sortedFiltered);
+      setFilteredItems(filtered);
     }
+  };
+
+  // Show snackbar with message
+  const showSnackbar = (message: string, severity: 'success' | 'error' | 'info' | 'warning') => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setSnackbarOpen(true);
+  };
+
+  // Close snackbar
+  const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
   };
 
   // Open dialog to add a new item
   const handleAddItem = () => {
     setCurrentItem({
       description: '',
-      priceEuro: 0,
-      quantity: 1
+      priceEuro: 0
     });
     setIsEditing(false);
-    setDialogOpen(true);
-  };
-
-  // Open dialog to edit existing item
-  const handleEditItem = (item: SupplyItem) => {
-    setCurrentItem(item);
-    setIsEditing(true);
     setDialogOpen(true);
   };
 
@@ -149,161 +211,254 @@ const ItemsPage: React.FC<ItemsPageProps> = ({ currentPath, onNavigate }) => {
     });
   };
 
-  // Refresh function to reload all items
-  const refreshItems = async () => {
-    try {
-      const loadedItems = await apiService.getSupplies();
-      // Sort items alphabetically by description
-      const sortedItems = [...loadedItems].sort((a, b) =>
-        a.description.localeCompare(b.description)
-      );
-      setItems(sortedItems);
-      setFilteredItems(sortedItems);
-    } catch (error) {
-      console.error('Error refreshing items:', error);
-      showSnackbar('Erreur lors du rafraîchissement des articles', 'error');
-    }
-  };
-
   // Save item (create or update)
   const handleSaveItem = async () => {
     if (!currentItem.description) {
-      alert('Description is required');
+      showSnackbar('La description est requise', 'error');
       return;
     }
 
     try {
+      setLoading(true);
+      const itemData = {
+        description: currentItem.description,
+        price: currentItem.priceEuro
+      };
+
       if (isEditing && currentItem.id) {
-        // Update existing item
-        await apiService.saveSupply({
-          id: currentItem.id,
-          description: currentItem.description,
-          priceEuro: Number(currentItem.priceEuro) || 0,
-          quantity: currentItem.quantity || 1
-        });
+        await itemsApi.updateItem(currentItem.id, itemData);
       } else {
-        // Create new item
-        await apiService.saveSupply({
-          description: currentItem.description,
-          priceEuro: Number(currentItem.priceEuro) || 0,
-          quantity: currentItem.quantity || 1
-        });
+        await itemsApi.createItem(itemData);
       }
 
+      showSnackbar(`Article ${isEditing ? 'mis à jour' : 'créé'} avec succès`, 'success');
       handleCloseDialog();
-      await refreshItems();
-      showSnackbar('Article enregistré avec succès', 'success');
+      await loadItems();
     } catch (error) {
-      console.error('Error saving item:', error);
-      showSnackbar('Erreur lors de l\'enregistrement de l\'article', 'error');
+      showSnackbar(`Erreur lors de ${isEditing ? 'la mise à jour' : 'la création'} de l\'article`, 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Delete an item
+  // Delete item
   const handleDeleteItem = async (id: string) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cet article?')) {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cet article ?')) {
       try {
         setDeletingId(id);
-        await apiService.deleteSupply(id);
-        // Remove the item from local state immediately
+        await itemsApi.deleteItem(id);
         setItems(prevItems => prevItems.filter(item => item.id !== id));
-        setFilteredItems(prevFiltered => prevFiltered.filter(item => item.id !== id));
-        // Then refresh from server to ensure sync
-        await refreshItems();
+        setFilteredItems(prevItems => prevItems.filter(item => item.id !== id));
         showSnackbar('Article supprimé avec succès', 'success');
-      } catch (error: any) {
-        console.error('Error deleting item:', error);
-        showSnackbar(
-          error.response?.data?.error || 'Erreur lors de la suppression de l\'article',
-          'error'
-        );
-        // Refresh items in case of error to ensure UI is in sync
-        await refreshItems();
+      } catch (error) {
+        showSnackbar('Erreur lors de la suppression de l\'article', 'error');
       } finally {
         setDeletingId(null);
       }
     }
   };
 
-  // Trigger file input click
-  const handleImportClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
+  // Handle file selection
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      handleFileUpload(file);
     }
   };
 
-  // Handle file selection and import
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files && e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      try {
-        const data = event.target?.result;
-        const workbook = XLSX.read(data, { type: 'binary' });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json<ExcelRowData>(worksheet);
-
-        if (jsonData.length === 0) {
-          showSnackbar('Le fichier est vide', 'error');
-          return;
-        }
-
-        // Validate and transform data
-        const validItems: Omit<SupplyItem, 'id'>[] = [];
-        const invalidRows: number[] = [];
-
-        jsonData.forEach((row: ExcelRowData, index: number) => {
-          if (row.Description && (row.Prix !== undefined && !isNaN(parseFloat(String(row.Prix))))) {
-            validItems.push({
-              description: String(row.Description),
-              priceEuro: parseFloat(String(row.Prix)),
-              quantity: 1
-            });
-          } else {
-            invalidRows.push(index + 2);
-          }
-        });
-
-        // Save valid items
-        if (validItems.length > 0) {
-          await Promise.all((validItems ?? []).map(item => apiService.saveSupply(item)));
-          await refreshItems();
-
-          if (invalidRows.length > 0) {
-            showSnackbar(`Importé ${validItems.length} articles. Lignes invalides: ${invalidRows.join(', ')}`, 'info');
-          } else {
-            showSnackbar(`Importé ${validItems.length} articles avec succès`, 'success');
-          }
-        } else {
-          showSnackbar('Aucun article valide trouvé dans le fichier', 'error');
-        }
-      } catch (error) {
-        console.error('Error importing file:', error);
-        showSnackbar('Erreur lors de l\'importation du fichier', 'error');
-      }
-
-      // Reset file input
-      if (e.target) {
-        e.target.value = '';
-      }
+  // Add this new function after handleSaveItem
+  const handleImportItems = async (items: { description: string; priceEuro: number }[]) => {
+    const results = {
+      successful: [] as any[],
+      failed: [] as any[],
+      total: items.length,
+      imported: 0
     };
 
-    reader.readAsBinaryString(file);
+    try {
+      setLoading(true);
+
+      // Process each item one by one
+      for (const item of items) {
+        try {
+          // Validate item
+          if (!item.description) {
+            results.failed.push({
+              item,
+              error: 'La description est requise'
+            });
+            continue;
+          }
+
+          // Prepare item data (same structure as handleSaveItem)
+          const itemData = {
+            description: item.description,
+            price: item.priceEuro
+          };
+
+          // Create item using the same API call as handleSaveItem
+          const response = await itemsApi.createItem(itemData);
+
+          results.successful.push({
+            original: item,
+            created: response
+          });
+          results.imported++;
+
+          // Show progress
+          showSnackbar(
+            `Import en cours: ${results.imported}/${items.length} articles traités...`,
+            'info'
+          );
+        } catch (error) {
+          results.failed.push({
+            item,
+            error: `Erreur: ${(error as Error).message}`
+          });
+        }
+      }
+
+      // Show final results
+      if (results.failed.length > 0) {
+        if (results.successful.length > 0) {
+          showSnackbar(
+            `Import partiel: ${results.successful.length} articles importés, ${results.failed.length} échecs`,
+            'warning' as const
+          );
+        } else {
+          showSnackbar('Échec de l\'import: aucun article importé', 'error');
+        }
+        console.error('Failed imports:', results.failed);
+      } else {
+        showSnackbar(`${results.successful.length} articles importés avec succès`, 'success');
+      }
+
+      // Refresh the list
+      await loadItems();
+    } catch (error) {
+      console.error('Error during import:', error);
+      showSnackbar('Erreur lors de l\'import', 'error');
+    } finally {
+      setLoading(false);
+    }
+
+    return results;
   };
 
-  // Show snackbar with message
-  const showSnackbar = (message: string, severity: 'success' | 'error' | 'info') => {
-    setSnackbarMessage(message);
-    setSnackbarSeverity(severity);
-    setSnackbarOpen(true);
-  };
+  // Update handleFileUpload function
+  const handleFileUpload = async (file: File) => {
+    try {
+      setLoading(true);
+      const reader = new FileReader();
 
-  // Close snackbar
-  const handleCloseSnackbar = () => {
-    setSnackbarOpen(false);
+      reader.onload = async (event: ProgressEvent<FileReader>) => {
+        try {
+          const data = event.target?.result;
+          if (typeof data !== 'string') {
+            throw new Error('Invalid file data');
+          }
+
+          // Read the Excel file
+          const workbook = XLSX.read(data, { type: 'binary' });
+          const sheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+
+          // Convert worksheet to JSON
+          const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+          // Skip header row and process data
+          const processedItems: ProcessedExcelItem[] = [];
+          for (let i = 1; i < jsonData.length; i++) {
+            const row = jsonData[i] as any[];
+            if (!row || row.length < 2) continue;
+
+            const description = String(row[0] || '').trim();
+            if (!description) continue;
+
+            let price = 0;
+            const priceValue = row[1];
+            if (typeof priceValue === 'number') {
+              price = priceValue;
+            } else if (typeof priceValue === 'string') {
+              const cleanPrice = priceValue.replace(/[^0-9.,]/g, '').replace(',', '.');
+              price = parseFloat(cleanPrice);
+              if (isNaN(price)) price = 0;
+            }
+
+            const processedItem: ProcessedExcelItem = {
+              description,
+              priceEuro: price,
+              rowIndex: i + 1,
+              isValid: true,
+              originalRow: {
+                description: row[0],
+                price: row[1]
+              }
+            };
+
+            processedItems.push(processedItem);
+          }
+
+          if (processedItems.length > 0) {
+            // Save each processed item individually
+            let successCount = 0;
+            let errorCount = 0;
+
+            for (const item of processedItems) {
+              try {
+                // Create a new item using the API
+                const response = await fetch(`${API_BASE_URL}/items`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    description: item.description,
+                    price: item.priceEuro
+                  })
+                });
+
+                if (!response.ok) {
+                  throw new Error(`Failed to save item: ${response.statusText}`);
+                }
+
+                await response.json();
+                successCount++;
+              } catch (error) {
+                errorCount++;
+              }
+            }
+
+            // Show final summary
+            showSnackbar(
+              `Import terminé: ${successCount} articles importés avec succès, ${errorCount} erreurs`,
+              successCount > 0 ? 'success' : 'error'
+            );
+
+            // Refresh the items list
+            await loadItems();
+          }
+
+        } catch (error) {
+          showSnackbar(
+            'Erreur lors du traitement du fichier: ' + (error as Error).message,
+            'error'
+          );
+        }
+      };
+
+      reader.readAsBinaryString(file);
+    } catch (error) {
+      showSnackbar(
+        'Erreur lors de la lecture du fichier: ' + (error as Error).message,
+        'error'
+      );
+    } finally {
+      setLoading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
   };
 
   return (
@@ -316,9 +471,14 @@ const ItemsPage: React.FC<ItemsPageProps> = ({ currentPath, onNavigate }) => {
       <Container className="items-page-container">
         <Paper elevation={2} className="items-paper">
           <Box className="items-header">
-            <Typography variant="h6" className="section-title">
-              ARTICLES DE FOURNITURE
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="h6" className="section-title">
+                ARTICLES DE FOURNITURE
+              </Typography>
+              <Typography variant="subtitle1" sx={{ color: 'text.secondary' }}>
+                ({items.length} articles)
+              </Typography>
+            </Box>
             <Box className="search-and-add">
               <TextField
                 label="Rechercher un article"
@@ -328,33 +488,31 @@ const ItemsPage: React.FC<ItemsPageProps> = ({ currentPath, onNavigate }) => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="search-field"
               />
-              <Box className="button-group">
-                <Button
-                  variant="contained"
-                  color="primary"
-                  startIcon={<AddIcon />}
-                  onClick={handleAddItem}
-                >
-                  Nouvel Article
-                </Button>
-                <Tooltip title="Importer depuis Excel (Colonnes: Description, Prix)">
-                  <Button
-                    variant="outlined"
-                    color="secondary"
-                    startIcon={<FileUploadIcon />}
-                    onClick={handleImportClick}
-                  >
-                    Importer
-                  </Button>
-                </Tooltip>
-                <input
-                  type="file"
-                  accept=".xlsx, .xls"
-                  style={{ display: 'none' }}
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                />
-              </Box>
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<AddIcon />}
+                onClick={handleAddItem}
+                disabled={loading}
+              >
+                Ajouter un article
+              </Button>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileSelect}
+                accept=".xlsx,.xls"
+                style={{ display: 'none' }}
+              />
+              <Button
+                variant="outlined"
+                color="primary"
+                startIcon={<FileUploadIcon />}
+                onClick={() => fileInputRef.current?.click()}
+                disabled={loading}
+              >
+                Importer Excel
+              </Button>
             </Box>
           </Box>
 
@@ -368,9 +526,15 @@ const ItemsPage: React.FC<ItemsPageProps> = ({ currentPath, onNavigate }) => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredItems.length === 0 ? (
+                {loading ? (
                   <TableRow>
-                    <TableCell colSpan={3} align="center">
+                    <TableCell colSpan={4} align="center">
+                      Chargement...
+                    </TableCell>
+                  </TableRow>
+                ) : filteredItems.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} align="center">
                       Aucun article trouvé
                     </TableCell>
                   </TableRow>
@@ -379,13 +543,17 @@ const ItemsPage: React.FC<ItemsPageProps> = ({ currentPath, onNavigate }) => {
                     <TableRow key={item.id}>
                       <TableCell>{item.description}</TableCell>
                       <TableCell align="right">
-                        {(item.priceEuro ?? 0).toFixed(2)}
+                        {item.priceEuro ? Number(item.priceEuro).toFixed(2) : '0.00'}
                       </TableCell>
                       <TableCell align="center">
                         <IconButton
                           size="small"
                           color="primary"
-                          onClick={() => handleEditItem(item)}
+                          onClick={() => {
+                            setCurrentItem(item);
+                            setIsEditing(true);
+                            setDialogOpen(true);
+                          }}
                         >
                           <EditIcon fontSize="small" />
                         </IconButton>
@@ -429,20 +597,22 @@ const ItemsPage: React.FC<ItemsPageProps> = ({ currentPath, onNavigate }) => {
             value={currentItem.description}
             onChange={handleInputChange}
           />
-          <CustomNumberInput
-            label="Prix (€)"
-            value={currentItem.priceEuro || 0}
-            onChange={(value) => handleInputChange({ target: { name: 'priceEuro', value: value.toString() } } as React.ChangeEvent<HTMLInputElement>)}
-            min={0}
-            step={0.01}
-            fullWidth
+          <TextField
             margin="dense"
+            name="priceEuro"
+            label="Prix (€)"
+            type="number"
+            fullWidth
+            variant="outlined"
+            value={currentItem.priceEuro}
+            onChange={handleInputChange}
+            inputProps={{ step: "0.01" }}
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Annuler</Button>
-          <Button onClick={handleSaveItem} color="primary" variant="contained">
-            Enregistrer
+          <Button onClick={handleSaveItem} color="primary" variant="contained" disabled={loading}>
+            {loading ? 'Enregistrement...' : 'Enregistrer'}
           </Button>
         </DialogActions>
       </Dialog>

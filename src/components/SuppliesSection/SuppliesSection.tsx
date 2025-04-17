@@ -69,8 +69,22 @@ const SuppliesSection: React.FC<SuppliesSectionProps> = ({
       try {
         setIsLoading(true);
         const loadedItems = await apiService.getSupplies();
-        setCatalogItems(loadedItems);
-        setFilteredItems(loadedItems);
+
+        // Map API response to expected structure if needed
+        const mappedItems = loadedItems.map(item => {
+          const itemAny = item as any;
+          const description = itemAny.description || itemAny.Description || itemAny.name || itemAny.Name || '';
+
+          return {
+            id: itemAny.id,
+            description: description,
+            priceEuro: parseFloat(itemAny.price) || 0,
+            quantity: 1
+          } as SupplyItem;
+        });
+
+        setCatalogItems(mappedItems);
+        setFilteredItems(mappedItems);
       } catch (error) {
         console.error('Error loading catalog items:', error);
       } finally {

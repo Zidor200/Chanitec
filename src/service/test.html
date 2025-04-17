@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test Interface</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #333;
+            margin-top: 0;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        pre {
+            background-color: #f8f8f8;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            max-height: 200px;
+        }
+        .response {
+            margin-top: 10px;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        input[type="text"], input[type="number"] {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+        }
+        input[type="file"] {
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>API Test Interface</h1>
+    <div class="container">
+        <!-- Database Connection Test -->
+        <div class="card">
+            <h2>Database Connection</h2>
+            <button onclick="testDbConnection()">Test Connection</button>
+            <button onclick="checkDatabaseStructure()">Check Database Structure</button>
+            <button onclick="testSiteCreationAndRetrieval()">Test Site Creation and Retrieval</button>
+            <div class="response" id="dbResponse"></div>
+        </div>
+
+        <!-- Clients API Test -->
+        <div class="card">
+            <h2>Clients API</h2>
+            <button onclick="getClients()">Get All Clients</button>
+            <button onclick="createClient()">Create Client</button>
+            <div class="response" id="clientsResponse"></div>
+        </div>
+
+        <!-- Sites API Test -->
+        <div class="card">
+            <h2>Sites API</h2>
+            <div>
+                <input type="text" id="siteName" placeholder="Site Name">
+                <input type="text" id="siteClientId" placeholder="Client ID">
+                <button onclick="createSite()">Create Site</button>
+            </div>
+            <div>
+                <input type="text" id="getSiteClientId" placeholder="Client ID to fetch sites">
+                <button onclick="getSitesByClientId()">Get Sites by Client ID</button>
+                <button onclick="testSiteLookupWithId()">Debug Site Lookup</button>
+            </div>
+            <div class="response" id="sitesResponse"></div>
+        </div>
+
+        <!-- Quotes API Test -->
+        <div class="card">
+            <h2>Quotes API</h2>
+            <button onclick="getQuotes()">Get All Quotes</button>
+            <button onclick="createQuote()">Create Quote</button>
+            <div class="response" id="quotesResponse"></div>
+        </div>
+
+        <!-- Supply Items API Test -->
+        <div class="card">
+            <h2>Supply Items API</h2>
+            <button onclick="getSupplyItems()">Get All Supply Items</button>
+            <button onclick="createSupplyItem()">Create Supply Item</button>
+            <div class="response" id="supplyItemsResponse"></div>
+        </div>
+
+        <!-- Labor Items API Test -->
+        <div class="card">
+            <h2>Labor Items API</h2>
+            <button onclick="getLaborItems()">Get All Labor Items</button>
+            <button onclick="createLaborItem()">Create Labor Item</button>
+            <div class="response" id="laborItemsResponse"></div>
+        </div>
+
+        <!-- Items List Section -->
+        <div class="section">
+            <h2>Items List</h2>
+
+            <!-- Create Item Form -->
+            <div>
+                <h3>Create New Item</h3>
+                <input type="text" id="itemDescription" placeholder="Description">
+                <input type="number" id="itemPrice" placeholder="Price" step="0.01">
+                <button onclick="createItem()">Create Item</button>
+            </div>
+
+            <!-- Import Items Form -->
+            <div>
+                <h3>Import Items from Excel</h3>
+                <input type="file" id="excelFile" accept=".xlsx,.xls">
+                <button onclick="importItems()">Import Items</button>
+            </div>
+
+            <!-- List Items -->
+            <div>
+                <h3>Items List</h3>
+                <button onclick="getItems()">Refresh Items</button>
+                <button onclick="clearItemsTable()" style="background-color: #f44336;">Clear Items Table</button>
+                <div id="itemsList" class="response"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:3001/api';
+
+        // Helper function to display responses
+        function displayResponse(elementId, data, isError = false) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<pre class="${isError ? 'error' : 'success'}">${JSON.stringify(data, null, 2)}</pre>`;
+        }
+
+        // Database Connection Test
+        async function testDbConnection() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`);
+                const data = await response.json();
+                displayResponse('dbResponse', data);
+            } catch (error) {
+                displayResponse('dbResponse', { error: error.message }, true);
+            }
+        }
+
+        // Database Structure Check
+        async function checkDatabaseStructure() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/debug/database-structure`);
+                if (!response.ok) {
+                    throw new Error(`API returned status ${response.status}`);
+                }
+                const data = await response.json();
+                displayResponse('dbResponse', data);
+            } catch (error) {
+                displayResponse('dbResponse', { error: error.message }, true);
+            }
+        }
+
+        // Add a direct create-and-get test for sites
+        async function testSiteCreationAndRetrieval() {
+            try {
+                // First create a test client
+                const clientResponse = await fetch(`${API_BASE_URL}/clients`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: "Test Client " + new Date().toISOString(),
+                        email: "test@example.com"
+                    })
+                });
+
+                if (!clientResponse.ok) {
+                    throw new Error("Failed to create test client");
+                }
+
+                const client = await clientResponse.json();
+                console.log("Created test client:", client);
+
+                // Now create a site for this client
+                const siteResponse = await fetch(`${API_BASE_URL}/sites`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: "Test Site " + new Date().toISOString(),
+                        client_id: client.id
+                    })
+                });
+
+                if (!siteResponse.ok) {
+                    throw new Error("Failed to create test site");
+                }
+
+                const site = await siteResponse.json();
+                console.log("Created test site:", site);
+
+                // Now fetch sites for this client
+                const getSitesResponse = await fetch(`${API_BASE_URL}/sites/by-client?clientId=${client.id}`);
+                const sites = await getSitesResponse.json();
+
+                const result = {
+                    testClient: client,
+                    testSite: site,
+                    retrievedSites: sites,
+                    success: Array.isArray(sites) && sites.length > 0 && sites[0].id === site.id
+                };
+
+                displayResponse('sitesResponse', result);
+            } catch (error) {
+                console.error("Test failed:", error);
+                displayResponse('sitesResponse', { error: error.message }, true);
+            }
+        }
+
+        // Clients API
+        async function getClients() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/clients`);
+                const data = await response.json();
+
+                // Format the data to clearly show ID and name
+                if (Array.isArray(data)) {
+                    const formattedData = data.map(client => ({
+                        id: client.id,
+                        name: client.name,
+                        // Include other properties if needed
+                    }));
+
+                    displayResponse('clientsResponse', formattedData);
+
+                    // Show a helper message
+                    const helperElement = document.createElement('div');
+                    helperElement.innerHTML = '<p style="color: blue; margin-top: 10px;">👆 Use these client IDs for the "Get Sites by Client ID" function</p>';
+                    document.getElementById('clientsResponse').appendChild(helperElement);
+                } else {
+                    displayResponse('clientsResponse', data);
+                }
+            } catch (error) {
+                displayResponse('clientsResponse', { error: error.message }, true);
+            }
+        }
+
+        async function createClient() {
+            const clientData = {
+                name: "Test Client",
+                email: "test@example.com",
+                phone: "1234567890",
+                address: "123 Test St"
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/clients`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(clientData)
+                });
+                const data = await response.json();
+                displayResponse('clientsResponse', data);
+            } catch (error) {
+                displayResponse('clientsResponse', { error: error.message }, true);
+            }
+        }
+
+        // Sites API
+        async function getSitesByClientId() {
+            const clientId = document.getElementById('getSiteClientId').value;
+
+            if (!clientId) {
+                displayResponse('sitesResponse', { error: 'Client ID is required to fetch sites' }, true);
+                return;
+            }
+
+            try {
+                console.log('Requesting sites for client ID:', clientId);
+                const url = `${API_BASE_URL}/sites/by-client?clientId=${clientId}`;
+                console.log('Request URL:', url);
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                console.log('Response status:', response.status);
+                console.log('Response data:', data);
+
+                if (Array.isArray(data) && data.length === 0) {
+                    displayResponse('sitesResponse', { message: 'No sites found for this client' });
+                } else {
+                    displayResponse('sitesResponse', data);
+                }
+            } catch (error) {
+                console.error('Error fetching sites:', error);
+                displayResponse('sitesResponse', { error: error.message }, true);
+            }
+        }
+
+        async function createSite() {
+            const name = document.getElementById('siteName').value;
+            const client_id = document.getElementById('siteClientId').value;
+
+            if (!name || !client_id) {
+                displayResponse('sitesResponse', { error: 'Site name and client ID are required' }, true);
+                return;
+            }
+
+            const siteData = {
+                name: name,
+                client_id: client_id
+            };
+
+            console.log('Creating site with data:', siteData);
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/sites`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(siteData)
+                });
+
+                console.log('Create site response status:', response.status);
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('Error response:', errorData);
+                    throw new Error(errorData.error || 'Failed to create site');
+                }
+
+                const data = await response.json();
+                console.log('Created site:', data);
+                displayResponse('sitesResponse', data);
+
+                // Clear the form
+                document.getElementById('siteName').value = '';
+                document.getElementById('siteClientId').value = '';
+            } catch (error) {
+                console.error('Error creating site:', error);
+                displayResponse('sitesResponse', { error: error.message }, true);
+            }
+        }
+
+        // Quotes API
+        async function getQuotes() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/quotes`);
+                const data = await response.json();
+                displayResponse('quotesResponse', data);
+            } catch (error) {
+                displayResponse('quotesResponse', { error: error.message }, true);
+            }
+        }
+
+        async function createQuote() {
+            const quoteData = {
+                client_name: "Test Client",
+                site_name: "Test Site",
+                object: "Test Quote",
+                date: "2024-04-15",
+                supply_description: "Test supplies",
+                labor_description: "Test labor",
+                supply_exchange_rate: 1.1,
+                supply_margin_rate: 1.2,
+                labor_exchange_rate: 1.1,
+                labor_margin_rate: 1.2,
+                total_supplies_ht: 1000,
+                total_labor_ht: 2000,
+                total_ht: 3000,
+                tva: 600,
+                total_ttc: 3600
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/quotes`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(quoteData)
+                });
+                const data = await response.json();
+                displayResponse('quotesResponse', data);
+            } catch (error) {
+                displayResponse('quotesResponse', { error: error.message }, true);
+            }
+        }
+
+        // Supply Items API
+        async function getSupplyItems() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/supply-items`);
+                const data = await response.json();
+                displayResponse('supplyItemsResponse', data);
+            } catch (error) {
+                displayResponse('supplyItemsResponse', { error: error.message }, true);
+            }
+        }
+
+        async function createSupplyItem() {
+            const supplyItemData = {
+                quote_id: "test-quote-id", // You'll need to replace this with an actual quote ID
+                description: "Test Supply Item",
+                quantity: 5,
+                price_euro: 100,
+                price_dollar: 110,
+                unit_price_dollar: 22,
+                total_price_dollar: 110
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/supply-items`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(supplyItemData)
+                });
+                const data = await response.json();
+                displayResponse('supplyItemsResponse', data);
+            } catch (error) {
+                displayResponse('supplyItemsResponse', { error: error.message }, true);
+            }
+        }
+
+        // Labor Items API
+        async function getLaborItems() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/labor-items`);
+                const data = await response.json();
+                displayResponse('laborItemsResponse', data);
+            } catch (error) {
+                displayResponse('laborItemsResponse', { error: error.message }, true);
+            }
+        }
+
+        async function createLaborItem() {
+            const laborItemData = {
+                quote_id: "test-quote-id", // You'll need to replace this with an actual quote ID
+                description: "Test Labor Item",
+                nb_technicians: 2,
+                nb_hours: 8,
+                weekend_multiplier: 1.5,
+                price_euro: 200,
+                price_dollar: 220,
+                unit_price_dollar: 27.5,
+                total_price_dollar: 220
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/labor-items`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(laborItemData)
+                });
+                const data = await response.json();
+                displayResponse('laborItemsResponse', data);
+            } catch (error) {
+                displayResponse('laborItemsResponse', { error: error.message }, true);
+            }
+        }
+
+        // Get all items
+        async function getItems() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/items`);
+                const data = await response.json();
+                document.getElementById('itemsList').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('itemsList').innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        // Create new item
+        async function createItem() {
+            const description = document.getElementById('itemDescription').value;
+            const price = document.getElementById('itemPrice').value;
+
+            if (!description || !price) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/items`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        description: description,
+                        price: parseFloat(price)
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    alert('Item created successfully');
+                    getItems(); // Refresh the list
+                    // Clear form
+                    document.getElementById('itemDescription').value = '';
+                    document.getElementById('itemPrice').value = '';
+                } else {
+                    throw new Error(data.error || 'Failed to create item');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert(`Error creating item: ${error.message}`);
+            }
+        }
+
+        // Import items from Excel
+        async function importItems() {
+            const fileInput = document.getElementById('excelFile');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert('Please select a file');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/items/import`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    alert(`Successfully imported ${data.count} items`);
+                    getItems(); // Refresh the list
+                    fileInput.value = ''; // Clear file input
+                } else {
+                    throw new Error(data.error || 'Failed to import items');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert(`Error importing items: ${error.message}`);
+            }
+        }
+
+        // Test site lookup with specific client ID
+        async function testSiteLookupWithId() {
+            const clientId = document.getElementById('getSiteClientId').value;
+
+            if (!clientId) {
+                displayResponse('sitesResponse', { error: 'Client ID is required for testing' }, true);
+                return;
+            }
+
+            try {
+                const url = `${API_BASE_URL}/debug/test-site-lookup/${clientId}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                displayResponse('sitesResponse', data);
+            } catch (error) {
+                displayResponse('sitesResponse', { error: error.message }, true);
+            }
+        }
+
+        // Add this function after the getItems function
+        async function clearItemsTable() {
+            if (!confirm('Are you sure you want to clear all items? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/items/clear`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API returned status ${response.status}`);
+                }
+
+                const data = await response.json();
+                displayResponse('itemsList', data);
+
+                // Refresh the items list after clearing
+                await getItems();
+            } catch (error) {
+                displayResponse('itemsList', { error: error.message }, true);
+            }
+        }
+
+        // Load items when page loads
+        window.onload = getItems;
+    </script>
+</body>
+</html>

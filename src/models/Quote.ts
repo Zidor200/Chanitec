@@ -41,7 +41,7 @@ export interface Client {
 export interface Site {
   id: string;
   name: string;
-  clientId: string;
+  client_id: string;
 }
 
 /**

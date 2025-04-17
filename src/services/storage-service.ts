@@ -158,21 +158,20 @@ class StorageService {
     return newClient;
   }
 
-  deleteClient(id: string): boolean {
+  deleteClient(id: string): void {
     const clients = this.getClients();
     const filteredClients = clients.filter(client => client.id !== id);
 
-    if (filteredClients.length !== clients.length) {
-      // Also delete sites for this client
-      const sites = this.getSites();
-      const filteredSites = sites.filter(site => site.clientId !== id);
-      this.saveToStorage(STORAGE_KEYS.SITES, filteredSites);
-
-      this.saveToStorage(STORAGE_KEYS.CLIENTS, filteredClients);
-      return true;
+    if (filteredClients.length === clients.length) {
+      throw new Error(`Client with ID ${id} not found`);
     }
 
-    return false;
+    // Also delete sites for this client
+    const sites = this.getSites();
+    const filteredSites = sites.filter(site => site.client_id !== id);
+    this.saveToStorage(STORAGE_KEYS.SITES, filteredSites);
+
+    this.saveToStorage(STORAGE_KEYS.CLIENTS, filteredClients);
   }
 
   // Sites
@@ -181,7 +180,7 @@ class StorageService {
   }
 
   getSitesByClientId(clientId: string): Site[] {
-    return this.getSites().filter(site => site.clientId === clientId);
+    return this.getSites().filter(site => site.client_id === clientId);
   }
 
   saveSite(site: Omit<Site, 'id'> & { id?: string }): Site {
