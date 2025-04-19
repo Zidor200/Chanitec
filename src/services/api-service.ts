@@ -48,6 +48,25 @@ class ApiService {
         });
     }
 
+    async updateQuote(quote: Quote): Promise<Quote> {
+        console.log('Updating quote in API service:', quote);
+        const response = await fetch(`${API_BASE_URL}/quotes/${quote.id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(quote),
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to update quote: ${response.statusText}`);
+        }
+
+        const updatedQuote = await response.json();
+        console.log('Update quote response:', updatedQuote);
+        return updatedQuote;
+    }
+
     // Clients
     async getClients(): Promise<Client[]> {
         return this.fetchApi<Client[]>('/clients');

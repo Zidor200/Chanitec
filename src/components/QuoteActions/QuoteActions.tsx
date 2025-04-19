@@ -75,7 +75,16 @@ const QuoteActions: React.FC<QuoteActionsProps> = ({
     if (!onUpdate) return;
 
     try {
+      console.log('Starting quote update process...');
+      console.log('Current quote data before update:', {
+        clientName,
+        siteName,
+        date,
+        isExistingQuote
+      });
+
       const success = await onUpdate();
+      console.log('Update result:', success);
 
       if (success) {
         setSnackbarMessage('Nouvelle version du devis créée avec succès!');
@@ -87,6 +96,7 @@ const QuoteActions: React.FC<QuoteActionsProps> = ({
 
       setSnackbarOpen(true);
     } catch (error) {
+      console.error('Error in handleUpdate:', error);
       setSnackbarMessage('Erreur lors de la création d\'une nouvelle version.');
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
@@ -154,7 +164,7 @@ const QuoteActions: React.FC<QuoteActionsProps> = ({
             color="primary"
             className="action-button update-button"
             startIcon={<UpdateIcon />}
-            onClick={handleUpdate}
+            onClick={handleSave}
           >
             Mettre à jour
           </Button>

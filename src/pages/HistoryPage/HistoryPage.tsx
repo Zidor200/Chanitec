@@ -67,14 +67,11 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ currentPath, onNavigate }) =>
   // Load all necessary data from API
   const loadData = async () => {
     try {
-      console.log('=== Loading History Page Data ===');
       const [allQuotes, allClients] = await Promise.all([
         apiService.getQuotes(),
         apiService.getClients()
       ]);
 
-      console.log(`Loaded ${allQuotes.length} quotes`);
-      console.log('Quote data sample:', allQuotes[0]);
 
       // Group quotes by base ID to identify versions
       const versionGroups: { [baseId: string]: Quote[] } = {};
@@ -89,7 +86,6 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ currentPath, onNavigate }) =>
         }
       });
 
-      console.log(`Grouped into ${Object.keys(versionGroups).length} unique quote groups`);
 
       // Sort each group by version
       Object.keys(versionGroups).forEach(baseId => {
