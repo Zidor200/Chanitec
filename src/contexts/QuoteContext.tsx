@@ -10,7 +10,8 @@ import {
   calculateSupplyItemTotal,
   calculateTotalLabor,
   calculateTotalSupplies,
-  calculateTotalTTC
+  calculateTotalTTC,
+  calculateVAT
 } from '../utils/calculations';
 import { generateId, generateQuoteId, extractBaseId, extractVersion } from '../utils/id-generator';
 
@@ -135,7 +136,9 @@ const quoteReducer = (state: QuoteState, action: QuoteAction): QuoteState => {
 
       const updatedItems = [...state.currentQuote.supplyItems, calculatedItem];
       const totalSuppliesHT = calculateTotalSupplies(updatedItems);
-      const totalHT = totalSuppliesHT + state.currentQuote.totalLaborHT;
+      const totalHT = Number(totalSuppliesHT) + Number(state.currentQuote.totalLaborHT);
+      const tva = calculateVAT(totalHT);
+      const totalTTC = totalHT + tva;
 
       return {
         ...state,
@@ -144,8 +147,8 @@ const quoteReducer = (state: QuoteState, action: QuoteAction): QuoteState => {
           supplyItems: updatedItems,
           totalSuppliesHT,
           totalHT,
-          tva: calculateTotalTTC(totalHT) - totalHT,
-          totalTTC: calculateTotalTTC(totalHT),
+          tva,
+          totalTTC,
         },
       };
     }
@@ -164,7 +167,9 @@ const quoteReducer = (state: QuoteState, action: QuoteAction): QuoteState => {
       );
 
       const totalSuppliesHT = calculateTotalSupplies(updatedItems);
-      const totalHT = totalSuppliesHT + state.currentQuote.totalLaborHT;
+      const totalHT = Number(totalSuppliesHT) + Number(state.currentQuote.totalLaborHT);
+      const tva = calculateVAT(totalHT);
+      const totalTTC = totalHT + tva;
 
       return {
         ...state,
@@ -173,8 +178,8 @@ const quoteReducer = (state: QuoteState, action: QuoteAction): QuoteState => {
           supplyItems: updatedItems,
           totalSuppliesHT,
           totalHT,
-          tva: calculateTotalTTC(totalHT) - totalHT,
-          totalTTC: calculateTotalTTC(totalHT),
+          tva,
+          totalTTC,
         },
       };
     }
@@ -187,7 +192,9 @@ const quoteReducer = (state: QuoteState, action: QuoteAction): QuoteState => {
       );
 
       const totalSuppliesHT = calculateTotalSupplies(updatedItems);
-      const totalHT = totalSuppliesHT + state.currentQuote.totalLaborHT;
+      const totalHT = Number(totalSuppliesHT) + Number(state.currentQuote.totalLaborHT);
+      const tva = calculateVAT(totalHT);
+      const totalTTC = totalHT + tva;
 
       return {
         ...state,
@@ -196,8 +203,8 @@ const quoteReducer = (state: QuoteState, action: QuoteAction): QuoteState => {
           supplyItems: updatedItems,
           totalSuppliesHT,
           totalHT,
-          tva: calculateTotalTTC(totalHT) - totalHT,
-          totalTTC: calculateTotalTTC(totalHT),
+          tva,
+          totalTTC,
         },
       };
     }
@@ -219,7 +226,9 @@ const quoteReducer = (state: QuoteState, action: QuoteAction): QuoteState => {
 
       const updatedItems = [...state.currentQuote.laborItems, calculatedItem];
       const totalLaborHT = calculateTotalLabor(updatedItems);
-      const totalHT = totalLaborHT + state.currentQuote.totalSuppliesHT;
+      const totalHT = Number(totalLaborHT) + Number(state.currentQuote.totalSuppliesHT);
+      const tva = calculateVAT(totalHT);
+      const totalTTC = totalHT + tva;
 
       return {
         ...state,
@@ -228,8 +237,8 @@ const quoteReducer = (state: QuoteState, action: QuoteAction): QuoteState => {
           laborItems: updatedItems,
           totalLaborHT,
           totalHT,
-          tva: calculateTotalTTC(totalHT) - totalHT,
-          totalTTC: calculateTotalTTC(totalHT),
+          tva,
+          totalTTC,
         },
       };
     }
@@ -248,7 +257,9 @@ const quoteReducer = (state: QuoteState, action: QuoteAction): QuoteState => {
       );
 
       const totalLaborHT = calculateTotalLabor(updatedItems);
-      const totalHT = totalLaborHT + state.currentQuote.totalSuppliesHT;
+      const totalHT = Number(totalLaborHT) + Number(state.currentQuote.totalSuppliesHT);
+      const tva = calculateVAT(totalHT);
+      const totalTTC = totalHT + tva;
 
       return {
         ...state,
@@ -257,8 +268,8 @@ const quoteReducer = (state: QuoteState, action: QuoteAction): QuoteState => {
           laborItems: updatedItems,
           totalLaborHT,
           totalHT,
-          tva: calculateTotalTTC(totalHT) - totalHT,
-          totalTTC: calculateTotalTTC(totalHT),
+          tva,
+          totalTTC,
         },
       };
     }
@@ -271,7 +282,9 @@ const quoteReducer = (state: QuoteState, action: QuoteAction): QuoteState => {
       );
 
       const totalLaborHT = calculateTotalLabor(updatedItems);
-      const totalHT = totalLaborHT + state.currentQuote.totalSuppliesHT;
+      const totalHT = Number(totalLaborHT) + Number(state.currentQuote.totalSuppliesHT);
+      const tva = calculateVAT(totalHT);
+      const totalTTC = totalHT + tva;
 
       return {
         ...state,
@@ -280,8 +293,8 @@ const quoteReducer = (state: QuoteState, action: QuoteAction): QuoteState => {
           laborItems: updatedItems,
           totalLaborHT,
           totalHT,
-          tva: calculateTotalTTC(totalHT) - totalHT,
-          totalTTC: calculateTotalTTC(totalHT),
+          tva,
+          totalTTC,
         },
       };
     }
@@ -308,7 +321,9 @@ const quoteReducer = (state: QuoteState, action: QuoteAction): QuoteState => {
       // Recalculate totals
       const totalSuppliesHT = calculateTotalSupplies(recalculatedSupplyItems);
       const totalLaborHT = calculateTotalLabor(recalculatedLaborItems);
-      const totalHT = totalSuppliesHT + totalLaborHT;
+      const totalHT = Number(totalSuppliesHT) + Number(totalLaborHT);
+      const tva = calculateVAT(totalHT);
+      const totalTTC = totalHT + tva;
 
       return {
         ...state,
@@ -319,8 +334,8 @@ const quoteReducer = (state: QuoteState, action: QuoteAction): QuoteState => {
           totalSuppliesHT,
           totalLaborHT,
           totalHT,
-          tva: calculateTotalTTC(totalHT) - totalHT,
-          totalTTC: calculateTotalTTC(totalHT),
+          tva,
+          totalTTC,
         },
       };
     }
@@ -413,13 +428,15 @@ export const QuoteProvider: React.FC<QuoteProviderProps> = ({ children }) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
 
-      // Format the quote ID if it's a new quote
+      // If it's a new quote, ensure the ID format is correct
       if (!state.isExistingQuote) {
-        const newQuoteId = `F-${state.currentQuote.id}-000`;
-        state.currentQuote.id = newQuoteId;
+        // If the ID doesn't end with -000, add it
+        if (!state.currentQuote.id.endsWith('-000')) {
+          state.currentQuote.id = `${state.currentQuote.id}-000`;
+        }
       }
 
-      // Save the quote first
+      // Save the quote
       const savedQuote = await apiService.saveQuote(state.currentQuote);
 
       dispatch({ type: 'SET_QUOTE', payload: savedQuote });
@@ -439,37 +456,30 @@ export const QuoteProvider: React.FC<QuoteProviderProps> = ({ children }) => {
     if (!state.currentQuote) return false;
 
     try {
-      dispatch({ type: 'SET_LOADING', payload: true });
-
       // Extract the base ID and current version
-      const baseId = extractBaseId(state.currentQuote.id);
-      const currentVersion = extractVersion(state.currentQuote.id);
-
-      if (!baseId || currentVersion === null) {
-        throw new Error('Invalid quote ID format');
-      }
+      const parts = state.currentQuote.id.split('-');
+      const baseId = parts.slice(0, -1).join('-'); // Everything except the last part
+      const currentVersion = parseInt(parts[parts.length - 1]) || 0;
 
       // Create a new quote with incremented version
-      const newVersion = currentVersion + 1;
-      const newQuoteId = generateQuoteId(baseId, newVersion);
+      const newVersion = (currentVersion + 1).toString().padStart(3, '0');
+      const newQuoteId = `${baseId}-${newVersion}`;
 
-      // Create the new quote with the updated ID
-      const newQuote = {
-        ...state.currentQuote,
-        id: newQuoteId,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
+      // Update the current quote's ID
+      dispatch({
+        type: 'UPDATE_QUOTE_FIELD',
+        payload: { field: 'id', value: newQuoteId }
+      });
 
-      // Save the new version
-      const updatedQuote = await apiService.saveQuote(newQuote);
-      dispatch({ type: 'SET_QUOTE', payload: updatedQuote });
-      return true;
+      // Set as new quote to trigger normal save behavior
+      dispatch({ type: 'SET_EXISTING_QUOTE', payload: false });
+
+      // Use the existing save function
+      return await saveQuote();
     } catch (error) {
+      console.error('Error updating quote:', error);
       dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to update quote' });
       return false;
-    } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 

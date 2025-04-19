@@ -262,10 +262,10 @@ const SuppliesSection: React.FC<SuppliesSectionProps> = ({
                 <TableRow key={item.id}>
                   <TableCell>{item.description}</TableCell>
                   <TableCell align="right">{item.quantity}</TableCell>
-                  <TableCell align="right">{(item.priceEuro ?? 0).toFixed(2)}</TableCell>
-                  <TableCell align="right">{(item.priceDollar ?? 0).toFixed(2)}</TableCell>
-                  <TableCell align="right">{(item.unitPriceDollar ?? 0).toFixed(2)}</TableCell>
-                  <TableCell align="right">{(item.totalPriceDollar ?? 0).toFixed(2)}</TableCell>
+                  <TableCell align="right">{Number(item.priceEuro || 0).toFixed(2)}</TableCell>
+                  <TableCell align="right">{Number(item.priceDollar || 0).toFixed(2)}</TableCell>
+                  <TableCell align="right">{Number(item.unitPriceDollar || 0).toFixed(2)}</TableCell>
+                  <TableCell align="right">{Number(item.totalPriceDollar || 0).toFixed(2)}</TableCell>
                   <TableCell align="center">
                     <IconButton
                       size="small"
@@ -287,7 +287,7 @@ const SuppliesSection: React.FC<SuppliesSectionProps> = ({
           TOTAL FOURNITURE $ HT:
         </Typography>
         <Typography variant="subtitle1" className="total-value">
-          {(totalHT ?? 0).toFixed(2)}
+          {Number(totalHT ?? 0).toFixed(2)}
         </Typography>
       </Box>
 
@@ -338,7 +338,7 @@ const SuppliesSection: React.FC<SuppliesSectionProps> = ({
                       onClick={() => handleSelectItem(item)}
                     >
                       <TableCell>{item.description}</TableCell>
-                      <TableCell align="right">{(item.priceEuro ?? 0).toFixed(2)}</TableCell>
+                      <TableCell align="right">{Number(item.priceEuro || 0).toFixed(2)}</TableCell>
                       <TableCell align="center">
                         <Button
                           size="small"

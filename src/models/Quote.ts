@@ -3,6 +3,7 @@
  */
 export interface SupplyItem {
   id: string;
+  quote_id?: string;
   description: string;
   quantity: number;
   priceEuro: number; // Price in Euro (PR €)
@@ -16,6 +17,7 @@ export interface SupplyItem {
  */
 export interface LaborItem {
   id: string;
+  quote_id?: string;
   description: string;
   nbTechnicians: number;
   nbHours: number;

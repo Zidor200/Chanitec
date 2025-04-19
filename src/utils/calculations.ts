@@ -31,14 +31,20 @@ export const calculateSupplyItemTotal = (
   exchangeRate: number,
   marginRate: number
 ): SupplyItem => {
+  // Ensure all values are numbers
+  const validPriceEuro = Number(item.priceEuro) || 0;
+  const validExchangeRate = Number(exchangeRate) || 1;
+  const validMarginRate = Number(marginRate) || 1;
+  const validQuantity = Number(item.quantity) || 0;
+
   // PR dollar = PR euro * exchange rate
-  const priceDollar = calculateDollarPrice(item.priceEuro, exchangeRate);
+  const priceDollar = calculateDollarPrice(validPriceEuro, validExchangeRate);
 
   // PV/U dollar = PR dollar / margin rate
-  const unitPriceDollar = calculateSalesPrice(priceDollar, marginRate);
+  const unitPriceDollar = calculateSalesPrice(priceDollar, validMarginRate);
 
   // PV dollar total HT = PV/U * Quantity
-  const totalPriceDollar = unitPriceDollar * item.quantity;
+  const totalPriceDollar = unitPriceDollar * validQuantity;
 
   return {
     ...item,
@@ -56,14 +62,22 @@ export const calculateLaborItemTotal = (
   exchangeRate: number,
   marginRate: number
 ): LaborItem => {
+  // Ensure all values are numbers
+  const validPriceEuro = Number(item.priceEuro) || 0;
+  const validExchangeRate = Number(exchangeRate) || 1;
+  const validMarginRate = Number(marginRate) || 1;
+  const validNbTechnicians = Number(item.nbTechnicians) || 0;
+  const validNbHours = Number(item.nbHours) || 0;
+  const validWeekendMultiplier = Number(item.weekendMultiplier) || 1;
+
   // PR dollar = PR euro * exchange rate
-  const priceDollar = calculateDollarPrice(item.priceEuro, exchangeRate);
+  const priceDollar = calculateDollarPrice(validPriceEuro, validExchangeRate);
 
   // PV/U dollar = PR dollar / margin rate
-  const unitPriceDollar = calculateSalesPrice(priceDollar, marginRate);
+  const unitPriceDollar = calculateSalesPrice(priceDollar, validMarginRate);
 
   // PV dollar total HT = PV/U * nbTechnicians * nbHours * weekendMultiplier
-  const totalPriceDollar = unitPriceDollar * item.nbTechnicians * item.nbHours * item.weekendMultiplier;
+  const totalPriceDollar = unitPriceDollar * validNbTechnicians * validNbHours * validWeekendMultiplier;
 
   return {
     ...item,
@@ -77,14 +91,20 @@ export const calculateLaborItemTotal = (
  * Calculates the total supplies price
  */
 export const calculateTotalSupplies = (items: SupplyItem[]): number => {
-  return items.reduce((total, item) => total + (item.totalPriceDollar || 0), 0);
+  return items.reduce((total, item) => {
+    const itemTotal = Number(item.totalPriceDollar) || 0;
+    return total + itemTotal;
+  }, 0);
 };
 
 /**
  * Calculates the total labor price
  */
 export const calculateTotalLabor = (items: LaborItem[]): number => {
-  return items.reduce((total, item) => total + (item.totalPriceDollar || 0), 0);
+  return items.reduce((total, item) => {
+    const itemTotal = Number(item.totalPriceDollar) || 0;
+    return total + itemTotal;
+  }, 0);
 };
 
 /**
@@ -98,5 +118,6 @@ export const calculateVAT = (amount: number): number => {
  * Calculates the total TTC (including VAT)
  */
 export const calculateTotalTTC = (totalHT: number): number => {
-  return totalHT + calculateVAT(totalHT);
+  const validTotalHT = Number(totalHT) || 0;
+  return validTotalHT + calculateVAT(validTotalHT);
 };

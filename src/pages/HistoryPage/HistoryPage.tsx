@@ -284,8 +284,10 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ currentPath, onNavigate }) =>
   // Load a quote
   const handleLoadQuote = async (quoteId: string) => {
     try {
+      // First load the quote data
       await loadQuote(quoteId);
-      onNavigate('/quote', quoteId);
+      // Then navigate to the home page where the quote will be displayed
+      onNavigate('/');
     } catch (error) {
       console.error('Error loading quote:', error);
       alert('Erreur lors du chargement du devis');

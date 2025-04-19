@@ -234,10 +234,10 @@ const LaborSection: React.FC<LaborSectionProps> = ({
                   <TableCell>{item.nbTechnicians}</TableCell>
                   <TableCell>{item.nbHours}</TableCell>
                   <TableCell>{item.weekendMultiplier}</TableCell>
-                  <TableCell align="right">{(item.priceEuro ?? 0).toFixed(2)}</TableCell>
-                  <TableCell align="right">{(item.priceDollar ?? 0).toFixed(2)}</TableCell>
-                  <TableCell align="right">{(item.unitPriceDollar ?? 0).toFixed(2)}</TableCell>
-                  <TableCell align="right">{(item.totalPriceDollar ?? 0).toFixed(2)}</TableCell>
+                  <TableCell align="right">{Number(item.priceEuro ?? 0).toFixed(2)}</TableCell>
+                  <TableCell align="right">{Number(item.priceDollar ?? 0).toFixed(2)}</TableCell>
+                  <TableCell align="right">{Number(item.unitPriceDollar ?? 0).toFixed(2)}</TableCell>
+                  <TableCell align="right">{Number(item.totalPriceDollar ?? 0).toFixed(2)}</TableCell>
                   <TableCell align="center">
                     <IconButton
                       size="small"
@@ -259,7 +259,7 @@ const LaborSection: React.FC<LaborSectionProps> = ({
           TOTAL MAIN D'OEUVRE $ HT:
         </Typography>
         <Typography variant="subtitle1" className="total-value">
-          {(totalHT ?? 0).toFixed(2)}
+          {Number(totalHT ?? 0).toFixed(2)}
         </Typography>
       </Box>
     </Paper>
